@@ -66,14 +66,15 @@ Rồi mở http://localhost:8000. Đăng nhập Firebase cần chạy website qu
 | D | Chủ đề |
 | E | Câu hỏi (hỗ trợ `<b>`, `<br>`, xuống dòng `\n`) |
 | F | Loại: `Lựa chọn`, `Danh sách`, `Kéo thả` |
-| G-L | Lựa chọn 1-6 |
-| M | Đáp án: số thứ tự lựa chọn, nhiều đáp án cách nhau dấu phẩy |
-| N | Link hình (tùy chọn) |
-| O | Giải thích (tùy chọn) |
+| G-N | Lựa chọn 1-8 |
+| O | Đáp án: số thứ tự lựa chọn, nhiều đáp án cách nhau dấu phẩy |
+| P | Link hình (tùy chọn) |
+| Q | Giải thích (tùy chọn) |
 
-- **Lựa chọn:** `M` là các số đúng, ví dụ `2,3` (nhiều đáp án thì hiện ô tích chọn).
-- **Danh sách:** câu hỏi chứa `{D}` cho mỗi ô thả xuống; `M` là đáp án theo thứ tự các `{D}`, ví dụ `2,1,3`.
-- **Kéo thả:** mỗi lựa chọn có dạng `Vế trái\nVế phải`; vế phải được xáo trộn, học sinh ghép lại đúng dòng.
+- **Lựa chọn:** `O` là các số đúng, ví dụ `2,3` (nhiều đáp án thì hiện ô tích chọn).
+- **Danh sách:** câu hỏi chứa `{D}` cho mỗi ô thả xuống; `O` là đáp án theo thứ tự các `{D}`, ví dụ `2,1,3`. Lựa chọn giữ nguyên thứ tự trong Excel.
+- Thứ tự câu hỏi trong mỗi lượt được xáo trộn.
+- **Kéo thả:** mỗi lựa chọn có dạng `Vế trái\nVế phải`; thẻ giữ nguyên thứ tự trong Excel để học sinh ghép với đúng dòng.
 
 ## V2: XP, Gold, trang bị, cửa hàng
 

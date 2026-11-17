@@ -1,6 +1,6 @@
 // Đọc file Excel mẫu và hiển thị câu hỏi (Lựa chọn / Danh sách / Kéo thả).
 // Cột (theo vị trí, vì tiêu đề trong file mẫu bị lệch):
-// 0 STT | 1 Độ khó | 2 Mã | 3 Chủ đề | 4 Câu hỏi | 5 Loại | 6-11 Lựa chọn 1-6 | 12 Đáp án | 13 Link hình | 14 Giải thích
+// 0 STT | 1 Độ khó | 2 Mã | 3 Chủ đề | 4 Câu hỏi | 5 Loại | 6-13 Lựa chọn 1-8 | 14 Đáp án | 15 Link hình | 16 Giải thích
 function el(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 const NL = /\\n|\n/g;
@@ -17,9 +17,9 @@ const Quiz = {
       out.push({
         id: c(r[0]), diff: c(r[1]), type,
         text: text.replace(NL, '<br>'),
-        opts: r.slice(6, 12).map(c).filter(Boolean),
-        ans: c(r[12]).split(',').map(s => parseInt(s, 10)).filter(n => n > 0),
-        img: c(r[13]), exp: c(r[14])
+        opts: r.slice(6, 14).map(c).filter(Boolean),
+        ans: c(r[14]).split(',').map(s => parseInt(s, 10)).filter(n => n > 0),
+        img: c(r[15]), exp: c(r[16])
       });
     });
     return out;
@@ -33,7 +33,10 @@ const Quiz = {
       const parts = q.text.split('{D}');
       txt.innerHTML = parts.map((p, k) => p + (k < parts.length - 1 ? '<select></select>' : '')).join('');
       const sels = [...txt.querySelectorAll('select')];
-      sels.forEach(s => { s.append(new Option('— chọn —', '')); q.opts.forEach((o, k) => s.append(new Option(o, k + 1))); });
+      sels.forEach(s => {
+        s.append(new Option('— chọn —', ''));
+        q.opts.forEach((o, k) => s.append(new Option(o, k + 1)));
+      });
       check = () => ({ ready: sels.every(s => s.value), correct: sels.every((s, k) => +s.value === q.ans[k]) });
       mark = () => sels.forEach((s, k) => s.classList.add(+s.value === q.ans[k] ? 'good' : 'bad'));
       solution = () => sels.map((s, k) => q.opts[q.ans[k] - 1] || '?').join(' · ');
@@ -44,12 +47,16 @@ const Quiz = {
       const pool = el('div', 'pool'), box = el('div');
       const chips = pairs.map((p, i) => { const b = el('button', 'chip', p.r); b.type = 'button'; b.dataset.i = i; b.draggable = true; return b; });
       const slots = pairs.map((p, i) => { const row = el('div', 'row'), s = el('div', 'slot'); s.dataset.i = i; row.append(el('div', '', p.l), s); box.append(row); return s; });
-      shuffle(chips.slice()).forEach(b => pool.append(b));
+      chips.forEach(b => pool.append(b));
       let sel = null, drag = null;
-      const put = (slot, chip) => { const old = slot.firstElementChild; if (old) pool.append(old); slot.append(chip); if (sel) sel.classList.remove('sel'); sel = null; };
+      const returnToPool = chip => {
+        const next = [...pool.children].find(b => +b.dataset.i > +chip.dataset.i);
+        pool.insertBefore(chip, next || null);
+      };
+      const put = (slot, chip) => { const old = slot.firstElementChild; if (old) returnToPool(old); slot.append(chip); if (sel) sel.classList.remove('sel'); sel = null; };
       chips.forEach(b => {
         b.onclick = () => {
-          if (b.parentElement !== pool) { pool.append(b); return; }
+          if (b.parentElement !== pool) { returnToPool(b); return; }
           if (sel) sel.classList.remove('sel');
           sel = sel === b ? null : b; if (sel) b.classList.add('sel');
         };
