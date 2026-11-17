@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quest Học Tập</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app-bg" aria-hidden="true"></div>
+
+<section id="screen-login" class="screen center">
+  <form id="login" class="card">
+    <p class="auth-kicker">CUỘC PHIÊU LƯU ĐANG CHỜ</p>
+    <h1>QUEST</h1>
+    <p>Đăng nhập để trở lại thế giới của bạn.</p>
+    <label for="f-cls">Khối lớp
+      <select id="f-cls" required></select>
+    </label>
+    <label for="f-name">Tên đăng nhập
+      <input id="f-name" required minlength="3" maxlength="20" autocomplete="username" autocapitalize="none">
+    </label>
+    <label for="f-password">Mật khẩu
+      <span class="password-field">
+        <input id="f-password" type="password" required autocomplete="current-password">
+        <button class="password-toggle" type="button" data-password-toggle="f-password" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
+      </span>
+    </label>
+    <button class="btn auth-submit" type="submit"><span class="button-label">Vào game</span><span class="button-loading" aria-hidden="true"></span></button>
+    <p id="login-status" class="auth-status" role="status" aria-live="polite"></p>
+    <p class="auth-switch">Chưa có nhân vật? <a href="#signup" data-screen="signup">Đăng ký ngay</a></p>
+  </form>
+</section>
+
+<section id="screen-signup" class="screen center" hidden>
+  <form id="signup" class="card">
+    <p class="auth-kicker">TẠO NHÂN VẬT MỚI</p>
+    <h1>GIA NHẬP QUEST</h1>
+    <p>Chọn khối, tạo tài khoản và sẵn sàng khám phá.</p>
+    <label for="signup-cls">Khối lớp
+      <select id="signup-cls" required></select>
+    </label>
+    <label for="signup-room">Lớp của bạn
+      <input id="signup-room" required maxlength="5" placeholder="Ví dụ 6/5" autocomplete="off" autocapitalize="none" aria-describedby="signup-room-hint">
+    </label>
+    <span id="signup-room-hint" class="field-hint">Nhập đúng dạng khối/số lớp, ví dụ 6/5, 7/11, 8/15 (số đầu phải trùng khối đã chọn).</span>
+    <label for="signup-name">Tên đăng nhập
+      <input id="signup-name" required minlength="3" maxlength="20" autocomplete="username" autocapitalize="none" aria-describedby="signup-name-hint">
+    </label>
+    <span id="signup-name-hint" class="field-hint">3–20 ký tự: chữ không dấu, số hoặc dấu gạch dưới.</span>
+    <label for="signup-password">Mật khẩu
+      <span class="password-field">
+        <input id="signup-password" type="password" required minlength="6" autocomplete="new-password">
+        <button class="password-toggle" type="button" data-password-toggle="signup-password" aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
+      </span>
+    </label>
+    <label for="signup-confirm">Nhập lại mật khẩu
+      <input id="signup-confirm" type="password" required minlength="6" autocomplete="new-password">
+    </label>
+    <label for="signup-nickname">Nickname trong game
+      <input id="signup-nickname" required minlength="2" maxlength="16" autocomplete="nickname">
+    </label>
+    <button class="btn auth-submit" type="submit"><span class="button-label">Tạo tài khoản</span><span class="button-loading" aria-hidden="true"></span></button>
+    <p id="signup-status" class="auth-status" role="status" aria-live="polite"></p>
+    <p class="auth-switch">Đã có tài khoản? <a href="#login" data-screen="login">Quay lại đăng nhập</a></p>
+  </form>
+</section>
+
+<div id="room-dialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="room-title" hidden>
+  <form id="room-form" class="card">
+    <p class="auth-kicker">CẬP NHẬT HỒ SƠ</p>
+    <h1 id="room-title">NHẬP LỚP</h1>
+    <p>Hồ sơ của bạn chưa có lớp. Nhập lớp để vào bảng xếp hạng theo lớp (khối <b id="room-grade"></b>). Chỉ nhập được một lần; sai thì nhờ giáo viên sửa.</p>
+    <label for="room-input">Lớp
+      <input id="room-input" required maxlength="5" placeholder="Ví dụ 6/5" autocomplete="off" autocapitalize="none">
+    </label>
+    <button class="btn auth-submit" type="submit"><span class="button-label">Lưu lớp</span></button>
+    <p id="room-status" class="auth-status" role="status" aria-live="polite"></p>
+    <button id="room-logout" class="btn ghost" type="button">Đăng xuất</button>
+  </form>
+</div>
+
+<div id="ranked-dialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="ranked-title" hidden>
+  <div class="card">
+    <p class="auth-kicker">ĐẤU XẾP HẠNG TRONG LỚP</p>
+    <h1 id="ranked-title">RANKED</h1>
+    <p id="ranked-me"></p>
+    <div id="ranked-top" class="raid-top-list"></div>
+    <p id="ranked-status" class="auth-status" role="status" aria-live="polite"></p>
+    <button id="ranked-find" class="btn" type="button">Tìm đối thủ</button>
+    <button id="ranked-close" class="btn ghost" type="button">Đóng</button>
+  </div>
+</div>
+
+<div id="reward-dialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="reward-title" hidden>
+  <div class="card">
+    <p class="auth-kicker">PHẦN THƯỞNG XẾP HẠNG</p>
+    <h1 id="reward-title">BẠN CÓ QUÀ!</h1>
+    <div id="reward-list"></div>
+    <p id="reward-status" class="auth-status" role="status" aria-live="polite"></p>
+    <button id="reward-close" class="btn ghost" type="button">Để sau</button>
+  </div>
+</div>
+
+<section id="screen-levels" class="screen" hidden>
+  <div id="world-map" class="world-map" aria-label="Bản đồ phiêu lưu">
+    <div id="map-stages" class="map-stages"></div>
+    <div class="map-hud map-hud--left">
+      <p id="who" class="map-who"></p>
+      <p id="world-title" class="map-world"></p>
+      <p id="world-progress" class="map-progress"></p>
+    </div>
+    <div class="map-hud map-hud--right">
+      <button id="open-equip" class="btn ghost" type="button">Trang bị</button>
+      <button id="open-shop" class="btn ghost" type="button">Cửa hàng</button>
+      <button id="open-rank" class="btn ghost" type="button">Xếp hạng</button>
+      <button id="open-raid" class="btn" type="button">Boss Raid</button>
+      <button id="open-ranked" class="btn" type="button">Ranked</button>
+      <button id="logout" class="btn ghost" type="button">Đăng xuất</button>
+    </div>
+    <p id="msg" class="note map-message" role="status"></p>
+    <aside id="stage-info" class="stage-bar" aria-live="polite" hidden></aside>
+  </div>
+  <p id="map-error" class="map-error" role="status" hidden></p>
+</section>
+
+<section id="screen-shop" class="screen ui-screen" hidden>
+  <div class="ui-frame">
+    <header class="ui-top">
+      <div class="ui-level" title="Cấp độ"><span id="shop-level">1</span></div>
+      <div class="ui-xp"><div class="ui-xpbar"><i id="shop-xp-bar"></i></div><small id="shop-xp"></small><b id="shop-class"></b></div>
+      <div class="ui-ribbon"><h1>CỬA HÀNG</h1></div>
+      <div class="ui-money"><span class="coin gold" id="shop-gold" title="Gold">0</span><span class="coin gem" id="shop-gem" title="Crystal">0</span></div>
+      <button id="shop-back" class="ui-close" type="button" aria-label="Về bản đồ">✕</button>
+    </header>
+    <p id="shop-msg" class="ui-msg" role="status" aria-live="polite"></p>
+    <div class="ui-body ui-split">
+      <section class="ui-panel">
+        <nav class="ui-tabs" aria-label="Chọn màn">
+          <button class="tab is-on" type="button" aria-current="page">CỬA HÀNG</button>
+          <button id="shop-go-equip" class="tab" type="button">TRANG BỊ</button>
+        </nav>
+        <div id="shop-tags" class="tag-bar" role="toolbar" aria-label="Lọc theo loại trang bị"></div>
+        <div id="shop-list" class="ui-scroll"></div>
+      </section>
+      <aside class="ui-panel ui-side">
+        <h2 class="ribbon">TÚI ĐỒ <small id="shop-count"></small></h2>
+        <div id="shop-bag" class="bag-grid ui-scroll"></div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section id="screen-equip" class="screen ui-screen" hidden>
+  <div class="ui-frame">
+    <header class="ui-top">
+      <div class="ui-level" title="Cấp độ"><span id="equip-level">1</span></div>
+      <div class="ui-xp"><div class="ui-xpbar"><i id="equip-xp-bar"></i></div><small id="equip-xp"></small><b id="equip-class"></b></div>
+      <div class="ui-ribbon"><h1>TRANG BỊ</h1></div>
+      <div class="ui-money"><span class="coin gold" id="equip-gold" title="Gold">0</span><span class="coin gem" id="equip-gem" title="Crystal">0</span></div>
+      <button id="equip-back" class="ui-close" type="button" aria-label="Về bản đồ">✕</button>
+    </header>
+    <p id="equip-msg" class="ui-msg" role="status" aria-live="polite"></p>
+    <div class="ui-body ui-split ui-split--equal">
+      <section class="ui-panel equip-left" aria-label="Đang trang bị">
+        <nav class="ui-tabs" aria-label="Chọn màn">
+          <button id="equip-go-shop" class="tab" type="button">CỬA HÀNG</button>
+          <button class="tab is-on" type="button" aria-current="page">TRANG BỊ</button>
+        </nav>
+        <label class="char-pick">Nhân vật
+          <select id="f-char"></select>
+          <span id="class-cd" class="class-cd" role="status"></span>
+        </label>
+        <div id="equip-stats" class="char-stats"></div>
+        <div class="char-stage">
+          <div class="slot-col">
+            <button class="slot-box" type="button" data-slot="weapon"></button>
+            <button class="slot-box" type="button" data-slot="helmet"></button>
+          </div>
+          <canvas id="equip-portrait" class="char-portrait" width="256" height="202" aria-hidden="true"></canvas>
+          <div class="slot-col">
+            <button class="slot-box" type="button" data-slot="armor"></button>
+            <button class="slot-box" type="button" data-slot="accessory"></button>
+          </div>
+        </div>
+        <p class="hint">Đổi sang nghề khác sẽ tháo toàn bộ trang bị đang mặc.</p>
+      </section>
+      <section class="ui-panel equip-right" aria-label="Kho đồ">
+        <h2 class="ribbon">KHO ĐỒ <small id="equip-count"></small></h2>
+        <div id="equip-tags" class="tag-bar" role="toolbar" aria-label="Lọc kho đồ"></div>
+        <div id="equip-bag" class="bag-grid ui-scroll"></div>
+        <div id="equip-info" class="item-action" aria-live="polite" hidden></div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<section id="screen-rank" class="screen ui-screen" hidden>
+  <div class="ui-frame">
+    <header class="ui-top">
+      <div class="ui-level" title="Cấp độ"><span id="rank-level">1</span></div>
+      <div class="ui-xp"><div class="ui-xpbar"><i id="rank-xp-bar"></i></div><small id="rank-xp"></small><b id="rank-class"></b></div>
+      <div class="ui-ribbon"><h1>XẾP HẠNG</h1></div>
+      <div class="ui-money"><span class="coin gold" id="rank-gold" title="Gold">0</span><span class="coin gem" id="rank-gem" title="Crystal">0</span></div>
+      <button id="rank-back" class="ui-close" type="button" aria-label="Về bản đồ">✕</button>
+    </header>
+    <div class="ui-body">
+      <section class="ui-panel rank-panel">
+        <div id="rank-scope" class="tag-bar" role="toolbar" aria-label="Bảng theo lớp hoặc theo khối"></div>
+        <div id="rank-tabs" class="ui-tabs" role="tablist"></div>
+        <p id="rank-info" class="hint"></p>
+        <div id="rank-list" class="ui-scroll"></div>
+        <button id="rank-refresh" class="btn ghost" type="button">Làm mới</button>
+      </section>
+    </div>
+  </div>
+</section>
+
+<section id="screen-game" class="screen" hidden>
+  <div class="game-rotate-notice" role="status">Hãy xoay ngang điện thoại để chơi Adventure.</div>
+  <div class="game">
+    <aside class="stage" id="stage" aria-hidden="true">
+      <canvas id="scene" class="scene"></canvas>
+      <div class="player-hud">
+        <div class="level-badge"><span>LV</span><b id="hud-level">1</b></div>
+        <div class="player-stats">
+          <div class="hud-name" id="hud-nick"></div>
+          <div class="player-hp"><i></i><b id="hud-hp">100 / 100</b></div>
+          <div class="player-xp"><i id="hud-xp-bar"></i><b id="hud-xp">0 / 100 XP</b></div>
+        </div>
+      </div>
+      <div class="hp" id="mobhp"><i></i><b id="mob-hp">—</b></div>
+      <canvas id="hero"></canvas>
+      <canvas id="mob"></canvas>
+      <img id="skill-projectile" alt="" aria-hidden="true">
+    </aside>
+    <main class="qwrap">
+      <button id="game-back" class="btn ghost game-back" type="button">← Về bản đồ</button>
+      <div id="raid-bar" class="raid-bar" title="Số sát thương kèm nickname đồng đội là hiệu ứng minh họa; tổng sát thương theo dữ liệu thật." hidden>
+        <span id="raid-time"></span>
+        <span id="raid-counter"></span>
+        <span id="raid-mine"></span>
+        <button id="raid-top-btn" class="btn ghost" type="button">Top 10</button>
+      </div>
+      <div id="raid-top" class="raid-top" hidden></div>
+      <div id="quiz" class="quiz"></div>
+      <div id="quiz-shield" class="quiz-shield" role="alert" hidden>
+        <p><b>Câu hỏi đã được ẩn.</b><br>Bạn vừa rời khỏi trang game. Đồng hồ vẫn chạy và quái vẫn tấn công khi bạn vắng mặt.</p>
+        <p id="quiz-shield-count" class="shield-count"></p>
+        <button id="quiz-shield-btn" class="btn" type="button">Tiếp tục</button>
+      </div>
+    </main>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/characters/character.js"></script>
+<script src="js/characters/warrior.js"></script>
+<script src="js/characters/archer.js"></script>
+<script src="js/characters/mage.js"></script>
+<script src="js/characters/roster.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="js/firebase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/player.js"></script>
+<script src="js/inventory.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/leaderboard.js"></script>
+<script src="js/stage-monster.js"></script>
+<script src="js/sprites.js"></script>
+<script src="games/adventure.js"></script>
+<script src="games/boss-battle.js"></script>
+<script src="games/ranked.js"></script>
+<script src="js/world-map.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

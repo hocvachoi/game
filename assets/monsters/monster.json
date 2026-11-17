@@ -1,0 +1,85 @@
+[
+  {
+    "id": "MON_001",
+    "key": "slime",
+    "name": "Slime",
+    "class": "Mage",
+    "type": "Normal",
+    "stats": {
+      "HP": 300,
+      "ATK": 15,
+      "DEF": 5
+    },
+    "rewards": {
+      "gold": 10,
+      "exp": 15
+    },
+    "sprite": {
+      "frameW": 256,
+      "frameH": 202,
+      "idle": {
+        "src": "assets/monsters/Undead_Knight_Idle.png",
+        "frames": [0, 1, 2, 3, 4, 5]
+      },
+      "animation": {
+        "src": "assets/monsters/Undead_Knight_Animation.png",
+        "frames": [4, 5, 6, 7, 8, 9, 10, 11]
+      }
+    }
+  },
+  {
+    "id": "MON_002",
+    "key": "undead_knight",
+    "name": "Undead Knight",
+    "class": "Warrior",
+    "type": "Epic",
+    "stats": {
+      "HP": 500,
+      "ATK": 30,
+      "DEF": 20
+    },
+    "rewards": {
+      "gold": 50,
+      "exp": 100
+    },
+    "sprite": {
+      "frameW": 256,
+      "frameH": 202,
+      "idle": {
+        "src": "assets/monsters/Undead_Knight_Idle.png",
+        "frames": [0, 1, 2, 3, 4, 5]
+      },
+      "animation": {
+        "src": "assets/monsters/Undead_Knight_Animation.png",
+        "frames": [4, 5, 6, 7, 8, 9, 10, 11]
+      }
+    }
+  },
+  {
+    "id": "MON_003",
+    "key": "dark_dragon",
+    "name": "Dark Dragon",
+    "type": "Legendary",
+    "stats": {
+      "HP": 500,
+      "ATK": 35,
+      "DEF": 20
+    },
+    "rewards": {
+      "gold": 1000,
+      "exp": 400
+    },
+    "sprite": {
+      "frameW": 256,
+      "frameH": 202,
+      "idle": {
+        "src": "assets/monsters/Undead_Knight_Idle.png",
+        "frames": [0, 1, 2, 3, 4, 5]
+      },
+      "animation": {
+        "src": "assets/monsters/Undead_Knight_Animation.png",
+        "frames": [4, 5, 6, 7, 8, 9, 10, 11]
+      }
+    }
+  }
+]

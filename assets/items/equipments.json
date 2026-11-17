@@ -1,0 +1,126 @@
+{
+  "warlord_helmet": {
+    "name": "Mũ Chiến Thần",
+    "slot": "helmet",
+    "class": ["warrior"],
+    "quality": "legendary",
+    "stats": { "HP": 120, "ATK": 0, "DEF": 35,"CRIT": 0 },
+    "effect": {
+      "type": "Recovery",
+      "value": 10
+    },
+    "image": "/assets/items/helmet_legendary.png",
+    "price": { "gold": 5000, "gem": 5 }
+  },
+  "warlord_armor": {
+    "name": "Giáp Chiến Thần",
+    "slot": "armor",
+    "class": ["warrior"],
+    "quality": "legendary",
+    "stats": { "HP": 300, "ATK": -10, "DEF": 40,"CRIT": 0 },
+     "effect": {
+      "type": "Reduce DMG",
+      "value": 10
+    },
+    "image": "/assets/items/helmet_legendary.png",
+    "price": { "gold": 10000, "gem": 5 }
+  },
+  "warlord_sword": {
+    "name": "Kiếm Chiến Thần",
+    "slot": "weapon",
+    "class": ["warrior"],
+    "quality": "legendary",
+    "stats": { "HP": 0, "ATK": 50, "DEF": 0,"CRIT": 15 },
+     "effect": {
+      "type": "Steal_Life",
+      "value": 15
+    },
+    "image": "/assets/items/sword_legendary.png",
+    "price": { "gold": 7000, "gem": 5 }
+  },
+  "warlord_ring": {
+    "name": "Nhẫn Chiến Thần",
+    "slot": "accessory",
+    "class": ["warrior"],
+    "quality": "legendary",
+    "stats": { "HP": 0, "ATK": 10, "DEF": 10,"CRIT": 10 },
+     "effect": {
+      "type": "Lucky",
+      "value": 10
+    },
+    "image": "/assets/items/helmet_legendary.png",
+    "price": { "gold": 5000, "gem": 15 }
+  },
+  "iron_sword": {
+    "name": "Kiếm sắt",
+    "slot": "weapon",
+    "class": ["warrior"],
+    "quality": "Normal",
+    "stats": { "HP": 0, "ATK": 10, "DEF": 0,"CRIT": 1 },
+     "effect": {
+      "type": null
+    },
+    "image": "/assets/items/helmet_legendary.png",
+    "price": { "gold": 50, "gem": 0 }
+  },
+  "short_bow": {
+    "name": "Cung ngắn",
+    "slot": "weapon",
+    "class": ["Archer"],
+    "quality": "Normal",
+    "stats": { "HP": 0, "ATK": 10, "DEF": 0,"CRIT": 3 },
+     "effect": {
+      "type": null
+    },
+    "image": "/assets/items/helmet_legendary.png",
+    "price": { "gold": 50, "gem": 0 }
+  },
+  "magic_staff": {
+    "name": "Gậy phép",
+    "slot": "weapon",
+    "class": ["Mage"],
+    "quality": "Normal",
+    "stats": { "HP": 0, "ATK": 15, "DEF": 0,"CRIT": 0 },
+     "effect": {
+      "type": null
+    },
+    "image": "/assets/items/helmet_legendary.png",
+    "price": { "gold":50, "gem": 0 }
+  },
+  "leather_armor": {
+    "name": "Giáp da",
+    "slot": "armor",
+    "class": ["warrior","Archer","Mage"],
+    "quality": "Normal",
+    "stats": { "HP": 30, "ATK": 0, "DEF": 0,"CRIT": 0 },
+     "effect": {
+      "type": null
+    },
+    "image": "/assets/items/helmet_legendary.png",
+    "price": { "gold": 50, "gem": 0 }
+  },
+  "iron_helmet": {
+    "name": "Mũ sắt",
+    "slot": "helmet",
+    "class": ["warrior","Archer","Mage"],
+    "quality": "Normal",
+    "stats": { "HP": 10, "ATK": 0, "DEF": 5,"CRIT": 0 },
+     "effect": {
+      "type": null
+    },
+    "image": "/assets/items/helmet_legendary.png",
+    "price": { "gold": 50, "gem": 0 }
+  },
+  "old_necklace": {
+    "name": "Dây chuyền cổ",
+    "slot": "accessory",
+    "class": ["warrior","Archer","Mage"],
+    "quality": "Normal",
+    "stats": { "HP": 10, "ATK": 0, "DEF": 5,"CRIT": 5 },
+     "effect": {
+      "type": null
+    },
+    "image": "/assets/items/helmet_legendary.png",
+    "price": { "gold": 50, "gem": 0 }
+  }
+}

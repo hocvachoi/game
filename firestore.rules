@@ -1,0 +1,560 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // [RULES] QUẢN TRỊ: tài khoản Google đăng nhập ở trang admin (repo mysite). THAY địa chỉ email bên dưới bằng email Google của bạn.
+    // Quản trị chỉ được ĐỌC bảng xếp hạng và TẠO phiếu thưởng (không sửa/xóa được phiếu đã tạo, không ghi được hồ sơ học sinh).
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['THAY_EMAIL_ADMIN@gmail.com'];
+    }
+
+    match /accounts/{className}/users/{username} {
+      function isStudentIdentity() {
+        return request.auth != null
+          && className in ['6', '7', '8', '9']
+          && request.auth.token.email == username + '.' + className + '@students.rpg-game.example';
+      }
+
+      // Item metadata lives in assets/items/equipments.json; profiles store IDs only (ID dạng chữ, vd 'iron_sword').
+      // [RULES] Keep these lists, the slot lists and the prices in sync with equipments.json.
+      function validItemId(id) {
+        return id in ['warlord_helmet', 'warlord_armor', 'warlord_sword', 'warlord_ring', 'iron_sword', 'short_bow', 'magic_staff', 'leather_armor', 'iron_helmet', 'old_necklace'];
+      }
+      // [RULES] Ràng buộc nghề (class) của trang bị — khớp trường "class" trong equipments.json (mage = Mage/Magical; trống = mọi nghề).
+      function classesOf(id) {
+        return {
+          'warlord_helmet': ['warrior'],
+          'warlord_armor': ['warrior'],
+          'warlord_sword': ['warrior'],
+          'warlord_ring': ['warrior'],
+          'iron_sword': ['warrior'],
+          'short_bow': ['archer'],
+          'magic_staff': ['mage'],
+          'leather_armor': ['warrior', 'archer', 'mage'],
+          'iron_helmet': ['warrior', 'archer', 'mage'],
+          'old_necklace': ['warrior', 'archer', 'mage']
+        }[id];
+      }
+      // [RULES] Nhân vật chọn được = tên thư mục assets/characters (CONFIG.CHARACTERS). Hồ sơ chưa có Character coi là Archer_F.
+      function charKeys() { return ['Archer_F', 'Archer_M', 'Mage_F', 'Mage_M', 'Warrior_F', 'Warrior_M']; }
+      function classPrefix(k) { return k.split('_')[0]; }
+      function classOfChar(k) { return { 'Archer': 'archer', 'Mage': 'mage', 'Warrior': 'warrior' }[classPrefix(k)]; }
+      function weaponIds() { return ['warlord_sword', 'iron_sword', 'short_bow', 'magic_staff']; }
+      function armorIds() { return ['warlord_armor', 'leather_armor']; }
+      function helmetIds() { return ['warlord_helmet', 'iron_helmet']; }
+      function accessoryIds() { return ['warlord_ring', 'old_necklace']; }
+      function goldPriceOf(id) {
+        return {
+          'warlord_helmet': 5000,
+          'warlord_armor': 10000,
+          'warlord_sword': 7000,
+          'warlord_ring': 5000,
+          'iron_sword': 50,
+          'short_bow': 50,
+          'magic_staff': 50,
+          'leather_armor': 50,
+          'iron_helmet': 50,
+          'old_necklace': 50
+        }[id];
+      }
+      function crystalPriceOf(id) {
+        return {
+          'warlord_helmet': 5,
+          'warlord_armor': 5,
+          'warlord_sword': 5,
+          'warlord_ring': 15,
+          'iron_sword': 0,
+          'short_bow': 0,
+          'magic_staff': 0,
+          'leather_armor': 0,
+          'iron_helmet': 0,
+          'old_necklace': 0
+        }[id];
+      }
+
+      function changed() {
+        return request.resource.data.diff(resource.data).affectedKeys();
+      }
+
+      // A reward drop appends exactly one new, valid, not-yet-owned item ID.
+      function dropOk() {
+        let n = request.resource.data;
+        let o = resource.data;
+        return !('Enventory' in changed())
+          || (n.Enventory is list
+            && n.Enventory.size() == o.Enventory.size() + 1
+            && n.Enventory.hasAll(o.Enventory)
+            && validItemId(n.Enventory[n.Enventory.size() - 1])
+            && !(n.Enventory[n.Enventory.size() - 1] in o.Enventory));
+      }
+
+      // [RULES] Level curve: EXP needed to REACH level L = 25*(L-1)*(L+2)  (XP_BASE 100, XP_STEP 50),
+      // MAX_LEVEL 100 -> max EXP 252450, per-run caps Gold 20000 / EXP 60000.
+      // Only LV and EXP are stored; HP/ATK/DEF come from the character JSON and are not saved.
+      // Crystal: tối đa 5 mỗi lượt (Stage +1; Dungeon_2 mỗi 5 quái +1, tối đa 5). Progress advances one stage entry and rewards are at least 20 seconds apart.
+      function validRun() {
+        let n = request.resource.data;
+        let o = resource.data;
+        return changed().hasAll(['progress', 'LastReward'])
+          && changed().hasOnly(['Golds', 'Crystals', 'EXP', 'LV', 'progress', 'LastReward', 'Enventory'])
+          && n.Golds is int && n.Golds >= o.Golds && n.Golds - o.Golds <= 20000
+          && (!('Crystals' in changed()) || (n.Crystals is int && n.Crystals >= o.Crystals && n.Crystals - o.Crystals <= 5))
+          && n.EXP is int && n.EXP >= o.EXP && n.EXP - o.EXP <= 60000 && n.EXP <= 252450
+          && n.LV is int && n.LV >= 1 && n.LV <= 100
+          && n.EXP >= 25 * (n.LV - 1) * (n.LV + 2)
+          && (n.LV == 100 || n.EXP < 25 * n.LV * (n.LV + 3))
+          && n.progress is map && n.progress.size() <= 60
+          && n.progress.diff(o.progress).affectedKeys().size() == 1
+          && n.LastReward == request.time
+          && (!('LastReward' in o) || request.time > o.LastReward + duration.value(20, 's'))
+          && dropOk();
+      }
+
+      // An empty slot is fine; a filled slot must hold an owned ID that belongs to that slot.
+      function slotOk(eq, slot, ids, inv, cls) {
+        let v = eq.get(slot, null);
+        return v == null || (v is string && v in ids && v in inv && cls in classesOf(v));
+      }
+      function slotCount(eq, slot) {
+        return eq.get(slot, null) == null ? 0 : 1;
+      }
+
+      // Equipment and inventory store catalog IDs, never client-supplied item metadata.
+      function validEquip() {
+        let n = request.resource.data;
+        let cls = classOfChar(n.get('Character', 'Archer_F'));
+        return changed().hasOnly(['Equipment'])
+          && n.Equipment is map
+          && n.Enventory is list
+          && n.Equipment.size() == slotCount(n.Equipment, 'weapon') + slotCount(n.Equipment, 'armor')
+            + slotCount(n.Equipment, 'helmet') + slotCount(n.Equipment, 'accessory')
+          && slotOk(n.Equipment, 'weapon', weaponIds(), n.Enventory, cls)
+          && slotOk(n.Equipment, 'armor', armorIds(), n.Enventory, cls)
+          && slotOk(n.Equipment, 'helmet', helmetIds(), n.Enventory, cls)
+          && slotOk(n.Equipment, 'accessory', accessoryIds(), n.Enventory, cls);
+      }
+
+      // Đổi nhân vật: Character thuộc danh sách; đổi NGHỀ thì Equipment phải về rỗng cùng lúc, cùng nghề thì giữ nguyên Equipment.
+      // Đổi NGHỀ còn phải cách lần đổi trước ≥ 24 giờ (giờ máy chủ) và ghi ClassChangedAt = request.time. [RULES] khớp CONFIG.CLASS_CHANGE_HOURS.
+      // Đổi kiểu nhân vật CÙNG nghề (vd Archer_F → Archer_M) không giới hạn và không đụng ClassChangedAt.
+      function validCharacter() {
+        let n = request.resource.data;
+        let before = resource.data.get('Character', 'Archer_F');
+        return changed().hasAny(['Character'])
+          && changed().hasOnly(['Character', 'Equipment', 'ClassChangedAt'])
+          && n.Character is string && n.Character in charKeys()
+          && (classPrefix(n.Character) == classPrefix(before)
+            ? (!('Equipment' in changed()) && !('ClassChangedAt' in changed()))
+            : (n.Equipment is map && n.Equipment.size() == 0
+              && n.ClassChangedAt == request.time
+              && (!('ClassChangedAt' in resource.data) || request.time >= resource.data.ClassChangedAt + duration.value(24, 'h'))));
+      }
+
+      // Lớp (Room, dạng '6/5'): hồ sơ cũ chưa có thì được đặt MỘT lần, phải thuộc đúng khối của tài khoản. Muốn sửa lại phải nhờ giáo viên (Console).
+      function validRoom() {
+        let n = request.resource.data;
+        return changed().hasOnly(['Room'])
+          && !('Room' in resource.data)
+          && n.Room is string
+          && n.Room.matches('^' + className + '/[0-9]{1,2}$');
+      }
+
+      function validBuy() {
+        let n = request.resource.data;
+        let o = resource.data;
+        let item = n.Enventory[n.Enventory.size() - 1];
+        return changed().hasAll(['Golds', 'Enventory'])
+          && changed().hasOnly(['Golds', 'Crystals', 'Enventory'])
+          && n.Enventory is list
+          && n.Enventory.size() == o.Enventory.size() + 1
+          && n.Enventory.hasAll(o.Enventory)
+          && validItemId(item)
+          && !(item in o.Enventory)
+          && n.Golds is int && n.Golds >= 0
+          && n.Golds == o.Golds - goldPriceOf(item)
+          && n.Crystals is int && n.Crystals >= 0
+          && n.Crystals == o.Crystals - crystalPriceOf(item);
+      }
+
+      allow get: if isStudentIdentity()
+        && resource.data.UID == request.auth.uid
+        && !('Password' in resource.data);
+      allow list: if false;
+
+      allow create: if isStudentIdentity()
+        && request.resource.data.UID == request.auth.uid
+        && request.resource.data.Username == username
+        && request.resource.data.Class == className
+        && request.resource.data.Nickname is string
+        && request.resource.data.Nickname.size() >= 2
+        && request.resource.data.Nickname.size() <= 16
+        && request.resource.data.Room is string
+        && request.resource.data.Room.matches('^' + className + '/[0-9]{1,2}$')
+        && request.resource.data.Golds == 0
+        && request.resource.data.Crystals == 0
+        && request.resource.data.LV == 1
+        && request.resource.data.EXP == 0
+        && request.resource.data.Equipment is map
+        && request.resource.data.Equipment.size() == 0
+        && request.resource.data.Enventory is list
+        && request.resource.data.Enventory.size() == 0
+        && request.resource.data.progress is map
+        && request.resource.data.progress.size() == 0
+        && request.resource.data.keys().hasOnly([
+          'UID', 'Username', 'Class', 'Nickname', 'Golds', 'Crystals',
+          'LV', 'EXP', 'Equipment', 'Enventory', 'progress', 'Room'
+        ]);
+
+      // Nhận phiếu thưởng xếp hạng: cộng đúng số Gold trên phiếu (rewards/<UID>/vouchers/<id>), phiếu phải được đánh dấu đã nhận
+      // CÙNG transaction (getAfter) và chưa nhận trước đó (get) → mỗi phiếu chỉ nhận một lần.
+      function validClaim() {
+        let n = request.resource.data;
+        let o = resource.data;
+        let v = /databases/$(database)/documents/rewards/$(request.auth.uid)/vouchers/$(n.LastClaim);
+        let vd = get(v).data;
+        return changed().hasOnly(['Golds', 'Crystals', 'Enventory', 'LastClaim'])
+          && n.LastClaim is string && n.LastClaim.size() <= 80
+          && vd.Claimed == false
+          && getAfter(v).data.Claimed == true
+          && n.Golds == o.Golds + vd.get('Gold', 0)
+          && n.Crystals == o.Crystals + vd.get('Crystals', 0)
+          && itemClaimOk(o, n, vd);
+      }
+      // Phiếu có ItemId: thêm đúng trang bị đó vào Enventory (nếu chưa có); không có ItemId: Enventory giữ nguyên.
+      function itemClaimOk(o, n, vd) {
+        return !('ItemId' in vd)
+          ? n.Enventory == o.Enventory
+          : (validItemId(vd.ItemId)
+            && (vd.ItemId in o.Enventory ? n.Enventory == o.Enventory : n.Enventory == o.Enventory.concat([vd.ItemId])));
+      }
+
+      allow update: if isStudentIdentity()
+        && resource.data.UID == request.auth.uid
+        && !('Password' in resource.data)
+        && (validRun() || validEquip() || validBuy() || validCharacter() || validRoom() || validClaim());
+
+      allow delete: if false;
+    }
+
+    // Bảng xếp hạng THEO TUẦN theo khối: leaderboards/{khối}/entries/{UID}. Chỉ chứa nickname + lớp (Room) + cấp + điểm tuần (không có tên đăng nhập).
+    // Học sinh của khối được ĐỌC (truy vấn bắt buộc có limit ≤ 1000; game chỉ dùng limit 10 cho top 10 của LỚP, bảng khối đang tắt, không còn truy vấn đếm hạng);
+    // chỉ chủ UID được ghi, và CHỈ cùng lúc ghi hồ sơ nhận thưởng (profile.LastReward == request.time) nên chịu cùng giới hạn 20s/lượt.
+    // Mỗi lần ghi chỉ được tăng điểm 1 bước hợp lý (+1 ải; kỷ lục hầm ngục ≤ 1000). Chống gian lận mức cơ bản (Plan 10.4).
+    match /leaderboards/{grade}/entries/{uid} {
+      function gradeOk() {
+        return request.auth != null
+          && grade in ['6', '7', '8', '9']
+          && request.auth.token.email.matches('.*[.]' + grade + '@students[.]rpg-game[.]example');
+      }
+      // [RULES] Đầu tuần = thứ Hai 07:00 giờ VN = 00:00 UTC thứ Hai (mốc 1970-01-05 = 345600000 ms, tuần = 604800000 ms). Khớp Rank.weekStart().
+      function weekStart() {
+        return math.floor((request.time.toMillis() - 345600000) / 604800000) * 604800000 + 345600000;
+      }
+      function profileAfter() {
+        return getAfter(/databases/$(database)/documents/accounts/$(grade)/users/$(request.auth.token.email.split('[.]')[0])).data;
+      }
+      function entryShape() {
+        let n = request.resource.data;
+        let p = profileAfter();
+        return n.keys().hasOnly(['Nickname', 'Room', 'LV', 'WeekStart', 'WeekClears', 'Dung1Week', 'Dung2Week', 'UpdatedAt', 'PrevWeekStart', 'PrevWeekClears', 'PrevDung1', 'PrevDung2'])
+          && n.keys().hasAll(['Nickname', 'Room', 'LV', 'WeekStart', 'WeekClears', 'Dung1Week', 'Dung2Week', 'UpdatedAt'])
+          && n.Nickname == p.Nickname && n.Room == p.Room && n.LV == p.LV
+          && n.WeekStart == weekStart()
+          && n.WeekClears is int && n.WeekClears >= 0
+          && n.Dung1Week is int && n.Dung1Week >= 0 && n.Dung1Week <= 1000
+          && n.Dung2Week is int && n.Dung2Week >= 0 && n.Dung2Week <= 1000
+          && n.UpdatedAt == request.time
+          && p.LastReward == request.time;
+      }
+
+      // Điểm TUẦN TRƯỚC (PrevWeekStart/PrevWeekClears/PrevDung1/PrevDung2): khi sang tuần mới, bản ghi cũ được chép vào các trường Prev*
+      // để trang admin chốt thưởng được cả khi học sinh đã chơi sang tuần mới. Phải đúng bằng điểm tuần cũ trong bản ghi hiện có.
+      function prevOk() {
+        let n = request.resource.data;
+        let o = resource.data;
+        return o.WeekStart == n.WeekStart
+          ? (n.get('PrevWeekStart', 0) == o.get('PrevWeekStart', 0)
+            && n.get('PrevWeekClears', 0) == o.get('PrevWeekClears', 0)
+            && n.get('PrevDung1', 0) == o.get('PrevDung1', 0)
+            && n.get('PrevDung2', 0) == o.get('PrevDung2', 0))
+          : (n.get('PrevWeekStart', 0) == o.WeekStart
+            && n.get('PrevWeekClears', 0) == o.get('WeekClears', 0)
+            && n.get('PrevDung1', 0) == o.get('Dung1Week', 0)
+            && n.get('PrevDung2', 0) == o.get('Dung2Week', 0));
+      }
+
+      allow get: if gradeOk() || isAdmin();
+      allow list: if (gradeOk() && request.query.limit <= 1000) || isAdmin();
+
+      allow create: if gradeOk() && uid == request.auth.uid && entryShape()
+        && !('PrevWeekStart' in request.resource.data)
+        && request.resource.data.WeekClears <= 1;
+
+      // Cùng tuần: điểm không giảm, số ải tăng tối đa 1. Sang tuần mới: bắt đầu lại (số ải tối đa 1). Bản ghi cũ có thể thiếu trường → get(..., 0).
+      allow update: if gradeOk() && uid == request.auth.uid && entryShape() && prevOk()
+        && (resource.data.WeekStart == request.resource.data.WeekStart
+          ? (request.resource.data.WeekClears >= resource.data.WeekClears
+            && request.resource.data.WeekClears <= resource.data.WeekClears + 1
+            && request.resource.data.Dung1Week >= resource.data.get('Dung1Week', 0)
+            && request.resource.data.Dung2Week >= resource.data.get('Dung2Week', 0))
+          : request.resource.data.WeekClears <= 1);
+
+      allow delete: if false;
+    }
+
+    // Phiếu thưởng xếp hạng: rewards/<UID>/vouchers/<id>. Chỉ quản trị TẠO (create, không ghi đè được); chủ UID ĐỌC và đánh dấu đã nhận
+    // đúng một lần, cùng transaction cộng Gold vào hồ sơ (xem validClaim ở trên). Trần mỗi phiếu 5000 Gold.
+    match /rewards/{ruid}/vouchers/{vid} {
+      function owner() { return request.auth != null && request.auth.uid == ruid; }
+      allow get: if owner() || isAdmin();
+      allow list: if owner() || isAdmin();
+
+      // Phiếu có thể gồm Gold (≤ 5000), Crystals (≤ 50) và/hoặc ItemId (ID trang bị); phải có ít nhất một phần thưởng.
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['Title', 'Gold', 'Crystals', 'ItemId', 'WeekStart', 'Board', 'Claimed', 'CreatedAt'])
+        && request.resource.data.keys().hasAll(['Title', 'WeekStart', 'Board', 'Claimed', 'CreatedAt'])
+        && request.resource.data.Title is string && request.resource.data.Title.size() <= 120
+        && request.resource.data.get('Gold', 0) is int && request.resource.data.get('Gold', 0) >= 0 && request.resource.data.get('Gold', 0) <= 5000
+        && request.resource.data.get('Crystals', 0) is int && request.resource.data.get('Crystals', 0) >= 0 && request.resource.data.get('Crystals', 0) <= 50
+        && (!('ItemId' in request.resource.data) || (request.resource.data.ItemId is string && request.resource.data.ItemId.matches('^[a-z][a-z0-9_]{2,40}$')))
+        && (request.resource.data.get('Gold', 0) > 0 || request.resource.data.get('Crystals', 0) > 0 || 'ItemId' in request.resource.data)
+        && request.resource.data.WeekStart is int
+        && request.resource.data.Board is string && request.resource.data.Board.size() <= 40
+        && request.resource.data.Claimed == false
+        && request.resource.data.CreatedAt == request.time;
+
+      allow update: if owner()
+        && resource.data.Claimed == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['Claimed', 'ClaimedAt'])
+        && request.resource.data.Claimed == true
+        && request.resource.data.ClaimedAt == request.time
+        && request.auth.token.email.matches('.*@students[.]rpg-game[.]example')
+        && getAfter(/databases/$(database)/documents/accounts/$(request.auth.token.email.split('[.]')[1].split('@')[0])/users/$(request.auth.token.email.split('[.]')[0])).data.LastClaim == vid;
+
+      allow delete: if false;
+    }
+
+    // ===== Boss Raid (games/boss-battle.js; hằng số khớp CONFIG.RAID trong js/config.js — sửa cả hai nơi rồi Publish lại rules) =====
+    // raids/<khối>_<yyyymmdd>_<slot> với slot 1 = Boss 1, slot 2 = Boss 2:
+    //   { MaxHP, Damage, Players, Slot, CreatedAt, StartAt?, DefeatedAt? }  (StartAt/DefeatedAt = giờ MÁY CHỦ)
+    // raids/<id>/players/<UID> = { Nickname, Damage, LastFlush }: sát thương cộng dồn của từng người (xếp hạng top 10).
+    // Luồng: Boss 1 được tạo bởi người đầu tiên bấm vào trong 19:00–21:00 VN (chưa có StartAt = phòng chờ); người thứ 5 vào thì ghi StartAt = request.time (Boss bắt đầu).
+    // Boss kéo dài 15 phút kể từ StartAt (thêm 3 phút gia hạn cho lượt gửi sát thương cuối). Hạ Boss: người nào phát hiện Damage >= MaxHP ghi DefeatedAt.
+    // Boss 2 chỉ được tạo SAU Boss 1 kết thúc (DefeatedAt hoặc StartAt+15') cộng 5 phút, trước 22:30 VN, và có StartAt = giờ tạo. Boss đã mở thì chạy nốt kể cả quá 21:00.
+    // Chống gian lận cơ bản: mỗi lần chỉ cộng ≤ 60000, cách nhau ≥ 105s, Damage của Boss chỉ tăng ĐÚNG bằng phần tăng của người gửi (getAfter, cùng batch),
+    // Players chỉ tăng 1 mỗi lần và chỉ cùng lúc tạo tài liệu người chơi, tối đa 70. Không chặn được người sửa mã gửi đúng mức trần mỗi lần.
+    match /raids/{raidId} {
+      function parts() { return raidId.split('_'); }
+      function raidGrade() { return parts()[0]; }
+      function slot() { return parts()[2]; }
+      function isStudentOfRaid() {
+        return request.auth != null
+          && parts().size() == 3
+          && raidGrade() in ['6', '7', '8', '9']
+          && slot() in ['1', '2']
+          && request.auth.token.email.matches('.*[.]' + raidGrade() + '@students[.]rpg-game[.]example');
+      }
+      function dayInt() { return request.time.year() * 10000 + request.time.month() * 100 + request.time.day(); }
+      function isToday() { return int(parts()[1]) == dayInt(); }
+      function minuteOfDay() { return request.time.hours() * 60 + request.time.minutes(); }
+      // [RULES] LỊCH RAID — khớp CONFIG.RAID.SCHEDULE (js/config.js). Khóa ở đây là dayOfWeek(): 1 = Thứ Hai … 7 = Chủ Nhật
+      // (= khóa của config trừ 1: config 2 = Thứ Hai → rules 1). UTC cùng ngày với giờ VN trong khung 19:00–22:30 VN. Mặc định:
+      // T2, T3, T5, T7 → khối 7 · T4, T6 → khối 6 và 8 · Chủ nhật → khối 9.
+      function scheduledGrades() {
+        return { 1: ['7'], 2: ['7'], 3: ['6', '8'], 4: ['7'], 5: ['6', '8'], 6: ['7'], 7: ['9'] }.get(request.time.dayOfWeek(), []);
+      }
+      function isScheduled() { return raidGrade() in scheduledGrades(); }
+      // [RULES] cửa kích hoạt Boss 1: 19:00–21:00 VN = phút 720–840 UTC (CONFIG.RAID.OPEN_MIN / CLOSE_MIN).
+      function openNow() { return minuteOfDay() >= 720 && minuteOfDay() < 840; }
+      // [RULES] Boss 2 chỉ bắt đầu trước 22:30 VN = phút 930 UTC (CONFIG.RAID.LATEST_START_MIN).
+      function boss2NotTooLate() { return minuteOfDay() < 930; }
+      // [RULES] HP tối đa Boss mỗi khối — khớp CONFIG.RAID.BOSS_HP.
+      function bossMax() { return { '6': 100000, '7': 100000, '8': 100000, '9': 100000 }[raidGrade()]; }
+      // [RULES] thời gian Boss: 15 phút (CONFIG.RAID.BOSS_MIN); lượt gửi cuối còn được nhận đến 18 phút (BOSS_MIN + GRACE_MIN); Boss 2 sau Boss 1 5 phút (BOSS2_DELAY_MIN).
+      function bossPath() { return /databases/$(database)/documents/raids/$(raidId); }
+      function boss1Path() { return /databases/$(database)/documents/raids/$(raidGrade() + '_' + parts()[1] + '_1'); }
+      function playerPath() { return /databases/$(database)/documents/raids/$(raidId)/players/$(request.auth.uid); }
+      // Boss 1 đã kết thúc ≥ 5 phút trước thời điểm hiện tại (mốc kết thúc = DefeatedAt nếu đã hạ, ngược lại StartAt + 15 phút).
+      function boss1EndedLongEnough() {
+        let b1 = get(boss1Path()).data;
+        return 'StartAt' in b1
+          && request.time >= (('DefeatedAt' in b1) ? b1.DefeatedAt : b1.StartAt + duration.value(15, 'm')) + duration.value(5, 'm');
+      }
+
+      allow get: if isAdmin() || isStudentOfRaid();
+      allow list: if isAdmin();
+
+      // Tạo Boss: người đầu tiên (kèm tài liệu người chơi của chính mình trong cùng batch). Boss 2 có StartAt = giờ tạo.
+      allow create: if isStudentOfRaid() && isToday() && isScheduled()
+        && request.resource.data.keys().hasOnly(['MaxHP', 'Damage', 'Players', 'Slot', 'CreatedAt', 'StartAt'])
+        && request.resource.data.keys().hasAll(['MaxHP', 'Damage', 'Players', 'Slot', 'CreatedAt'])
+        && request.resource.data.MaxHP == bossMax()
+        && request.resource.data.Damage == 0
+        && request.resource.data.Players == 1
+        && request.resource.data.Slot == int(slot())
+        && request.resource.data.CreatedAt == request.time
+        && existsAfter(playerPath())
+        && (slot() == '1'
+          ? (openNow() && !('StartAt' in request.resource.data))
+          : (boss2NotTooLate() && request.resource.data.StartAt == request.time && boss1EndedLongEnough()));
+
+      allow update: if isStudentOfRaid() && isToday() && isScheduled() && (joinOk() || flushOk() || defeatOk());
+
+      // (1) Vào Boss: Players + 1 (≤ 70) cùng lúc tạo tài liệu người chơi. Phòng chờ (chưa có StartAt): trong cửa 19–21h; người thứ 5 ghi StartAt = request.time.
+      //     Boss đang chạy (đã có StartAt): trong 15 phút, chưa hạ.
+      function joinOk() {
+        let o = resource.data;
+        let n = request.resource.data;
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['Players', 'StartAt'])
+          && n.Players == o.Players + 1 && n.Players <= 70
+          && !exists(playerPath()) && existsAfter(playerPath())
+          && ('StartAt' in o
+            ? (!('StartAt' in request.resource.data.diff(resource.data).affectedKeys())
+              && request.time < o.StartAt + duration.value(15, 'm')
+              && !('DefeatedAt' in o) && o.Damage < o.MaxHP)
+            : (openNow() && (n.Players >= 5 ? n.StartAt == request.time : !('StartAt' in n))));
+      }
+      // (2) Gửi sát thương: Damage tăng ≤ 60000, bằng đúng phần tăng của người gửi; trong 15 phút + 3 phút gia hạn kể từ StartAt.
+      function flushOk() {
+        let o = resource.data;
+        let n = request.resource.data;
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['Damage'])
+          && 'StartAt' in o
+          && request.time < o.StartAt + duration.value(18, 'm')
+          && n.Damage is int && n.Damage > o.Damage && n.Damage - o.Damage <= 60000
+          && getAfter(playerPath()).data.Damage - get(playerPath()).data.Damage == n.Damage - o.Damage;
+      }
+      // (3) Ghi mốc Boss bị hạ: chỉ khi Damage >= MaxHP, chưa có DefeatedAt, trong thời gian của Boss.
+      function defeatOk() {
+        let o = resource.data;
+        let n = request.resource.data;
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['DefeatedAt'])
+          && 'StartAt' in o && !('DefeatedAt' in o)
+          && o.Damage >= o.MaxHP
+          && n.DefeatedAt == request.time
+          && request.time < o.StartAt + duration.value(18, 'm');
+      }
+
+      allow delete: if false;
+
+      match /players/{puid} {
+        allow get: if isAdmin() || isStudentOfRaid();
+        allow list: if isAdmin() || (isStudentOfRaid() && request.query.limit <= 10);
+
+        // Tạo tài liệu người chơi: chỉ cùng batch với việc Boss tăng Players đúng 1 (hoặc Boss được tạo với Players = 1).
+        allow create: if isStudentOfRaid() && puid == request.auth.uid && isToday() && isScheduled()
+          && request.resource.data.keys().hasOnly(['Nickname', 'Damage', 'LastFlush'])
+          && request.resource.data.keys().hasAll(['Nickname', 'Damage', 'LastFlush'])
+          && request.resource.data.Nickname is string
+          && request.resource.data.Nickname.size() >= 2 && request.resource.data.Nickname.size() <= 16
+          && request.resource.data.Damage == 0
+          && request.resource.data.LastFlush == request.time
+          && (exists(bossPath())
+            ? getAfter(bossPath()).data.Players == get(bossPath()).data.Players + 1
+            : getAfter(bossPath()).data.Players == 1);
+
+        // Gửi sát thương: ≤ 60000 mỗi lần, cách nhau ≥ 105s, trong thời gian của Boss (StartAt + 18 phút).
+        allow update: if isStudentOfRaid() && puid == request.auth.uid && isToday() && isScheduled()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['Damage', 'LastFlush'])
+          && 'StartAt' in get(bossPath()).data
+          && request.time < get(bossPath()).data.StartAt + duration.value(18, 'm')
+          && request.resource.data.Damage is int
+          && request.resource.data.Damage > resource.data.Damage
+          && request.resource.data.Damage - resource.data.Damage <= 60000
+          && request.resource.data.LastFlush == request.time
+          && request.time >= resource.data.LastFlush + duration.value(105, 's');
+
+        allow delete: if false;
+      }
+    }
+
+    // ===== RANKED (games/ranked.js; hằng số khớp CONFIG.RANKED trong js/config.js) =====
+    // ranked/<khối>_<số lớp> (vd ranked/6_5): MỘT tài liệu cho mỗi lớp, mỗi học sinh một trường mang UID của mình:
+    //   { <UID>: { N, Lv, Ch, Eq, Pt, D, Cnt, Win, LS, B } }  — N tên, Lv cấp, Ch nhân vật, Eq trang bị, Pt điểm, D ngày VN (yyyymmdd),
+    //   Cnt số trận đã BẮT ĐẦU hôm nay, Win số trận thắng hôm nay, LS giờ bắt đầu trận gần nhất (máy chủ), B UID đối thủ của trận gần nhất.
+    // Học sinh của khối chỉ ĐỌC (get) tài liệu — KHÔNG có list/truy vấn; chỉ ghi được trường của CHÍNH MÌNH và chỉ khi lớp trong hồ sơ khớp tài liệu (+1 lượt đọc hồ sơ).
+    // Ba kiểu ghi hợp lệ: (1) đăng ký lần đầu: Pt = 10; (2) bắt đầu trận: Cnt + 1 (≤ 5/ngày, tính cả thắng và thua), LS = request.time, chọn B (có trong tài liệu);
+    // (3) báo thắng: Pt += 10 + max(0, Pt của B − Pt của mình) (phần chênh tối đa 100), Win + 1 (≤ Cnt), cách lúc bắt đầu ≥ 30s. Thua không ghi gì.
+    // KHÔNG kiểm tra được thắng thật hay không (trình duyệt tự báo): chống gian lận ở mức cơ bản bằng giới hạn 5 trận/ngày và các trần điểm.
+    match /ranked/{classKey} {
+      function kp() { return classKey.split('_'); }
+      function rkGrade() { return kp()[0]; }
+      function validKey() { return kp().size() == 2 && rkGrade() in ['6', '7', '8', '9'] && kp()[1].matches('^[0-9]{1,2}$'); }
+      function isStudentOfGrade() {
+        return request.auth != null && validKey()
+          && request.auth.token.email.matches('.*[.]' + rkGrade() + '@students[.]rpg-game[.]example');
+      }
+      // Lớp trong hồ sơ phải đúng tài liệu này (1 lượt đọc hồ sơ mỗi lần ghi).
+      function inMyRoom() {
+        let uname = request.auth.token.email.split('[.]')[0];
+        return get(/databases/$(database)/documents/accounts/$(rkGrade())/users/$(uname)).data.get('Room', '') == rkGrade() + '/' + kp()[1];
+      }
+      function me() { return request.auth.uid; }
+      // Ngày VN (UTC+7) dạng yyyymmdd — khớp Ranked.vnDay() ở trình duyệt.
+      function vnDay() {
+        let t = request.time + duration.value(7, 'h');
+        return t.year() * 10000 + t.month() * 100 + t.day();
+      }
+      // Bản chụp công khai (tên, cấp, nhân vật, trang bị) — chỉ để hiển thị/tính chỉ số đối thủ nên kiểm tra lỏng.
+      function snapOk(e) {
+        return e.N is string && e.N.size() >= 2 && e.N.size() <= 16
+          && e.Lv is int && e.Lv >= 1 && e.Lv <= 200
+          && e.Ch in ['Archer_F', 'Archer_M', 'Mage_F', 'Mage_M', 'Warrior_F', 'Warrior_M']
+          && e.Eq is map && e.Eq.size() <= 6;
+      }
+      // [RULES] điểm tặng khi đăng ký = CONFIG.RANKED.START_POINTS (10).
+      function registerOk(e) {
+        return e.keys().hasOnly(['N', 'Lv', 'Ch', 'Eq', 'Pt', 'D', 'Cnt', 'Win'])
+          && e.keys().hasAll(['N', 'Lv', 'Ch', 'Eq', 'Pt', 'D', 'Cnt', 'Win'])
+          && snapOk(e) && e.Pt == 10 && e.D == vnDay() && e.Cnt == 0 && e.Win == 0;
+      }
+      // [RULES] tối đa 5 trận/ngày = CONFIG.RANKED.DAILY_MATCHES.
+      function startOk() {
+        let o = resource.data[me()];
+        let n = request.resource.data[me()];
+        return n.keys().hasOnly(['N', 'Lv', 'Ch', 'Eq', 'Pt', 'D', 'Cnt', 'Win', 'LS', 'B'])
+          && n.keys().hasAll(['N', 'Lv', 'Ch', 'Eq', 'Pt', 'D', 'Cnt', 'Win', 'LS', 'B'])
+          && snapOk(n)
+          && n.Pt == o.Pt
+          && n.D == vnDay()
+          && (o.D == vnDay() ? (n.Cnt == o.Cnt + 1 && n.Win == o.Win) : (n.Cnt == 1 && n.Win == 0))
+          && n.Cnt <= 5
+          && n.LS == request.time
+          && n.B is string && n.B != me() && (n.B in resource.data);
+      }
+      // [RULES] điểm thắng = 10 (WIN_BASE) + min(100 (MAX_DIFF), max(0, Pt của B − Pt của mình)); báo thắng cách lúc bắt đầu ≥ 30 giây (MIN_BATTLE_SEC).
+      function winOk() {
+        let o = resource.data[me()];
+        let n = request.resource.data[me()];
+        let diff = resource.data[o.B].Pt - o.Pt;
+        let gain = 10 + (diff > 0 ? (diff > 100 ? 100 : diff) : 0);
+        return n.diff(o).affectedKeys().hasOnly(['Pt', 'Win'])
+          && ('LS' in o) && ('B' in o) && (o.B in resource.data)
+          && o.D == vnDay()
+          && n.Pt == o.Pt + gain
+          && n.Win == o.Win + 1 && n.Win <= o.Cnt
+          && request.time >= o.LS + duration.value(30, 's');
+      }
+
+      allow get: if isAdmin() || isStudentOfGrade();
+      allow list: if isAdmin();
+
+      // Tài liệu lớp được tạo bởi người đăng ký đầu tiên (chỉ có trường của chính mình).
+      allow create: if isStudentOfGrade() && inMyRoom()
+        && request.resource.data.keys().hasOnly([me()])
+        && registerOk(request.resource.data[me()]);
+
+      allow update: if isStudentOfGrade() && inMyRoom()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([me()])
+        && ((!(me() in resource.data) && registerOk(request.resource.data[me()]))
+          || ((me() in resource.data) && (startOk() || winOk())));
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

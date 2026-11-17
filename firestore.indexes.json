@@ -1,0 +1,101 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "WeekStart",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "WeekClears",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "WeekStart",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Dung1Week",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "WeekStart",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Dung2Week",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "Room",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "WeekStart",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "WeekClears",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "Room",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "WeekStart",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Dung1Week",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "Room",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "WeekStart",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Dung2Week",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
