@@ -80,9 +80,9 @@ h1{font:700 23px/1.4 "VT323",sans-serif;color:var(--gold);margin:0 0 16px;text-s
 .stage canvas{position:absolute}
 .scene{z-index:-1;inset:0;width:100%;height:100%}
 #hero,#mob{z-index:1;height:auto;image-rendering:pixelated;image-rendering:crisp-edges}
-#skill-projectile{display:none;position:absolute;z-index:2;width:clamp(72px,12vw,144px);height:auto;transform:translate(-50%,-50%);pointer-events:none;image-rendering:pixelated}
-#skill-projectile.is-flying{display:block;animation:skill-flight .48s ease-in forwards}
-@keyframes skill-flight{to{transform:translate(calc(-50% + var(--skill-x)),calc(-50% + var(--skill-y)))}}
+#skill-projectile{display:none;position:absolute;z-index:2;width:clamp(72px,12vw,144px);height:auto;transform:translate(-50%,-50%) scaleX(var(--skill-scale,1));pointer-events:none;image-rendering:pixelated}
+#skill-projectile.is-flying{display:block;animation:skill-flight .24s ease-in forwards}
+@keyframes skill-flight{to{transform:translate(calc(-50% + var(--skill-x)),calc(-50% + var(--skill-y))) scaleX(var(--skill-scale,1))}}
 #hero{left:-2%;bottom:33%;width:52%}
 #mob{right:8%;bottom:33%;width:32%}
 .player-hud{position:absolute;z-index:2;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:9px;min-height:62px;padding:6px 9px;background:rgba(16,21,21,.84);border:3px solid #d5dac2;box-shadow:inset 0 0 0 2px #535d50,3px 4px 0 rgba(0,0,0,.72)}
@@ -218,6 +218,7 @@ select.bad,.slot.bad{border-color:var(--bad);background-color:rgba(147,42,42,.55
 #screen-game #hero{width:min(29.33vw,50.67vh);max-width:50.67vw}
 #screen-game #hero{left:2%}
 #screen-game #mob{left:17.6%;right:auto;width:min(32vw,56vh);max-width:56vw}
+#screen-game #mob.ranked-opponent{width:min(29.33vw,50.67vh);max-width:50.67vw}
 #screen-game .hp{top:auto;bottom:calc(8% + min(42vh, 30vw) + 12px);left:27%;right:auto;width:12%;height:16px}
 #screen-game .qwrap{position:absolute;z-index:2;top:0;right:0;width:62%;height:100%;display:flex;flex-direction:column;overflow:auto;padding:clamp(12px,2vw,32px) 0;background:transparent}
 #screen-game .game-back{align-self:flex-end;margin:0 2vw 12px 0}
@@ -231,6 +232,7 @@ select.bad,.slot.bad{border-color:var(--bad);background-color:rgba(147,42,42,.55
   #screen-game #hero{width:min(80vw,50.67vh);max-width:80vw}
   #screen-game #hero{left:0}
   #screen-game #mob{left:12%;right:auto;width:min(88vw,56vh);max-width:88vw}
+  #screen-game #mob.ranked-opponent{width:min(80vw,50.67vh);max-width:80vw}
   #screen-game .hp{bottom:calc(6% + min(42vh, 30vw) + 8px);left:25%;width:14%;height:12px}
   #screen-game .qwrap{width:62%;padding:8px 0}
   #screen-game .game-back{min-height:38px;padding:5px 9px;margin:0 8px 8px 0}

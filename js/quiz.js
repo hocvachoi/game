@@ -90,7 +90,7 @@ const Quiz = {
     return { node, check, mark, solution, lock: () => node.classList.add('locked') };
   },
 
-  // Chạy một lượt làm bài. cb.result(correct, soFar, total, answered) trả về true (người chơi gục) hoặc số ms khóa nút.
+  // Chạy một lượt làm bài. cb.result(correct, soFar, total, answered) trả về true (người chơi gục), ms hoặc Promise để khóa nút.
   // cb.begin(index, headEl) gọi mỗi khi hiện câu mới (dùng cho đồng hồ). cb.loop = true: hết câu thì xáo lại và làm tiếp (Dungeon).
   // cb.finish({correct,total,answered,playerDefeated?}). Trả về { end(extra) } để kết thúc lượt từ bên ngoài (hết giờ bị hạ gục).
   run(qs, box, cb) {
@@ -125,6 +125,15 @@ const Quiz = {
         if (Number.isFinite(action) && action > 0) {
           btn.disabled = true;
           setTimeout(() => { if (btn.isConnected) btn.disabled = false; }, action);
+        } else if (action && typeof action.then === 'function') {
+          btn.disabled = true;
+          action.then(
+            () => { if (btn.isConnected) btn.disabled = false; },
+            error => {
+              console.error('Quiz result action failed:', error);
+              if (btn.isConnected) btn.disabled = false;
+            }
+          );
         }
       };
     };

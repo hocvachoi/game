@@ -2,6 +2,7 @@
   "name": "Undead Knight",
   "attackStyle": "melee",
   "Type": "Epic",
+  "Class":"Warrior",
   "stats": {
     "HP": 500,
     "ATK": 70,

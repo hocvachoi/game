@@ -290,6 +290,13 @@ const Player = {
       return { fields };
     });
     this.syncCharacter();
+    if (typeof Ranked !== 'undefined') {
+      try { await Ranked.syncCharacterSnapshot(true); }
+      catch (error) {
+        console.error('Ranked character snapshot sync failed:', error);
+        throw new Error(`Đã lưu nhân vật nhưng chưa đồng bộ được nhân vật Ranked: ${error.message || 'lỗi không rõ'}`);
+      }
+    }
   },
   // Thời gian còn lại (ms) trước khi được đổi nghề lần nữa — tính ở trình duyệt từ mốc đã có trong hồ sơ, KHÔNG tốn lượt đọc.
   classCooldownLeft() { return Math.max(0, (this.data.classChangedAt || 0) + CONFIG.CLASS_CHANGE_HOURS * 3600 * 1000 - Date.now()); },

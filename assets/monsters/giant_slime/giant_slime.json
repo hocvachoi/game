@@ -2,6 +2,7 @@
   "name": "Slime Khổng Lồ",
   "attackStyle": "melee",
   "Type": "Normal",
+  "Class":"Warrior",
   "stats": {
     "HP": 100,
     "ATK": 30,

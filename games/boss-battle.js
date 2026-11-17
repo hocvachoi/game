@@ -285,10 +285,13 @@ const Raid = {
     let hits = 0;
     while (Date.now() >= this.nextCounterAt && hits < 5 && !fight.downed) {
       this.nextCounterAt += R.COUNTER_SEC * 1000; hits++;
-      Stage.fx(false);
-      const hit = A.monsterHit(fight);
-      A.note(`${this.boss.name} phản công: ${hit.crit ? 'CHÍ MẠNG! ' : ''}-${hit.damage} HP.`);
-      if (fight.playerHp === 0) this.down(fight);
+      const hit = A.monsterHit(fight, false);
+      Stage.fx(false, 0, 0, () => {
+        if (!this.running || A.combat !== fight || fight.finished || fight.downed) return;
+        A.applyMonsterHit(fight, hit);
+        A.note(`${this.boss.name} phản công: ${hit.crit ? 'CHÍ MẠNG! ' : ''}-${hit.damage} HP.`);
+        if (fight.playerHp === 0) this.down(fight);
+      });
     }
     if (Date.now() >= this.nextCounterAt) this.nextCounterAt = Date.now() + R.COUNTER_SEC * 1000;   // bỏ lỡ quá 5 lần: bỏ phần còn lại
     const left = Math.max(0, Math.ceil((this.nextCounterAt - Date.now()) / 1000));
@@ -299,19 +302,34 @@ const Raid = {
     const A = Adventure, fight = A.combat;
     A.stopTimer();
     if (!fight || fight.finished) return true;
-    Stage.fx(correct, sofar, total);
-    if (!correct) return A.afterMonsterHit(fight, A.monsterHit(fight), 'trả lời sai');
+    if (!correct) {
+      const hit = A.monsterHit(fight, false);
+      const impact = Stage.fx(false, sofar, total, () => {
+        if (!this.running || A.combat !== fight || fight.finished) return;
+        A.applyMonsterHit(fight, hit);
+        const action = A.afterMonsterHit(fight, hit, 'trả lời sai');
+        if (action === true) A.quizCtl.end({ playerDefeated: true });
+      });
+      if (fight.playerHp <= hit.damage) {
+        const reviveMs = this.R().REVIVE_SEC * 1000;
+        return impact.then(() => new Promise(resolve => setTimeout(resolve, reviveMs)));
+      }
+      return impact;
+    }
     const base = Math.max(1, fight.playerStats.ATK - A.monsterStat('DEF'));
     const bonus = A.equipmentEffect('increasedmg');
     const crit = A.roll(fight.playerStats.CRIT);
     let damage = Math.max(1, Math.round(base * (1 + bonus / 100) * this.damageMult()));   // thiếu người → tăng sát thương
     if (crit) damage *= 2;
-    damage = Math.min(damage, this.remaining());
-    this.pending += damage; fight.damageDealt += damage;
-    A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương.`);
-    this.drawHp();
-    if (this.remaining() <= 0) { Stage.defeat(); this.end('boss'); }
-    return false;
+    const impact = Stage.fx(true, sofar, total, () => {
+      if (!this.running || A.combat !== fight || fight.finished) return;
+      const applied = Math.min(damage, this.remaining());
+      this.pending += applied; fight.damageDealt += applied;
+      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${applied} sát thương.`);
+      this.drawHp();
+      if (this.remaining() <= 0) { Stage.defeat(); this.end('boss'); }
+    });
+    return impact;
   },
   // Người chơi hết HP: không kết thúc, hồi sinh sau REVIVE_SEC giây (Plan 5.2).
   down(fight) {

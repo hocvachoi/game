@@ -51,6 +51,20 @@ const Ranked = {
     });
     this.at = Date.now();
   },
+  async syncCharacterSnapshot(force = false) {
+    if (!FirebaseService.configured || !Player.uid || !Player.data || !Player.data.room) return;
+    const uid = Player.uid, key = CONFIG.character().key;
+    if (!force && this.doc && this.doc[uid] && this.doc[uid].Ch === key) return;
+    const ref = this.ref();
+    await FirebaseService.db.runTransaction(async t => {
+      const snap = await t.get(ref), data = snap.exists ? snap.data() : {}, entry = data[uid];
+      if (!entry || entry.Ch === key) { this.doc = data; return; }
+      const next = { ...entry, Ch: key };
+      t.update(ref, { [uid]: next });
+      this.doc = { ...data, [uid]: next };
+    });
+    this.at = Date.now();
+  },
 
   // ----- màn Ranked (hộp thoại) -----
   async open() {
@@ -65,6 +79,7 @@ const Ranked = {
     try {
       await this.load(false);
       if (!this.doc[Player.uid]) { status.textContent = 'Đang đăng ký Ranked…'; await this.register(); }
+      await this.syncCharacterSnapshot();
       this.render();
     } catch (e) {
       console.error('Ranked open failed:', e);
@@ -132,8 +147,8 @@ const Ranked = {
   // Đối thủ B như một "quái": chỉ số tính từ bản chụp (cấp + nghề/nhân vật + trang bị), sprite là sprite nhân vật của B (lật ngang).
   monsterFrom(b) {
     const def = CONFIG.CHARACTERS[b.Ch] || CONFIG.character(), s = Player.statsOf(b.Lv, def.key, b.Eq);
-    return { key: 'rk_' + def.key, name: b.N, type: 'Ranked', flip: true, attackStyle: def.attackStyle,
-      stats: { HP: s.HP, ATK: s.ATK, DEF: s.DEF, CRIT: s.CRIT }, sprites: { idle: def.idle, attack: def.attack } };
+    return { key: 'rk_' + def.key, name: b.N, type: 'Ranked', flip: true, attackStyle: def.attackStyle, castSkill: def.castSkill,
+      stats: { HP: s.HP, ATK: s.ATK, DEF: s.DEF, CRIT: s.CRIT }, sprites: { idle: def.idle, attack: def.attack, skill: def.skill } };
   },
 
   // ----- chiến đấu (dùng lại Adventure/Stage/Quiz) -----
@@ -159,22 +174,31 @@ const Ranked = {
     const A = Adventure, fight = A.combat;
     A.stopTimer();
     if (!fight || fight.finished) return true;
-    Stage.fx(correct, sofar, total);
-    if (!correct) return A.afterMonsterHit(fight, A.monsterHit(fight), 'trả lời sai');   // HP về 0 → trả về true → thua
+    if (!correct) {
+      const hit = A.monsterHit(fight, false);
+      return Stage.fx(false, sofar, total, () => {
+        if (!A.active || A.combat !== fight || fight.finished) return;
+        A.applyMonsterHit(fight, hit);
+        const action = A.afterMonsterHit(fight, hit, 'trả lời sai');
+        if (action === true) A.quizCtl.end({ playerDefeated: true });
+      });
+    }
     const base = Math.max(1, fight.playerStats.ATK - A.monsterStat('DEF'));
     const bonus = A.equipmentEffect('increasedmg');
     const crit = A.roll(fight.playerStats.CRIT);
     let damage = Math.max(1, Math.round(base * (1 + bonus / 100)));
     if (crit) damage *= 2;
-    fight.monsterHp = Math.max(0, fight.monsterHp - damage);
-    A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương.`);
-    Stage.hp(fight.monsterHp / fight.maxMonsterHp, fight.monsterHp, fight.maxMonsterHp);
-    if (fight.monsterHp === 0) {   // B hết HP → THẮNG, kết thúc trận ngay
-      fight.finished = true; this.won = true;
-      Stage.defeat();
-      A.quizCtl.end({ rankedWin: true });
-    }
-    return false;
+    return Stage.fx(true, sofar, total, () => {
+      if (!A.active || A.combat !== fight || fight.finished) return;
+      fight.monsterHp = Math.max(0, fight.monsterHp - damage);
+      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương.`);
+      Stage.hp(fight.monsterHp / fight.maxMonsterHp, fight.monsterHp, fight.maxMonsterHp);
+      if (fight.monsterHp === 0) {
+        fight.finished = true; this.won = true;
+        Stage.defeat();
+        A.quizCtl.end({ rankedWin: true });
+      }
+    });
   },
   async finish(res, box) {
     const A = Adventure;

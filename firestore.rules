@@ -474,8 +474,8 @@ service cloud.firestore {
     //   { <UID>: { N, Lv, Ch, Eq, Pt, D, Cnt, Win, LS, B } }  — N tên, Lv cấp, Ch nhân vật, Eq trang bị, Pt điểm, D ngày VN (yyyymmdd),
     //   Cnt số trận đã BẮT ĐẦU hôm nay, Win số trận thắng hôm nay, LS giờ bắt đầu trận gần nhất (máy chủ), B UID đối thủ của trận gần nhất.
     // Học sinh của khối chỉ ĐỌC (get) tài liệu — KHÔNG có list/truy vấn; chỉ ghi được trường của CHÍNH MÌNH và chỉ khi lớp trong hồ sơ khớp tài liệu (+1 lượt đọc hồ sơ).
-    // Ba kiểu ghi hợp lệ: (1) đăng ký lần đầu: Pt = 10; (2) bắt đầu trận: Cnt + 1 (≤ 5/ngày, tính cả thắng và thua), LS = request.time, chọn B (có trong tài liệu);
-    // (3) báo thắng: Pt += 10 + max(0, Pt của B − Pt của mình) (phần chênh tối đa 100), Win + 1 (≤ Cnt), cách lúc bắt đầu ≥ 30s. Thua không ghi gì.
+    // Bốn kiểu ghi hợp lệ: (1) đăng ký lần đầu: Pt = 10; (2) bắt đầu trận: Cnt + 1 (≤ 5/ngày), LS = request.time, chọn B;
+    // (3) báo thắng theo công thức điểm; (4) chỉ đồng bộ Ch với Character của hồ sơ. Thua không ghi điểm.
     // KHÔNG kiểm tra được thắng thật hay không (trình duyệt tự báo): chống gian lận ở mức cơ bản bằng giới hạn 5 trận/ngày và các trần điểm.
     match /ranked/{classKey} {
       function kp() { return classKey.split('_'); }
@@ -502,6 +502,16 @@ service cloud.firestore {
           && e.Lv is int && e.Lv >= 1 && e.Lv <= 200
           && e.Ch in ['Archer_F', 'Archer_M', 'Mage_F', 'Mage_M', 'Warrior_F', 'Warrior_M']
           && e.Eq is map && e.Eq.size() <= 6;
+      }
+      function savedCharacter() {
+        let uname = request.auth.token.email.split('[.]')[0];
+        return get(/databases/$(database)/documents/accounts/$(rkGrade())/users/$(uname)).data.get('Character', 'Archer_F');
+      }
+      function characterSyncOk() {
+        let old = resource.data[me()];
+        let next = request.resource.data[me()];
+        return next.diff(old).affectedKeys().hasOnly(['Ch'])
+          && snapOk(next) && next.Ch == savedCharacter();
       }
       // [RULES] điểm tặng khi đăng ký = CONFIG.RANKED.START_POINTS (10).
       function registerOk(e) {
@@ -548,7 +558,7 @@ service cloud.firestore {
       allow update: if isStudentOfGrade() && inMyRoom()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([me()])
         && ((!(me() in resource.data) && registerOk(request.resource.data[me()]))
-          || ((me() in resource.data) && (startOk() || winOk())));
+          || ((me() in resource.data) && (startOk() || winOk() || characterSyncOk())));
 
       allow delete: if false;
     }

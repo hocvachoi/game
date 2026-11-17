@@ -114,15 +114,19 @@ const Adventure = {
   },
 
   // Quái đánh người chơi: sát thương = max(1, ATK - DEF) giảm theo hiệu ứng giáp, CRIT nhân đôi.
-  monsterHit(fight) {
+  monsterHit(fight, apply = true) {
     const base = Math.max(1, this.monsterStat('ATK') - fight.playerStats.DEF);
     const reduction = Math.min(100, this.equipmentEffect('reducedmg'));
     const crit = this.roll(this.monsterStat('CRIT'));
     let damage = Math.max(0, Math.round(base * (1 - reduction / 100)));
     if (crit) damage *= 2;
-    fight.playerHp = Math.max(0, fight.playerHp - damage);
+    const hit = { damage, crit };
+    if (apply) this.applyMonsterHit(fight, hit);
+    return hit;
+  },
+  applyMonsterHit(fight, hit) {
+    fight.playerHp = Math.max(0, fight.playerHp - hit.damage);
     Stage.playerHp(fight.playerHp / fight.maxPlayerHp, fight.playerHp, fight.maxPlayerHp);
-    return { damage, crit };
   },
   // Quái hồi sinh / xuất hiện quái mới (Dungeon chọn ngẫu nhiên trong danh sách của dungeon).
   spawnNext(fight) {
@@ -141,30 +145,46 @@ const Adventure = {
     this.stopTimer();
     const fight = this.combat;
     if (!fight || fight.finished) return true;
-    Stage.fx(correct, sofar, total);
+    let damage = 0, crit = false, hit = null;
     if (correct) {
       const base = Math.max(1, fight.playerStats.ATK - this.monsterStat('DEF'));
       const bonus = this.equipmentEffect('increasedmg');
-      const crit = this.roll(fight.playerStats.CRIT);
-      let damage = Math.max(1, Math.round(base * (1 + bonus / 100)));
+      crit = this.roll(fight.playerStats.CRIT);
+      damage = Math.max(1, Math.round(base * (1 + bonus / 100)));
       if (crit) damage *= 2;
-      fight.damageDealt += Math.min(damage, fight.monsterHp);
-      fight.monsterHp = Math.max(0, fight.monsterHp - damage);
-      this.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương.`);
-      if (fight.monsterHp === 0) {
-        fight.monsterKills++;
-        Stage.hp(0, 0, fight.maxMonsterHp);
-        Stage.defeat();
-        Stage.respawnTimer = setTimeout(() => {
-          Stage.respawnTimer = null;
-          if (this.active && this.combat === fight && !fight.finished) this.spawnNext(fight);
-        }, 650);
-        return 700;
+    } else hit = this.monsterHit(fight, false);
+    const impact = Stage.fx(correct, sofar, total, () => {
+      if (!this.active || this.combat !== fight || fight.finished) return;
+      if (correct) {
+        const actualDamage = Math.min(damage, fight.monsterHp);
+        fight.damageDealt += actualDamage;
+        fight.monsterHp = Math.max(0, fight.monsterHp - damage);
+        this.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương.`);
+        if (fight.monsterHp === 0) {
+          fight.monsterKills++;
+          Stage.hp(0, 0, fight.maxMonsterHp);
+          Stage.defeat();
+          Stage.respawnTimer = setTimeout(() => {
+            Stage.respawnTimer = null;
+            if (this.active && this.combat === fight && !fight.finished) this.spawnNext(fight);
+          }, 650);
+        } else Stage.hp(fight.monsterHp / fight.maxMonsterHp, fight.monsterHp, fight.maxMonsterHp);
+        return;
       }
-      Stage.hp(fight.monsterHp / fight.maxMonsterHp, fight.monsterHp, fight.maxMonsterHp);
-      return false;
+      this.applyMonsterHit(fight, hit);
+      const action = this.afterMonsterHit(fight, hit, 'trả lời sai');
+      if (action === true) this.quizCtl.end({ playerDefeated: true });
+    });
+    if (correct) {
+      return damage >= fight.monsterHp
+        ? impact.then(() => new Promise(resolve => setTimeout(resolve, 700)))
+        : impact;
     }
-    return this.afterMonsterHit(fight, this.monsterHit(fight), 'trả lời sai');
+    if (this.raid && fight.playerHp <= hit.damage) {
+      const reviveMs = this.raid.R().REVIVE_SEC * 1000;
+      return impact.then(() => new Promise(resolve => setTimeout(resolve, reviveMs)));
+    }
+    return impact;
   },
   afterMonsterHit(fight, hit, reason) {
     this.note(`${this.monster.name} tấn công vì ${reason}: ${hit.crit ? 'CHÍ MẠNG! ' : ''}-${hit.damage} HP.`);
@@ -201,17 +221,19 @@ const Adventure = {
     const fight = this.combat;
     if (!fight || fight.finished) return true;
     if (fight.downed) return false;   // Raid: đang chờ hồi sinh, Boss không đánh thêm
-    Stage.fx(false);
-    const hit = this.monsterHit(fight);
-    label.textContent = `⏱ Hết giờ! ${this.monster.name} đánh -${hit.damage} HP${hit.crit ? ' (CHÍ MẠNG)' : ''}`;
-    if (fight.playerHp === 0 && this.raid) { this.raid.down(fight); return false; }
-    if (fight.playerHp === 0) {
-      fight.finished = true;
-      this.stopTimer();
-      Stage.playerDefeat();
-      this.quizCtl.end({ playerDefeated: true });
-      return true;
-    }
+    const hit = this.monsterHit(fight, false);
+    Stage.fx(false, 0, 0, () => {
+      if (!this.active || this.combat !== fight || fight.finished || fight.downed) return;
+      this.applyMonsterHit(fight, hit);
+      label.textContent = `⏱ Hết giờ! ${this.monster.name} đánh -${hit.damage} HP${hit.crit ? ' (CHÍ MẠNG)' : ''}`;
+      if (fight.playerHp === 0 && this.raid) { this.raid.down(fight); return; }
+      if (fight.playerHp === 0) {
+        fight.finished = true;
+        this.stopTimer();
+        Stage.playerDefeat();
+        this.quizCtl.end({ playerDefeated: true });
+      }
+    });
     return false;
   },
 
