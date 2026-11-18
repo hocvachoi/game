@@ -81,7 +81,8 @@ const Inventory = {
   },
   // Ảnh icon vật phẩm; thiếu ảnh thì hiện biểu tượng theo ô trang bị.
   icon(it) {
-    const box = el('span', 'item-icon');
+    const qk = String(it.quality || 'normal').toLowerCase();
+    const box = el('span', 'item-icon q-' + (CONFIG.QUALITIES[qk] ? qk : 'normal'));   // khung ảnh theo phẩm chất: assets/ui/<qk>_frame.png
     const fallback = () => { box.replaceChildren(el('span', 'item-icon-fallback', this.SLOT_ICON[it.slot] || '❔')); };
     if (!it.image) { fallback(); return box; }
     const img = new Image();
@@ -112,8 +113,9 @@ const Inventory = {
   },
   tagBar(container, current, onPick) {
     container.replaceChildren(...[{ id: 'all', name: 'Tất cả' }, ...CONFIG.SLOTS].map(s => {
-      const b = el('button', 'tag' + (s.id === current ? ' is-on' : ''), s.name);
+      const b = el('button', 'tag' + (s.id === current ? ' is-on' : ''));
       b.type = 'button'; b.onclick = () => onPick(s.id);
+      b.append(el('span', '', s.name));
       return b;
     }));
   },

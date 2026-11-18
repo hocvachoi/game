@@ -9,7 +9,7 @@
       "type": "Recovery",
       "value": 10
     },
-    "image": "/assets/items/helmet_legendary.png",
+    "image": "/assets/items/legend/w_warlord_helmet.png",
     "price": { "gold": 5000, "gem": 5 }
   },
   "warlord_armor": {
@@ -22,7 +22,7 @@
       "type": "Reduce DMG",
       "value": 10
     },
-    "image": "/assets/items/helmet_legendary.png",
+    "image": "/assets/items/legend/w_warlord_armor.png",
     "price": { "gold": 10000, "gem": 5 }
   },
   "warlord_sword": {
@@ -35,7 +35,7 @@
       "type": "Steal_Life",
       "value": 15
     },
-    "image": "/assets/items/sword_legendary.png",
+    "image": "/assets/items/legend/w_warlord_sword.png",
     "price": { "gold": 7000, "gem": 5 }
   },
   "warlord_ring": {
@@ -48,7 +48,33 @@
       "type": "Lucky",
       "value": 10
     },
-    "image": "/assets/items/helmet_legendary.png",
+    "image": "/assets/items/legend/w_warlord_ring.png",
+    "price": { "gold": 5000, "gem": 15 }
+  },
+  "warlord_axe": {
+    "name": "Rìu Chiến Thần",
+    "slot": "weapon",
+    "class": ["warrior"],
+    "quality": "legendary",
+    "stats": { "HP": 0, "ATK": 10, "DEF": 10,"CRIT": 10 },
+     "effect": {
+      "type": "Lucky",
+      "value": 10
+    },
+    "image": "/assets/items/legend/w_warlord_axe.png",
+    "price": { "gold": 5000, "gem": 15 }
+  },
+    "warlord_spear": {
+    "name": "Thương Chiến Thần",
+    "slot": "weapon",
+    "class": ["warrior"],
+    "quality": "legendary",
+    "stats": { "HP": 0, "ATK": 10, "DEF": 10,"CRIT": 10 },
+     "effect": {
+      "type": "Lucky",
+      "value": 10
+    },
+    "image": "/assets/items/legend/w_warlord_spear.png",
     "price": { "gold": 5000, "gem": 15 }
   },
   "iron_sword": {

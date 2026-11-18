@@ -45,9 +45,11 @@ class Character {
     if (!data.sprites || !Character.validSheet(data.sprites.idle) || !Character.validSheet(data.sprites.attack)) return 'thiếu/sai sprites.idle hoặc sprites.attack';
     if (this.needsSkill) {
       const cast = data.castSkill;
+      const aim = cast && cast.target;
       if (!data.sprites.skill || typeof data.sprites.skill.src !== 'string') return 'nhân vật tầm xa cần sprites.skill.src';
-      if (!cast || !Number.isInteger(cast.frame) || cast.frame < 0 || cast.frame >= data.sprites.attack.frames.length
-        || !Character.validPosition(cast.origin) || !Character.validPosition(cast.target)) return 'castSkill không hợp lệ';
+      if (!cast || !Number.isInteger(cast.frame) || !data.sprites.attack.frames.includes(cast.frame)
+        || !Character.validPosition(cast.origin) || !aim || !Number.isFinite(aim.x) || aim.x < 0 || aim.x > 1)
+        return 'castSkill không hợp lệ';
     }
     return null;
   }

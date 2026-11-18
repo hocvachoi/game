@@ -1,12 +1,12 @@
 // Quái vật của từng ải. Mỗi quái vật nằm trong assets/monsters/<key>/<key>.json (nguồn dữ liệu chuẩn).
 // stage_monster.json chỉ ánh xạ Stage_i -> key; quái trong Dungeon do world.json (dungeon_monsters) quy định.
 const StageMonster = {
-  FALLBACK: { key: 'undead_knight', name: 'Undead Knight', type: 'Epic',
+  FALLBACK: Monster.create({ key: 'undead_knight', Class: 'Warrior', name: 'Undead Knight', type: 'Epic',
     stats: { HP: 200, ATK: 20, DEF: 10, CRIT: 0 },
     sprites: {
       idle: { src: 'assets/monsters/undead_knight/Undead_Knight_Idle.png', frameW: 256, frameH: 202, frames: [0, 1, 2, 3, 4, 5] },
       attack: { src: 'assets/monsters/undead_knight/Undead_Knight_Animation.png', frameW: 256, frameH: 202, frames: [4, 5, 6, 7, 8, 9, 10, 11] }
-    } },
+    } }),
   monsters: {}, map: { default: 'undead_knight', worlds: {} }, ready: null,
 
   validate(data) {
@@ -23,7 +23,7 @@ const StageMonster = {
       .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(data => {
         if (!this.validate(data)) throw new Error('JSON quái vật không hợp lệ');
-        this.monsters[key] = { ...data, key, stats: { CRIT: 0, ...data.stats } };
+        this.monsters[key] = Monster.create({ ...data, key, stats: { CRIT: 0, ...data.stats } });
       })
       .catch(e => console.warn(`Không tải được quái vật "${key}" (assets/monsters/${key}/${key}.json):`, e.message || e));
   },

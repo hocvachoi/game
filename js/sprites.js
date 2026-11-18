@@ -5,7 +5,7 @@ const Stage = {
   resizeObserver: null, background: null, bgSrc: null,
   hero: null,  // { key, def, images:{idle,attack,skill}, mode:'idle'|'attack', i }
   mob: null,   // { monster, images:{idle,attack,skill}, mode, i }
-  heroTimer: null, mobTimer: null, impactTimers: [], respawnTimer: null, visibilityObserver: null, visibilityHandler: null,
+  lungeDone: { hero: null, mob: null }, heroTimer: null, mobTimer: null, impactTimers: [], respawnTimer: null, visibilityObserver: null, visibilityHandler: null,
 
   reduced() { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; },
   loadImage(src, onload) {
@@ -60,20 +60,34 @@ const Stage = {
   },
   tickHero() {
     this.heroTimer = null; if (!this.visible() || !this.hero) return;
-    const h = this.hero; h.i++;
-    if (h.mode === 'attack' && h.i >= h.def.attack.frames.length) {
+    const h = this.hero, frames = h.def.attack.frames;
+    const endedFrame = h.mode === 'attack' ? frames[h.i] : null;
+    const attack = h.attackState; h.i++;
+    if (h.mode === 'attack' && h.i >= frames.length) {
       h.mode = 'idle'; h.i = 0;
-      this.drawHero(); this.finishAttack('hero');
-    } else this.drawHero();
+      this.drawHero();
+      if (this.isRanged('hero') && h.def.castSkill && endedFrame === h.def.castSkill.frame) this.fireSkill('hero', attack);
+      this.finishAttack('hero', attack);
+    } else {
+      this.drawHero();
+      if (this.isRanged('hero') && h.def.castSkill && endedFrame === h.def.castSkill.frame) this.fireSkill('hero', attack);
+    }
     this.sync();
   },
   tickMob() {
     this.mobTimer = null; if (!this.visible() || !this.mob) return;
-    const m = this.mob, sheet = this.mobSheet(); m.i++;
+    const m = this.mob, sheet = this.mobSheet();
+    const endedFrame = m.mode === 'attack' ? sheet.frames[m.i] : null;
+    const attack = m.attackState; m.i++;
     if (m.mode === 'attack' && m.i >= sheet.frames.length) {
       m.mode = 'idle'; m.i = 0;
-      this.drawMob(); this.finishAttack('mob');
-    } else this.drawMob();
+      this.drawMob();
+      if (this.isRanged('mob') && m.monster.castSkill && endedFrame === m.monster.castSkill.frame) this.fireSkill('mob', attack);
+      this.finishAttack('mob', attack);
+    } else {
+      this.drawMob();
+      if (this.isRanged('mob') && m.monster.castSkill && endedFrame === m.monster.castSkill.frame) this.fireSkill('mob', attack);
+    }
     this.sync();
   },
   observe() {
@@ -139,13 +153,14 @@ const Stage = {
     this.stopTimers();
     this.impactTimers.forEach(clearTimeout); this.impactTimers = [];
     clearTimeout(this.respawnTimer); this.respawnTimer = null;
-    document.getElementById('hero').classList.remove('atk', 'hurt', 'lunge', 'dead');
-    document.getElementById('mob').classList.remove('atk', 'hurt', 'lunge', 'dead');
+    document.getElementById('hero').classList.remove('atk', 'hurt', 'lunge', 'lunge-go', 'lunge-back', 'dead');
+    document.getElementById('mob').classList.remove('atk', 'hurt', 'lunge', 'lunge-go', 'lunge-back', 'dead');
+    this.lungeDone = { hero: null, mob: null };
     const projectile = document.getElementById('skill-projectile');
     projectile.classList.remove('is-flying');
     projectile.style.removeProperty('--skill-scale');
-    if (this.hero) { this.hero.mode = 'idle'; this.hero.i = 0; this.hero.onImpact = []; }
-    if (this.mob) { this.mob.mode = 'idle'; this.mob.i = 0; this.mob.onImpact = []; }
+    if (this.hero) { this.hero.mode = 'idle'; this.hero.i = 0; this.hero.attackState = null; }
+    if (this.mob) { this.mob.mode = 'idle'; this.mob.i = 0; this.mob.attackState = null; }
     this.drawHero(); this.drawMob(); this.sync();
     const hp = this.mob && Number(this.mob.monster.stats && this.mob.monster.stats.HP);
     this.hp(1, hp > 0 ? hp : 1, hp > 0 ? hp : 1);
@@ -165,59 +180,127 @@ const Stage = {
     void e.offsetWidth; e.classList.add(cls);
     e.addEventListener('animationend', () => e.classList.remove(cls), { once: true });
   },
-  play(who, mode, onImpact) {  // chuyển sang hoạt ảnh tấn công từ khung đầu
+  play(who, mode, onImpact, onAnimationEnd) {  // chuyển sang hoạt ảnh tấn công từ khung đầu
     const o = this[who];
-    if (!o) { if (onImpact) onImpact(); return; }
-    if (mode === 'attack' && onImpact) {
-      if (!o.onImpact) o.onImpact = [];
-      o.onImpact.push(onImpact);
+    if (!o) {
+      if (onImpact) onImpact();
+      if (onAnimationEnd) onAnimationEnd();
+      return;
+    }
+    const continuing = mode === 'attack' && o.mode === 'attack' && o.attackState;
+    let attack = continuing ? o.attackState : null;
+    if (mode === 'attack') {
+      if (!attack) attack = o.attackState = {
+        impactCallbacks: [], animationCallbacks: [],
+        skillFired: false, projectileArrived: false, animationDone: false, impactDone: false
+      };
+      if (onImpact) {
+        if (attack.impactDone) {
+          this.anim(who === 'hero' ? 'mob' : 'hero', 'hurt');
+          onImpact();
+        } else attack.impactCallbacks.push(onImpact);
+      }
+      if (onAnimationEnd) attack.animationCallbacks.push(onAnimationEnd);
     }
     if (this.reduced()) {
       o.mode = 'idle'; o.i = 0;
       who === 'hero' ? this.drawHero() : this.drawMob();
-      if (mode === 'attack') this.finishAttack(who);
+      if (mode === 'attack') this.finishAttack(who, attack);
       return;
     }
+    if (continuing) return;
     clearTimeout(who === 'hero' ? this.heroTimer : this.mobTimer);
     if (who === 'hero') this.heroTimer = null; else this.mobTimer = null;
     o.mode = mode; o.i = 0;
     who === 'hero' ? this.drawHero() : this.drawMob();
     this.sync();
   },
-  finishAttack(who) {
-    const actor = this[who], callbacks = actor && actor.onImpact ? actor.onImpact.splice(0) : [];
-    if (!actor) return;
-    const impact = () => {
-      this.anim(who === 'hero' ? 'mob' : 'hero', 'hurt');
-      callbacks.forEach(callback => callback());
-    };
-    if (this.isRanged(who) && this.castSkill(who)) {
+  finishAttack(who, attack) {
+    const actor = this[who];
+    attack = attack || (actor && actor.attackState);
+    if (!actor || !attack) return;
+    if (this.isRanged(who)) {
+      attack.animationDone = true;
+      if (!attack.skillFired) this.fireSkill(who, attack);
+      this.maybeDispatchImpact(who, attack);
+    } else {
+      attack.animationDone = true;
+      this.dispatchImpact(who, attack);
+    }
+    const callbacks = attack.animationCallbacks.splice(0);
+    callbacks.forEach(callback => callback());
+    if (actor.attackState === attack) actor.attackState = null;
+  },
+  fireSkill(who, attack) {
+    const actor = this[who];
+    attack = attack || (actor && actor.attackState);
+    if (!actor || !attack || attack.skillFired) return;
+    attack.skillFired = true;
+    if (this.castSkill(who)) {
       const timer = setTimeout(() => {
         this.impactTimers = this.impactTimers.filter(id => id !== timer);
-        impact();
+        attack.projectileArrived = true;
+        this.maybeDispatchImpact(who, attack);
       }, 240);
       this.impactTimers.push(timer);
-    } else impact();
+    } else {
+      attack.projectileArrived = true;
+      this.maybeDispatchImpact(who, attack);
+    }
+  },
+  maybeDispatchImpact(who, attack) {
+    if (!attack.projectileArrived || (this.isRanged(who) && !attack.animationDone)) return;
+    this.dispatchImpact(who, attack);
+  },
+  dispatchImpact(who, attack) {
+    if (!attack || attack.impactDone) return;
+    attack.impactDone = true;
+    this.anim(who === 'hero' ? 'mob' : 'hero', 'hurt');
+    const callbacks = attack.impactCallbacks.splice(0);
+    callbacks.forEach(callback => callback());
   },
   isRanged(who) {
     const actor = who === 'hero' ? this.hero : this.mob;
     if (!actor) return false;
     if (who === 'hero') return actor.def.ranged;
-    const monster = actor.monster, classKey = String(monster.Class || monster.class || '').split('_')[0].toLowerCase();
+    const monster = actor.monster;
+    if (monster instanceof Monster) return monster.ranged;   // lớp Monster quyết định kiểu đánh
+    const classKey = String(monster.Class || monster.class || '').split('_')[0].toLowerCase();   // đối thủ Ranked (object thường)
     return monster.attackStyle === 'ranged' || classKey === 'mage' || classKey === 'archer';
   },
   fx(correct, soFar, total, onImpact) {
     const who = correct ? 'hero' : 'mob';
     const melee = !this.reduced() && !this.isRanged(who);
     return new Promise(resolve => {
+      let impacted = false, animationEnded = false;
+      const complete = () => { if (impacted && animationEnded) resolve(); };
       this.play(who, 'attack', () => {
         try {
           if (onImpact) onImpact();
         } finally {
-          resolve();
+          impacted = true; complete();
         }
+      }, () => {
+        animationEnded = true; complete();
+        const back = this.lungeDone[who]; this.lungeDone[who] = null; if (back) back();
       });
-      if (melee) this.anim(who, 'lunge');
+      if (melee) this.meleeLunge(who, done => { this.lungeDone[who] = done; });
+    });
+  },
+  // Nhân vật/quái cận chiến (class Warrior): lao tới trong lúc chạy các khung tấn công, GIỮ vị trí tới khung cuối, rồi mới lướt về.
+  // `register` nhận hàm lướt-về để gọi khi hoạt ảnh kết thúc (class lunge-go → lunge-back; hero sang phải, mob sang trái).
+  meleeLunge(who, register) {
+    const actor = who === 'hero' ? this.hero : this.mob;
+    if (!actor) return;
+    const e = document.getElementById(who);
+    const frames = (who === 'hero' ? actor.def.attack : actor.monster.sprites.attack).frames.length;
+    e.classList.remove('lunge-back'); void e.offsetWidth;
+    e.style.setProperty('--lunge-ms', frames * 80 + 'ms');
+    e.classList.add('lunge-go');
+    register(() => {
+      e.classList.remove('lunge-go'); void e.offsetWidth;
+      e.classList.add('lunge-back');
+      e.addEventListener('animationend', () => e.classList.remove('lunge-back'), { once: true });
     });
   },
   castSkill(who = 'hero') {
@@ -236,7 +319,7 @@ const Stage = {
     const startX = source.left + source.width * (flip ? 1 - origin.x : origin.x) - bounds.left;
     const startY = source.top + source.height * origin.y - bounds.top;
     const endX = target.left + target.width * (flip ? 1 - aim.x : aim.x) - bounds.left;
-    const endY = target.top + target.height * aim.y - bounds.top;
+    const endY = startY;
     projectile.src = skill.src;
     projectile.style.left = `${startX}px`;
     projectile.style.top = `${startY}px`;

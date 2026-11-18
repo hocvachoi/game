@@ -38,21 +38,46 @@ function renderLevels() {
     showLoginError('Vui lòng đăng nhập để truy cập thế giới của bạn.');
     return;
   }
-  const d = Player.data, cls = Player.u.cls;
+  const cls = Player.u.cls;
   const match = String(cls).match(/^\s*(?:lớp\s*)?([6-9])(?=$|[\sA-Za-z])/i);
   const world = match && CONFIG.WORLDS.find(item => item.grade === Number(match[1]));
-  $('#who').textContent = `${d.nick} · Lv ${d.level} · Khối ${cls}`;
+  renderMapPlayerInfo();
   $('#map-error').hidden = Boolean(world);
   $('#world-map').hidden = !world;
   if (world) {
     WorldMap.open(world, stage => Adventure.start(stage, world));
   } else {
     $('#map-error').textContent = `Không xác định được khối 6, 7, 8 hoặc 9 từ hồ sơ lớp "${cls}". Hãy liên hệ giáo viên.`;
-    $('#world-title').textContent = 'KHÔNG TÌM THẤY THẾ GIỚI';
     $('#world-progress').textContent = '';
   }
   setMsg('');
   show('screen-levels');
+}
+
+function renderMapPlayerInfo() {
+  const d = Player.data;
+  $('#who').textContent = d.nick;
+  $('#map-level').textContent = d.level;
+  $('#map-class').textContent = CONFIG.character().name;
+  $('#map-gold').textContent = d.gold.toLocaleString('vi-VN');
+  $('#map-gem').textContent = d.crystals.toLocaleString('vi-VN');
+  drawMapPortrait();
+}
+
+function drawMapPortrait() {
+  const canvas = $('#map-portrait'), sheet = CONFIG.character().idle, key = CONFIG.character().key;
+  const context = canvas.getContext('2d');
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  if (!sheet || !sheet.frames || !sheet.frames.length) return;
+  const image = new Image();
+  image.onload = () => {
+    if (CONFIG.character().key !== key) return;
+    context.imageSmoothingEnabled = false;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, sheet.frames[0] * sheet.frameW, sheet.cropY || 0, sheet.frameW, sheet.cropH || sheet.frameH, 0, 0, canvas.width, canvas.height);
+  };
+  image.onerror = () => console.warn(`Không tải được ảnh nhân vật: ${sheet.src}`);
+  image.src = sheet.src;
 }
 
 // Hồ sơ cũ chưa có lớp (Room, vd 6/5): hỏi một lần. Trả về false nếu người dùng chọn đăng xuất.
@@ -116,6 +141,7 @@ async function checkRewards() {
         button.disabled = true;
         try {
           await Player.claimVoucher(v.id);
+          renderMapPlayerInfo();
           vouchers = vouchers.filter(x => x.id !== v.id);
           setAuthStatus('#reward-status', `Đã nhận: ${parts.join(' + ')}.`, 'success');
           if (vouchers.length) draw(); else { dialog.hidden = true; }

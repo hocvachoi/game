@@ -26,6 +26,7 @@
     }
   },
   "castSkill": {
+    "frame": 9,
     "origin": { "x": 0.72, "y": 0.42 },
     "target": { "x": 0.4, "y": 0.42 }
   }

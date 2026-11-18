@@ -106,23 +106,39 @@
 </div>
 
 <section id="screen-levels" class="screen" hidden>
-  <div id="world-map" class="world-map" aria-label="Bản đồ phiêu lưu">
-    <div id="map-stages" class="map-stages"></div>
-    <div class="map-hud map-hud--left">
-      <p id="who" class="map-who"></p>
-      <p id="world-title" class="map-world"></p>
-      <p id="world-progress" class="map-progress"></p>
+  <div class="levels-layout">
+    <div class="map-col">
+      <div id="world-map" class="world-map" aria-label="Bản đồ phiêu lưu">
+        <div id="map-stages" class="map-stages"></div>
+        <p id="msg" class="note map-message" role="status"></p>
+        <aside id="stage-info" class="stage-bar" aria-live="polite" hidden></aside>
+      </div>
     </div>
-    <div class="map-hud map-hud--right">
-      <button id="open-equip" class="btn ghost" type="button">Trang bị</button>
-      <button id="open-shop" class="btn ghost" type="button">Cửa hàng</button>
-      <button id="open-rank" class="btn ghost" type="button">Xếp hạng</button>
-      <button id="open-raid" class="btn" type="button">Boss Raid</button>
-      <button id="open-ranked" class="btn" type="button">Ranked</button>
-      <button id="logout" class="btn ghost" type="button">Đăng xuất</button>
-    </div>
-    <p id="msg" class="note map-message" role="status"></p>
-    <aside id="stage-info" class="stage-bar" aria-live="polite" hidden></aside>
+    <aside class="map-rail" aria-label="Thông tin và thao tác">
+      <div class="map-hud map-hud--left">
+        <div class="map-avatar">
+          <canvas id="map-portrait" width="160" height="160" aria-hidden="true"></canvas>
+          <div class="map-avatar-copy">
+            <p id="who" class="map-who"></p>
+            <p class="map-level">LV <b id="map-level">1</b></p>
+            <p class="map-class" id="map-class"></p>
+          </div>
+        </div>
+        <div class="map-currency" aria-label="Số dư">
+          <span class="currency currency-gold"><b id="map-gold">0</b></span>
+          <span class="currency currency-crystal"><b id="map-gem">0</b></span>
+        </div>
+        <p id="world-progress" class="map-progress"></p>
+      </div>
+      <nav class="map-actions" aria-label="Thao tác">
+        <button id="open-equip" class="map-action" type="button" title="Trang bị" aria-label="Trang bị"><img src="assets/ui/btn_inv.png" alt=""><span>Trang bị</span></button>
+        <button id="open-shop" class="map-action" type="button" title="Cửa hàng" aria-label="Cửa hàng"><img src="assets/ui/btn_shop.png" alt=""><span>Cửa hàng</span></button>
+        <button id="open-rank" class="map-action" type="button" title="Xếp hạng" aria-label="Xếp hạng"><img src="assets/ui/ranking.png" alt=""><span>Xếp hạng</span></button>
+        <button id="open-raid" class="map-action" type="button" title="Boss Raid" aria-label="Boss Raid"><img src="assets/ui/boss_raid.png" alt=""><span>Boss Raid</span></button>
+        <button id="open-ranked" class="map-action" type="button" title="Ranked" aria-label="Ranked"><img src="assets/ui/ranked.png" alt=""><span>Ranked</span></button>
+        <button id="logout" class="map-action" type="button" title="Đăng xuất" aria-label="Đăng xuất"><img src="assets/ui/btn_logout.png" alt=""><span>Đăng xuất</span></button>
+      </nav>
+    </aside>
   </div>
   <p id="map-error" class="map-error" role="status" hidden></p>
 </section>
@@ -133,8 +149,11 @@
       <div class="ui-level" title="Cấp độ"><span id="shop-level">1</span></div>
       <div class="ui-xp"><div class="ui-xpbar"><i id="shop-xp-bar"></i></div><small id="shop-xp"></small><b id="shop-class"></b></div>
       <div class="ui-ribbon"><h1>CỬA HÀNG</h1></div>
-      <div class="ui-money"><span class="coin gold" id="shop-gold" title="Gold">0</span><span class="coin gem" id="shop-gem" title="Crystal">0</span></div>
-      <button id="shop-back" class="ui-close" type="button" aria-label="Về bản đồ">✕</button>
+      <div class="ui-money">
+        <span class="currency currency-gold" title="Gold"><b id="shop-gold">0</b></span>
+        <span class="currency currency-crystal" title="Crystal"><b id="shop-gem">0</b></span>
+      </div>
+      <button id="shop-back" class="ui-close" type="button" aria-label="Về bản đồ"><img src="assets/ui/exit_btn.png" alt=""></button>
     </header>
     <p id="shop-msg" class="ui-msg" role="status" aria-live="polite"></p>
     <div class="ui-body ui-split">
@@ -160,8 +179,11 @@
       <div class="ui-level" title="Cấp độ"><span id="equip-level">1</span></div>
       <div class="ui-xp"><div class="ui-xpbar"><i id="equip-xp-bar"></i></div><small id="equip-xp"></small><b id="equip-class"></b></div>
       <div class="ui-ribbon"><h1>TRANG BỊ</h1></div>
-      <div class="ui-money"><span class="coin gold" id="equip-gold" title="Gold">0</span><span class="coin gem" id="equip-gem" title="Crystal">0</span></div>
-      <button id="equip-back" class="ui-close" type="button" aria-label="Về bản đồ">✕</button>
+      <div class="ui-money">
+        <span class="currency currency-gold" title="Gold"><b id="equip-gold">0</b></span>
+        <span class="currency currency-crystal" title="Crystal"><b id="equip-gem">0</b></span>
+      </div>
+      <button id="equip-back" class="ui-close" type="button" aria-label="Về bản đồ"><img src="assets/ui/exit_btn.png" alt=""></button>
     </header>
     <p id="equip-msg" class="ui-msg" role="status" aria-live="polite"></p>
     <div class="ui-body ui-split ui-split--equal">
@@ -204,8 +226,11 @@
       <div class="ui-level" title="Cấp độ"><span id="rank-level">1</span></div>
       <div class="ui-xp"><div class="ui-xpbar"><i id="rank-xp-bar"></i></div><small id="rank-xp"></small><b id="rank-class"></b></div>
       <div class="ui-ribbon"><h1>XẾP HẠNG</h1></div>
-      <div class="ui-money"><span class="coin gold" id="rank-gold" title="Gold">0</span><span class="coin gem" id="rank-gem" title="Crystal">0</span></div>
-      <button id="rank-back" class="ui-close" type="button" aria-label="Về bản đồ">✕</button>
+      <div class="ui-money">
+        <span class="currency currency-gold" title="Gold"><b id="rank-gold">0</b></span>
+        <span class="currency currency-crystal" title="Crystal"><b id="rank-gem">0</b></span>
+      </div>
+      <button id="rank-back" class="ui-close" type="button" aria-label="Về bản đồ"><img src="assets/ui/exit_btn.png" alt=""></button>
     </header>
     <div class="ui-body">
       <section class="ui-panel rank-panel">
@@ -273,6 +298,7 @@
 <script src="js/inventory.js"></script>
 <script src="js/shop.js"></script>
 <script src="js/leaderboard.js"></script>
+<script src="js/monsters/monster.js"></script>
 <script src="js/stage-monster.js"></script>
 <script src="js/sprites.js"></script>
 <script src="games/adventure.js"></script>

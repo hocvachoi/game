@@ -12,7 +12,6 @@ const WorldMap = {
     this.selected = null;
     $('#map-error').hidden = true;
     $('#world-map').hidden = false;
-    $('#world-title').textContent = `Thế giới ${world.grade} · ${world.name}`;
     const map = $('#world-map');
     map.setAttribute('aria-label', `Bản đồ ${world.name}`);
     map.style.backgroundImage = `url("${world.mapImage}")`;
@@ -20,7 +19,7 @@ const WorldMap = {
     this.fitAspect(world.mapImage);
     if (!this.bound) {
       this.bound = true;
-      map.addEventListener('click', event => { if (!event.target.closest('.map-stage, .stage-bar, .map-hud')) this.select(null); });
+      map.addEventListener('click', event => { if (!event.target.closest('.map-stage, .stage-bar')) this.select(null); });
       document.addEventListener('keydown', event => { if (event.key === 'Escape' && this.selected) this.select(null); });
     }
     this.render();
