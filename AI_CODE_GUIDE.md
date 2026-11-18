@@ -301,22 +301,6 @@ Khi thêm hoặc đổi ảnh/animation: giữ đúng quy ước class, số fra
    - **Giới hạn bảo mật:** kết quả trận do trình duyệt tự báo, Rules chỉ kiểm tra giới hạn/công thức, **không biết thắng thật hay không** — một học sinh sửa mã vẫn có thể báo thắng tối đa 5 lần/ngày với phần cộng tối đa 110 điểm.
 7. **Quy định dự án:** chỉ thao tác và gửi lại những file đã thay đổi.
 
-
-**CẬP NHẬT:** Cập nhật UI từ bộ UI trong `asset/ui`
-- panel_avatar: khung nhân vật, chưa tên, LV, lớp (loại bỏ những thứ không cần thiết)
-- hp_bar,exp_bar thanh hp và exp. dùng hp_fill,exp_fill để làm thanh hp và exp
-- inv_... biểu thị tab trang bị
-- equip_... biểu thị các ô trang bị
-- panel_square: khung chính, dùng cho các khung lớn, dùng kĩ thuật 9-slice
-- ranked-->nút bấm ranked mode
-- boss raid -->nút bấm boss raid
-- ranking --> xếp hạng
-- logout --> đăng xuất
-- shop -->cửa hàng
-- btn_inv --> trang bị
-- gold, crystal bar: số vàng, crystal đang sở hữu
-- gold, crystal: icon gold crystal
-
 **V5 — GIAO DIỆN THEO BẢNG MÀU (đã làm):**
 - Bảng màu `#18345A #101B2D #243C5B #D8B65D #F5D68C #80602D #080F1B` khai báo thành biến `--c-*` ở khối `[18]` cuối `css/style.css`; khối `[19]` xử lý bo góc và thanh chỉ số.
 - **Không còn dùng** `panel_avatar.png`, `hp_bar.png`, `exp_bar.png` (+ `hp_fill/exp_fill`): khung avatar, HUD người chơi, thanh HP/EXP/HP quái được vẽ bằng CSS (bo góc 6–12px). Khung `.ui-frame/.ui-panel` cũng là CSS bo góc thay vì 9-slice. Nút tròn/huy hiệu/`gold_bar`/`crystal_bar` giữ nguyên tỉ lệ ảnh.
@@ -326,3 +310,30 @@ Khi thêm hoặc đổi ảnh/animation: giữ đúng quy ước class, số fra
 - Quái cận chiến (Warrior) dùng chung `Stage.meleeLunge(who)` với người chơi: lao tới, giữ ở khung cuối rồi lướt về (hero sang phải, mob sang trái).
 - **Khung vật phẩm theo phẩm chất**: `Inventory.icon(it)` gán class `q-normal|uncommon|rare|epic|legendary` cho `.item-icon`; CSS khối `[20]` đặt nền `assets/ui/<quality>_frame.png` (giữ nguyên hình), ảnh vật phẩm thu về 62% trong lòng khung. Dùng chung cho Cửa hàng, kho đồ (`.tile`) và ô đang mặc (`.slot-box`). Phẩm chất lạ → khung normal.
 - Đã bỏ icon `inv_*.png` trên các tab lọc (`Inventory.tagBar`) và `Panel_name.png` ở tên vật phẩm (các ảnh này chưa dùng nữa, chưa xóa khỏi `assets/ui`). Viền các khung/nút dày hơn (3→4–5px) ở khối `[20]`.
+- **Kẻ địch = khối `.enemy`** (index.html): `<div class="enemy"><div class="hp" id="mobhp">…</div><canvas id="mob"></canvas></div>` — thanh HP nằm trên sprite quái (`margin-right:20px`), vị trí/kích thước đặt trên `.enemy` (khối `[21]` style.css) nên thanh HP luôn đi theo quái. (Lỗi mất thanh HP trước đó do khối `[19]` đặt `position:relative` cho `.hp` khiến thanh rơi ra ngoài khung.)
+- **Thứ tự lớp sprite**: người chơi z=3 luôn trên quái z=2; sprite đang tấn công (`.is-attacking`, `lunge-go`, `lunge-back`; `Stage.drawHero/drawMob` bật/tắt `is-attacking`) lên z=4; thanh HP z=5; đạn skill z=6.
+**Cập nhật V5:**
+**Giai đoạn 1:**
+-  thêm tên phía trên thanh hp; <div> <div>Name</> <div>HP bar>=</>. cả 2 có marin right khoảng 40% kích thước sprite nhân vật.
+-  Thống nhất khung kích thước của `shop-item` ( không để thanh scroll làm thay đổi kích thước)
+-  loại bỏ `q-badge` (khung ảnh đã thể hiện phẩm chất, không cần thiết cho thẻ này).
+-  UI của `shop-item `sẽ là: 170x170px khung `item-icon q-..` 80px img bên trong có kích thước 64px. Cấu trúc: `item-icon q-` nằm bên trái, name và giá bán nằm bên phải (`coin gold`,`coin gem` không tạo backround và bo góc nữa).
+- sprite nhân vật trong cửa hàng được cắt đi 50px theo chiều dọc bên phải ảnh
+**Giai đoạn 2:**
+- Hầm ngục được chia theo tầng (vô hạn) xếp hạng tính theo tầng đã vượt (k reset)
+- tầng 1-10: quái normal, 11-20: uncommon, 21-40: Rare, 40-70: epic, 71 trở đi: legend (chọn quái ngẫu nhiên trong phù hợp với class)
+- Mỗi quái có `type` trong `monster.json` để biết phẩm chất của chúng.
+- Thêm mục thoát hầm ngục, người chơi chơi được đến tầng XY khi vào lại sẽ đánh tầng X1. Vẫn lưu ải đã vượt cao nhất là tầng XY.
+**Giai đoạn 3:** Trang bị
+- Thêm các hiệu ứng cho trang bị. Trang bị dùng `type` và `value` trong equipment.json để nhận hiệu ứng.
+- Các hiệu ứng bao gồm:
+   Tên                        Hiệu ứng
+Ban phước                     Hồi HP theo [x] % mỗi lượt 
+Đoạt huyết                    Hút máu, hồi HP theo [x]%dmg đã gây ra
+Gai góc                       Gây sát thương [x] khi bị tấn công
+Đột kích                      Tăng [x]% dmg khi chí mạng
+Thánh thuẫn                   có [x]% dmg nhận bằng 0
+Cường tráng                   Giảm [x]% dmg khi bị chí mạng
+Trừng phạt                    có [x]% gây thêm dmg =25% hp địch (max 2000)
+Cuồng chiến                   mỗi 10% HP mất tăng [x]% dmg gây ra
+[x] là giá trị của `value`.

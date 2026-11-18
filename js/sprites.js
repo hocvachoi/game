@@ -35,11 +35,13 @@ const Stage = {
   drawHero() {
     const h = this.hero; if (!h) return;
     const sheet = h.mode === 'attack' ? h.def.attack : h.def.idle;
+    document.getElementById('hero').classList.toggle('is-attacking', h.mode === 'attack');   // đang tấn công → sprite nằm trên (z-index)
     this.drawFrame('hero', h.images[h.mode], sheet, sheet.frames[h.i % sheet.frames.length]);
   },
   drawMob() {
     const m = this.mob; if (!m) return;
     const sheet = this.mobSheet();
+    document.getElementById('mob').classList.toggle('is-attacking', m.mode === 'attack');
     const image = m.images[m.mode === 'idle' ? 'idle' : 'attack'];
     this.drawFrame('mob', image, sheet, sheet.frames[m.i % sheet.frames.length], Boolean(m.monster.flip));
   },

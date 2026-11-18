@@ -687,3 +687,23 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 .btn,.tab,.tag{border-width:4px}
 #screen-levels .map-avatar,#screen-game .player-hud{border-width:3px}
 @media (max-width:800px){.ui-frame{border-width:4px}.ui-panel{border-width:3px}}
+
+
+/* [21] ===== V5.3 · KẺ ĐỊCH = KHỐI .enemy { thanh HP (margin-right 20px) + sprite quái } + THỨ TỰ LỚP SPRITE =====
+   <div class="enemy"><div class="hp"> … </div><canvas id="mob"></canvas></div> — vị trí/kích thước đặt trên .enemy (thay cho #mob cũ),
+   thanh HP nằm ngay trên sprite quái nên luôn đi theo quái. Lớp: người chơi (3) luôn nằm trên quái (2); đang tấn công (.is-attacking / lunge-go / lunge-back)
+   thì sprite đó lên 4 (quái tấn công sẽ đè lên người chơi); thanh HP (5) và đạn skill (6) luôn trên cùng. */
+.enemy{position:absolute;display:flex;flex-direction:column;align-items:flex-end}
+#screen-game .enemy{bottom:8%;left:17.6%;width:min(32vw,56vh);max-width:56vw}
+#screen-game .enemy:has(#mob.ranked-opponent){width:min(29.33vw,50.67vh);max-width:50.67vw}
+#screen-game .enemy #mob{position:relative;left:auto;right:auto;bottom:auto;width:100%;max-width:none;z-index:2}
+#screen-game .enemy .hp{position:relative;top:auto;bottom:auto;left:auto;right:auto;align-self:flex-start;width:42%;min-width:70px;height:16px;margin-right:20px;z-index:5}
+#screen-game #hero{z-index:3}
+#screen-game #hero.is-attacking,#screen-game #hero.lunge-go,#screen-game #hero.lunge-back,
+#screen-game .enemy #mob.is-attacking,#screen-game .enemy #mob.lunge-go,#screen-game .enemy #mob.lunge-back{z-index:4}
+#skill-projectile{z-index:6}
+@media (max-width:800px){
+  #screen-game .enemy{bottom:6%;left:12%;width:min(88vw,56vh);max-width:88vw}
+  #screen-game .enemy:has(#mob.ranked-opponent){width:min(80vw,50.67vh);max-width:80vw}
+  #screen-game .enemy .hp{height:12px}
+}
