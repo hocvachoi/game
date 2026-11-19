@@ -95,6 +95,34 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "Room",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Dung1Floor",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "Room",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Dung2Floor",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

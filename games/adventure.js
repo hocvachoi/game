@@ -3,7 +3,7 @@
 const Adventure = {
   PASS_RATIO: 0.7,   // Plan 13.5: Stage hoàn thành khi hạ ≥ 1 quái và đúng ≥ 70% số câu
   raid: null, level: null, world: null, monster: null, monsterPool: [], all: [], active: false, combat: null,
-  quizCtl: null, timer: null,
+  quizCtl: null, timer: null, floor: 1, startFloor: 1,
   // ----- Chống gian lận: che câu hỏi khi người chơi rời trang (đổi tab, bấm ô địa chỉ, chuyển cửa sổ để hỏi AI...). -----
   // Đồng hồ và quái VẪN chạy khi bị che (không thể "tạm dừng" để tra cứu). Chỉ là rào cản cơ bản, không chặn được chụp màn hình/thiết bị khác.
   guard: {
@@ -26,6 +26,17 @@ const Adventure = {
     reset() { this.count = 0; this.uncover(); }
   },
   isDungeon() { return Boolean(this.level && this.level.kind === 'dungeon'); },
+  // Hầm ngục theo tầng: nhãn "Tầng N" và nút "Thoát hầm ngục" chỉ hiện khi đang chơi hầm ngục.
+  syncDungeonUi() {
+    const on = this.active && this.isDungeon();
+    $('#floor-badge').hidden = !on; $('#dungeon-exit').hidden = !on;
+    if (on) $('#floor-badge').textContent = `Tầng ${this.floor}`;
+  },
+  // Thoát hầm ngục: kết thúc lượt, các tầng đã vượt vẫn được tính thưởng/kỷ lục.
+  exitDungeon() {
+    if (!this.active || !this.isDungeon() || !this.quizCtl) return;
+    this.quizCtl.end({ exited: true });
+  },
 
   async start(lv, world) {
     this.raid = null;   // chế độ Boss Raid (games/boss-battle.js) tự gán lại khi vào trận
@@ -56,7 +67,7 @@ const Adventure = {
       : [StageMonster.forStage(this.world, lv.key ? lv : { key: '' })];
     this.run();
   },
-  pickMonster() { return this.monsterPool[Math.floor(Math.random() * this.monsterPool.length)]; },
+  pickMonster() { return this.isDungeon() ? StageMonster.forFloor(this.monsterPool, this.floor) : this.monsterPool[Math.floor(Math.random() * this.monsterPool.length)]; },
 
   run() {
     this.teardown();
@@ -65,7 +76,10 @@ const Adventure = {
     this.active = true;
     this.guard.bind(); this.guard.reset();
     show('screen-game');
+    // Hầm ngục: bắt đầu từ tầng X1 (kỷ lục XY), xem CONFIG.dungeonStartFloor
+    if (this.isDungeon()) this.floor = this.startFloor = CONFIG.dungeonStartFloor(((Player.data.progress || {})[this.level.id] || {}).best || 0);
     this.monster = this.pickMonster();
+    this.syncDungeonUi();
     // nền theo từng ải (file Excel chọn từ máy dùng nền của ải đầu thế giới)
     Stage.init({ background: this.level.background || this.world.stages[0].background, monster: this.monster, character: CONFIG.selectedCharacter });
     Stage.reset();
@@ -82,7 +96,7 @@ const Adventure = {
     this.stopTimer();
     clearTimeout(Stage.respawnTimer); Stage.respawnTimer = null;
   },
-  abort() { this.active = false; this.teardown(); this.guard.reset(); },
+  abort() { this.active = false; this.teardown(); this.guard.reset(); this.syncDungeonUi(); },
 
   monsterStat(name) { return Number(this.monster && this.monster.stats && this.monster.stats[name]) || 0; },
   beginCombat() {
@@ -131,6 +145,8 @@ const Adventure = {
   // Quái hồi sinh / xuất hiện quái mới (Dungeon chọn ngẫu nhiên trong danh sách của dungeon).
   spawnNext(fight) {
     if (this.isDungeon()) {
+      this.floor = this.startFloor + fight.monsterKills;   // hạ quái = vượt tầng, lên tầng kế
+      this.syncDungeonUi();
       this.monster = fight.monster = this.pickMonster();
       Stage.setMonster(this.monster);
     } else {
@@ -241,11 +257,13 @@ const Adventure = {
     this.stopTimer();
     this.active = false;
     this.guard.uncover();   // màn kết quả không cần che
+    $('#dungeon-exit').hidden = true; $('#floor-badge').hidden = true;
     const fight = this.combat, dungeon = this.isDungeon();
     if (fight) fight.finished = true;
     clearTimeout(Stage.respawnTimer);
     Stage.respawnTimer = null;
     const kills = fight ? fight.monsterKills : 0;
+    const topFloor = dungeon && kills > 0 ? this.startFloor + kills - 1 : 0;   // tầng cao nhất vượt được trong lượt này
     const defeated = Boolean(res.playerDefeated || (fight && fight.playerHp <= 0));
     const ratio = res.total ? res.correct / res.total : 0;
     const passed = !dungeon && !defeated && kills > 0 && ratio >= this.PASS_RATIO;
@@ -257,9 +275,10 @@ const Adventure = {
     const name = this.monster.name, pctText = Math.round(ratio * 100) + '%';
     let title, detail;
     if (dungeon) {
-      title = 'HẦM NGỤC KẾT THÚC';
+      title = res.exited ? 'ĐÃ THOÁT HẦM NGỤC' : 'HẦM NGỤC KẾT THÚC';
       const D = CONFIG.GAME.CRYSTAL.dungeon;
-      detail = `Bạn đã hạ ${kills} quái vật trước khi hết HP; mỗi quái bị hạ tăng 5% phần thưởng.`
+      detail = (kills > 0 ? `Bạn đã vượt ${kills} tầng (tầng ${this.startFloor} → ${topFloor}) ` : `Bạn chưa vượt được tầng ${this.startFloor} `)
+        + (res.exited ? 'rồi thoát hầm ngục' : 'trước khi hết HP') + '; mỗi quái bị hạ tăng 5% phần thưởng.'
         + (this.level.index === D.index ? ` Mỗi ${D.killsPerCrystal} quái hạ được nhận 1 Crystal (tối đa ${D.max}).` : '');
     } else if (passed) {
       title = 'CHIẾN THẮNG!';
@@ -276,14 +295,14 @@ const Adventure = {
         ? `Bạn chưa hạ được ${name}. Cần hạ ít nhất 1 quái và đúng từ 70% số câu (hiện ${pctText}).`
         : `Bạn đã hạ quái nhưng mới đúng ${pctText}; cần đúng từ 70% số câu để vượt ải.`;
     }
-    div.append(el('h1', '', title), el('div', 'score', dungeon ? `${kills} quái` : `${res.correct}/${res.total}`), el('p', '', detail), status, again, back);
+    div.append(el('h1', '', title), el('div', 'score', dungeon ? `${kills} tầng` : `${res.correct}/${res.total}`), el('p', '', detail), status, again, back);
     box.replaceChildren(div);
     const save = async () => {
       again.disabled = back.disabled = true;
       try {
         const wait = Player.cooldownLeftMs();
         if (wait > 0) { status.textContent = `Đang chờ ${Math.ceil(wait / 1000)}s để lưu kết quả…`; await new Promise(r => setTimeout(r, wait)); status.textContent = 'Đang lưu kết quả…'; }
-        const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, damagePct, hpRatio });
+        const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct, hpRatio });
         const drop = r.drop && Player.item(r.drop);
         status.textContent = `+${r.gold} Gold · +${r.exp} EXP (${Math.round(r.factor * 100)}% thưởng)`
           + (r.crystals ? ` · +${r.crystals} Crystal` : '')

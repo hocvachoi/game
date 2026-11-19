@@ -54,6 +54,17 @@ const StageMonster = {
   forStage(world, stage) {
     return this.get((this.map.worlds[world.folder] || {})[stage.key] || this.map.default);
   },
+  // Quái cho một TẦNG hầm ngục: ngẫu nhiên trong pool theo phẩm chất của tầng (CONFIG.dungeonTier); thiếu thì lấy phẩm chất gần nhất (thấp hơn trước).
+  forFloor(pool, floor) {
+    const order = CONFIG.GAME.DUNGEON.TIERS.map(t => t.type), want = order.indexOf(CONFIG.dungeonTier(floor));
+    for (let d = 0; d < order.length; d++) {
+      for (const i of d ? [want - d, want + d] : [want]) {
+        const same = i >= 0 && i < order.length ? pool.filter(m => m.quality === order[i]) : [];
+        if (same.length) return same[Math.floor(Math.random() * same.length)];
+      }
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  },
   // Các quái có thể xuất hiện trong một dungeon (bỏ key chưa có JSON); rỗng thì dùng quái mặc định.
   poolFor(world, dungeon) {
     const pool = (dungeon.monsters || []).filter(k => this.monsters[k]).map(k => this.monsters[k]);

@@ -87,7 +87,7 @@ const WorldMap = {
     if (stage.kind === 'stage' && CONFIG.GAME.STAGE_LEVEL_STEP > 0) lines.push(this.element('span', 'stage-level', `Yêu cầu cấp: ${this.levelReq(stage)}`));
     if (progress) {
       lines.push(this.element('span', 'stage-best', stage.kind === 'dungeon'
-        ? `Kỷ lục: ${progress.best} quái · đã chơi ${progress.tries} lần`
+        ? `Tầng cao nhất: ${progress.best} · vào lại từ tầng ${CONFIG.dungeonStartFloor(progress.best)} · đã chơi ${progress.tries} lần`
         : `Tốt nhất: ${progress.best}% · đã chơi ${progress.tries} lần`));
     }
     if (!this.hasQuestions(stage)) lines.push(this.element('span', 'stage-note', 'Ải đang chờ được bổ sung file câu hỏi.'));

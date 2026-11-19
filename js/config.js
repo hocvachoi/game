@@ -108,6 +108,15 @@ CONFIG.GAME = {
   // Giá trị MẶC ĐỊNH (Plan 13.4: 20s). Mỗi quái vật quy định riêng bằng "ANSWER_TIMEOUT_SEC" trong <monster_key>.json
   // (xem như tốc độ tấn công: sau ngần ấy giây chưa trả lời thì quái đánh, lặp lại mỗi chu kỳ). Quái không khai báo thì dùng số này.
   ANSWER_TIMEOUT_SEC: 20,
+  // HẦM NGỤC THEO TẦNG (vô hạn): mỗi tầng 1 quái; hạ quái = vượt tầng, lên tầng kế (HP người chơi giữ nguyên).
+  // Phẩm chất quái theo tầng = trường "type" trong <monster_key>.json (không phân biệt hoa/thường). Thiếu quái đúng phẩm chất thì lấy phẩm chất gần nhất (ưu tiên thấp hơn).
+  // Vào lại hầm ngục: nếu tầng cao nhất đã vượt là XY thì bắt đầu từ tầng X1 (37 → 31; 40 → 41). Kỷ lục tầng cao nhất vẫn giữ nguyên.
+  DUNGEON: {
+    TIERS: [{ to: 10, type: 'normal' }, { to: 20, type: 'uncommon' }, { to: 40, type: 'rare' }, { to: 70, type: 'epic' }, { to: Infinity, type: 'legendary' }],
+    BLOCK: 10,
+    MAX_FLOOR: 100000,   // [RULES] trần tầng ghi trong bảng xếp hạng (Dung1Floor / Dung2Floor)
+    MAX_FLOORS_PER_RUN: 300   // [RULES] một lượt chơi tăng kỷ lục tối đa bấy nhiêu tầng
+  },
   KILL_BONUS: { stage: 0.10, dungeon: 0.05 },   // cộng dồn thẳng (không lũy tiến): 3 quái dungeon = +15%
   MIN_LOSE_FACTOR: 0.10,    // thua: thưởng = % sát thương gây cho quái, tối thiểu 10%
   REWARD: {
@@ -170,6 +179,8 @@ CONFIG.RAID = {
 // Đổi NGHỀ (Archer/Mage/Warrior) tối đa 1 lần mỗi CLASS_CHANGE_HOURS giờ (đổi giới tính/kiểu nhân vật CÙNG nghề không giới hạn).
 // Mốc đổi gần nhất lưu ở hồ sơ (ClassChangedAt, giờ máy chủ) nên đếm ngược ở trình duyệt không tốn thêm lượt đọc. [RULES] khớp validCharacter() trong firestore.rules.
 CONFIG.CLASS_CHANGE_HOURS = 24;
+// Màn Trang bị: cắt bấy nhiêu px bên PHẢI mỗi khung sprite nhân vật (px của ảnh gốc), xem Inventory.startPortrait.
+CONFIG.PORTRAIT_CROP_RIGHT = 50;
 
 CONFIG.RANK = {
   TOP: 10, REFRESH_SEC: 300,   // chỉ top 10 có hạng; mỗi học sinh tải mới tối đa 1 lần / 5 phút / tab (chỉ ở trình duyệt)
@@ -255,4 +266,14 @@ CONFIG.loadItems = function () {
       });
   }
   return this.itemsPromise;
+};
+
+// ----- Hầm ngục theo tầng: phẩm chất quái của một tầng và tầng bắt đầu khi vào lại -----
+CONFIG.dungeonTier = function (floor) {
+  const tiers = this.GAME.DUNGEON.TIERS;
+  return (tiers.find(t => floor <= t.to) || tiers[tiers.length - 1]).type;
+};
+CONFIG.dungeonStartFloor = function (best) {
+  const block = this.GAME.DUNGEON.BLOCK;
+  return best >= 1 ? Math.floor(best / block) * block + 1 : 1;
 };

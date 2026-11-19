@@ -169,7 +169,7 @@ const Player = {
 
   // Kết thúc một lượt ải/dungeon: ghi tiến trình + thưởng bằng MỘT lần ghi (Plan mục 9.3).
   // level: stage/dungeon từ CONFIG.WORLDS (có .reward lấy từ world.json).
-  // o: { correct, total, passed, kills, damagePct, hpRatio }  (damagePct = sát thương đã gây / HP một quái, 0..1; hpRatio = HP còn lại / HP tối đa)
+  // o: { correct, total, passed, kills, floor (hầm ngục: tầng cao nhất vượt được trong lượt), damagePct, hpRatio }  (damagePct = sát thương đã gây / HP một quái, 0..1; hpRatio = HP còn lại / HP tối đa)
   // Thưởng (Plan 13.4): thắng stage = base * (1 + 10% * quái hạ); dungeon = base * (1 + 5% * quái hạ);
   // thua / chưa vượt ải = base * max(10%, %sát thương gây cho quái). Crystal: xem CONFIG.GAME.CRYSTAL.
   // Bản ghi xếp hạng (leaderboards/<khối>/entries/<UID>) ghi cùng transaction; nếu Rules từ chối riêng phần xếp hạng
@@ -190,6 +190,7 @@ const Player = {
     const G = this.G(), R = G.REWARD, dungeon = level.kind === 'dungeon';
     const out = { gold: 0, exp: 0, crystals: 0, levelUp: false, factor: 0, drop: null, rankSkipped: false };
     if (!Number.isInteger(o.kills) || o.kills < 0) throw new Error('Số quái vật bị hạ không hợp lệ.');
+    if (dungeon && (!Number.isInteger(o.floor) || o.floor < 0)) throw new Error('Tầng hầm ngục không hợp lệ.');
     const base = level.reward || { EXP: 0, GOLD: 0, drops: [] };
     const win = dungeon ? o.kills > 0 : o.passed;
     const factor = win
@@ -222,14 +223,14 @@ const Player = {
       }
       const pct = o.total ? Math.round(o.correct / o.total * 100) : 0;
       const entry = dungeon
-        ? { best: Math.max(old.best, o.kills), passed: false, tries: old.tries + 1 }       // dungeon: best = số quái hạ nhiều nhất
+        ? { best: Math.max(old.best, o.floor), passed: false, tries: old.tries + 1 }       // dungeon: best = TẦNG cao nhất đã vượt (không giảm)
         : { best: Math.max(old.best, pct), passed: old.passed || o.passed, tries: old.tries + 1 };
       const fields = { Golds: (cur.Golds || 0) + gold, EXP: exp, LV: this.levelOf(exp), LastReward: firebase.firestore.FieldValue.serverTimestamp() };
       if (crystals > 0) fields.Crystals = (cur.Crystals || 0) + crystals;
       if (out.drop) fields.Enventory = [...owned, out.drop];
       const result = { fields, progress: { id: level.id, entry } };
       if (needRank) {
-        const rank = Rank.entry(rankPrev, { nick: cur.Nickname, room: cur.Room, lv: fields.LV, kind: dungeon ? 'dungeon' : 'stage', index: level.index, kills: o.kills, passedNow: !dungeon && o.passed });
+        const rank = Rank.entry(rankPrev, { nick: cur.Nickname, room: cur.Room, lv: fields.LV, kind: dungeon ? 'dungeon' : 'stage', index: level.index, kills: o.kills, floor: o.floor || 0, passedNow: !dungeon && o.passed });
         if (rank) { result.rank = rank; out.rank = rank; }
       }
       return result;

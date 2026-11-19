@@ -232,12 +232,15 @@ const Inventory = {
     const sheet = CONFIG.character().idle, cv = $('#equip-portrait');
     if (!sheet || !cv) return;
     const img = new Image(); let i = 0;
+    // cắt PORTRAIT_CROP_RIGHT px bên phải mỗi khung (sprite lệch/thừa hiệu ứng) → canvas hẹp lại, vẫn giữ đúng tỉ lệ ảnh
+    const CROP = CONFIG.PORTRAIT_CROP_RIGHT, srcW = Math.max(1, sheet.frameW - CROP), srcH = sheet.cropH || sheet.frameH;
+    cv.width = srcW; cv.height = srcH; cv.style.aspectRatio = srcW + ' / ' + srcH;
     const draw = () => {
       const g = cv.getContext('2d');
       g.clearRect(0, 0, cv.width, cv.height);
       if (!img.complete || !img.naturalWidth) return;
       g.imageSmoothingEnabled = false;
-      g.drawImage(img, sheet.frames[i % sheet.frames.length] * sheet.frameW, sheet.cropY || 0, sheet.frameW, sheet.cropH || sheet.frameH, 0, 0, cv.width, cv.height);
+      g.drawImage(img, sheet.frames[i % sheet.frames.length] * sheet.frameW, sheet.cropY || 0, srcW, srcH, 0, 0, srcW, srcH);
     };
     img.onload = draw;
     img.src = sheet.src;

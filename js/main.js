@@ -64,20 +64,20 @@ function renderMapPlayerInfo() {
   drawMapPortrait();
 }
 
+// Avatar HUD = ảnh tĩnh assets/characters/<key>/avatar.png (không dùng khung idle của sprite).
 function drawMapPortrait() {
-  const canvas = $('#map-portrait'), sheet = CONFIG.character().idle, key = CONFIG.character().key;
+  const canvas = $('#map-portrait'), key = CONFIG.character().key;
   const context = canvas.getContext('2d');
   context.clearRect(0, 0, canvas.width, canvas.height);
-  if (!sheet || !sheet.frames || !sheet.frames.length) return;
   const image = new Image();
   image.onload = () => {
     if (CONFIG.character().key !== key) return;
     context.imageSmoothingEnabled = false;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(image, sheet.frames[0] * sheet.frameW, sheet.cropY || 0, sheet.frameW, sheet.cropH || sheet.frameH, 0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight, 0, 0, canvas.width, canvas.height);
   };
-  image.onerror = () => console.warn(`Không tải được ảnh nhân vật: ${sheet.src}`);
-  image.src = sheet.src;
+  image.onerror = () => console.warn(`Không tải được avatar: assets/characters/${key}/avatar.png`);
+  image.src = `assets/characters/${key}/avatar.png`;
 }
 
 // Hồ sơ cũ chưa có lớp (Room, vd 6/5): hỏi một lần. Trả về false nếu người dùng chọn đăng xuất.
@@ -271,6 +271,12 @@ $('#equip-go-shop').onclick = () => { Shop.msg(''); Shop.open(); };
 ['shop', 'equip', 'rank'].forEach(name => { $(`#${name}-back`).onclick = () => renderLevels(); });
 $('#rank-refresh').onclick = () => Rank.refresh();
 
+$('#dungeon-exit').onclick = () => {   // Thoát hầm ngục: lưu các tầng đã vượt (khác "Về bản đồ" = bỏ lượt, không lưu)
+  Adventure.guard.mute = true;
+  const ok = window.confirm('Thoát hầm ngục? Các tầng đã vượt trong lượt này vẫn được lưu và nhận thưởng.');
+  setTimeout(() => { Adventure.guard.mute = false; }, 300);
+  if (ok) Adventure.exitDungeon();
+};
 $('#game-back').onclick = () => {
   Adventure.guard.mute = true;   // hộp thoại xác nhận làm cửa sổ mất focus: không coi là rời trang
   const raid = Raid.running || Raid.waiting;   // đang đánh Boss hoặc đang ở phòng chờ

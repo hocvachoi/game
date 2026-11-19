@@ -164,6 +164,8 @@ const Stage = {
     if (this.hero) { this.hero.mode = 'idle'; this.hero.i = 0; this.hero.attackState = null; }
     if (this.mob) { this.mob.mode = 'idle'; this.mob.i = 0; this.mob.attackState = null; }
     this.drawHero(); this.drawMob(); this.sync();
+    const nameEl = document.getElementById('mob-name');
+    if (nameEl) nameEl.textContent = (this.mob && this.mob.monster.name) || '';   // tên quái nằm trên thanh HP
     const hp = this.mob && Number(this.mob.monster.stats && this.mob.monster.stats.HP);
     this.hp(1, hp > 0 ? hp : 1, hp > 0 ? hp : 1);
   },

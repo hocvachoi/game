@@ -249,6 +249,7 @@
   <div class="game">
     <aside class="stage" id="stage" aria-hidden="true">
       <canvas id="scene" class="scene"></canvas>
+      <div id="floor-badge" class="floor-badge" hidden>Tầng 1</div>
       <div class="player-hud">
         <div class="level-badge"><span>LV</span><b id="hud-level">1</b></div>
         <div class="player-stats">
@@ -259,13 +260,19 @@
       </div>
       <canvas id="hero"></canvas>
       <div class="enemy" id="enemy">
-        <div class="hp" id="mobhp"><i></i><b id="mob-hp">—</b></div>
+        <div class="enemy-info">
+          <div class="enemy-name" id="mob-name"></div>
+          <div class="hp" id="mobhp"><i></i><b id="mob-hp">—</b></div>
+        </div>
         <canvas id="mob"></canvas>
       </div>
       <img id="skill-projectile" alt="" aria-hidden="true">
     </aside>
     <main class="qwrap">
-      <button id="game-back" class="btn ghost game-back" type="button">← Về bản đồ</button>
+      <div class="game-actions">
+        <button id="dungeon-exit" class="btn game-back dungeon-exit" type="button" hidden>Thoát hầm ngục</button>
+        <button id="game-back" class="btn ghost game-back" type="button">← Về bản đồ</button>
+      </div>
       <div id="raid-bar" class="raid-bar" title="Số sát thương kèm nickname đồng đội là hiệu ứng minh họa; tổng sát thương theo dữ liệu thật." hidden>
         <span id="raid-time"></span>
         <span id="raid-counter"></span>

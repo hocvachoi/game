@@ -23,8 +23,9 @@ const Rank = {
   MONDAY_UTC_MS: 4 * 24 * 3600 * 1000,   // 1970-01-05 00:00 UTC là thứ Hai đầu tiên sau epoch. [RULES] weekStart()
   TABS: [
     { id: 'stage', label: 'Ải đã vượt', field: 'WeekClears', unit: 'ải' },
-    { id: 'dungeon1', label: 'Hầm ngục 1', field: 'Dung1Week', unit: 'quái' },
-    { id: 'dungeon2', label: 'Hầm ngục 2', field: 'Dung2Week', unit: 'quái' }
+    // Hầm ngục theo TẦNG: kỷ lục tầng cao nhất đã vượt, KHÔNG reset theo tuần (weekly: false) → không lọc WeekStart, ws = 0.
+    { id: 'dungeon1', label: 'Hầm ngục 1', field: 'Dung1Floor', unit: 'tầng', weekly: false },
+    { id: 'dungeon2', label: 'Hầm ngục 2', field: 'Dung2Floor', unit: 'tầng', weekly: false }
   ],
   SCOPES: [{ id: 'room', label: 'Lớp' }, { id: 'grade', label: 'Khối' }],
   tab: 'stage', scope: 'room', own: null, tick: null, seq: 0,   // own = bản sao bản ghi xếp hạng của mình { v: 2, doc: {...} | null }
@@ -37,11 +38,14 @@ const Rank = {
   entry(prev, p) {
     const ws = this.weekStart(Date.now()), same = prev && prev.WeekStart === ws;
     const e = { WeekClears: same ? prev.WeekClears || 0 : 0, Dung1Week: same ? prev.Dung1Week || 0 : 0, Dung2Week: same ? prev.Dung2Week || 0 : 0 };
+    const fl = { Dung1Floor: (prev && prev.Dung1Floor) || 0, Dung2Floor: (prev && prev.Dung2Floor) || 0 };   // tầng cao nhất: giữ qua các tuần
     let changed = false;
     if (p.kind === 'stage' && p.passedNow) { e.WeekClears += 1; changed = true; }
     if (p.kind === 'dungeon' && p.index >= 1 && p.index <= 2) {
       const key = `Dung${p.index}Week`;
       if (p.kills > e[key]) { e[key] = p.kills; changed = true; }
+      const fkey = `Dung${p.index}Floor`;
+      if (p.floor > fl[fkey]) { fl[fkey] = p.floor; changed = true; }
     }
     if (!changed) return null;
     // Điểm TUẦN TRƯỚC được chép sang Prev* khi sang tuần mới (để trang admin vẫn chốt thưởng được); cùng tuần thì giữ nguyên Prev* cũ.
@@ -51,7 +55,7 @@ const Rank = {
     } else if (prev) {
       ['PrevWeekStart', 'PrevWeekClears', 'PrevDung1', 'PrevDung2'].forEach(k => { if (k in prev) carry[k] = prev[k]; });
     }
-    return { Nickname: p.nick, Room: p.room, LV: p.lv, WeekStart: ws, ...e, ...carry, UpdatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    return { Nickname: p.nick, Room: p.room, LV: p.lv, WeekStart: ws, ...e, ...fl, ...carry, UpdatedAt: firebase.firestore.FieldValue.serverTimestamp() };
   },
   // ----- Bản sao điểm của mình (localStorage) -----
   ownKey() { return `rank.own.v2.${Player.u.cls}.${Player.uid}`; },
@@ -66,15 +70,16 @@ const Rank = {
   },
   setOwn(doc) {   // doc = dữ liệu bản ghi (bỏ UpdatedAt) hoặc null = chưa có bản ghi
     let keep = null;
-    if (doc) { keep = {}; ['Nickname', 'Room', 'LV', 'WeekStart', 'WeekClears', 'Dung1Week', 'Dung2Week', 'PrevWeekStart', 'PrevWeekClears', 'PrevDung1', 'PrevDung2'].forEach(k => { if (k in doc) keep[k] = doc[k]; }); }
+    if (doc) { keep = {}; ['Nickname', 'Room', 'LV', 'WeekStart', 'WeekClears', 'Dung1Week', 'Dung2Week', 'Dung1Floor', 'Dung2Floor', 'PrevWeekStart', 'PrevWeekClears', 'PrevDung1', 'PrevDung2'].forEach(k => { if (k in doc) keep[k] = doc[k]; }); }
     this.own = { v: 2, doc: keep };
     try { localStorage.setItem(this.ownKey(), JSON.stringify(this.own)); } catch (e) { /* bỏ qua */ }
     return this.own;
   },
   // Điểm tuần `ws` của mình (0 nếu bản sao thuộc tuần khác). Không đọc gì.
   scoresFor(ws) {
-    const d = this.own && this.own.doc;
-    return d && d.WeekStart === ws ? { WeekClears: d.WeekClears || 0, Dung1Week: d.Dung1Week || 0, Dung2Week: d.Dung2Week || 0 } : { WeekClears: 0, Dung1Week: 0, Dung2Week: 0 };
+    const d = this.own && this.own.doc, wk = d && d.WeekStart === ws;
+    return { WeekClears: wk ? d.WeekClears || 0 : 0, Dung1Week: wk ? d.Dung1Week || 0 : 0, Dung2Week: wk ? d.Dung2Week || 0 : 0,
+      Dung1Floor: (d && d.Dung1Floor) || 0, Dung2Floor: (d && d.Dung2Floor) || 0 };   // tầng hầm ngục không phụ thuộc tuần
   },
   // Gọi sau khi ghi xếp hạng thành công (Player.runSave). KHÔNG đọc/ghi Firestore.
   // Kiểm tra top 10 ở trình duyệt (bảng LỚP của mình): so điểm mới với người thứ 10 trong cache; chưa lọt top 10 → giữ nguyên cache;
@@ -82,9 +87,8 @@ const Rank = {
   afterRun(entry) {
     if (!entry) return;
     this.setOwn(entry);
-    const ws = entry.WeekStart;
     this.TABS.forEach(tab => {
-      const c = this.readCache(tab, 'room');
+      const ws = tab.weekly === false ? 0 : entry.WeekStart, c = this.readCache(tab, 'room');
       if (!c || c.ws !== ws) return;
       const score = entry[tab.field] || 0, rows = c.rows || [];
       const inTop = rows.some(r => r.id === Player.uid);
@@ -109,7 +113,8 @@ const Rank = {
   // Bảng KHỐI đang tắt (CONFIG.RANK.GRADE_BOARD_ENABLED): render() không gọi hàm này cho phạm vi 'grade'.
   async fetch(tab, ws) {
     if (this.scope === 'grade' && !CONFIG.RANK.GRADE_BOARD_ENABLED) throw new Error('Bảng khối đang tạm đóng.');
-    let base = this.collection().where('WeekStart', '==', ws);
+    let base = this.collection();
+    if (tab.weekly !== false) base = base.where('WeekStart', '==', ws);   // bảng tầng hầm ngục không reset theo tuần
     if (this.scope === 'room') base = base.where('Room', '==', Player.data.room);   // bảng theo lớp
     const snap = await base.orderBy(tab.field, 'desc').limit(CONFIG.RANK.TOP).get();
     const rows = snap.docs.map(d => ({ id: d.id, Nickname: d.data().Nickname, LV: d.data().LV, score: d.data()[tab.field] || 0 })).filter(r => r.score > 0);
@@ -122,7 +127,7 @@ const Rank = {
   open() { this.render(); show('screen-rank'); },
   async render(force) {
     Player.fillTopBar('rank');
-    const tab = this.TABS.find(t => t.id === this.tab), ws = this.weekStart(Date.now());
+    const tab = this.TABS.find(t => t.id === this.tab), ws = tab.weekly === false ? 0 : this.weekStart(Date.now());
     const bar = $('#rank-tabs'), list = $('#rank-list'), info = $('#rank-info'), scopeBar = $('#rank-scope');
     scopeBar.replaceChildren(...this.SCOPES.map(s => {
       const b = el('button', 'tag' + (s.id === this.scope ? ' is-on' : ''), s.id === 'room' ? `Lớp ${Player.data.room || '?'}` : `Khối ${Player.u.cls}`);
@@ -138,8 +143,10 @@ const Rank = {
       b.type = 'button'; b.onclick = () => { this.tab = t.id; this.render(); };
       return b;
     }));
-    info.textContent = `${tab.id === 'stage' ? 'Số lượt vượt ải trong tuần (tính cả chơi lại).' : 'Kỷ lục số quái hạ được trong tuần.'} Reset 07:00 sáng thứ Hai (giờ Việt Nam) — còn ${this.countdown(this.nextReset(Date.now()) - Date.now())}.`;
-    const prize = ((CONFIG.RANK.REWARDS[this.scope] || {})[tab.id]) || null;
+    info.textContent = tab.weekly === false
+      ? 'Tầng hầm ngục cao nhất đã vượt (kỷ lục không reset theo tuần).'
+      : `${tab.id === 'stage' ? 'Số lượt vượt ải trong tuần (tính cả chơi lại).' : 'Kỷ lục trong tuần.'} Reset 07:00 sáng thứ Hai (giờ Việt Nam) — còn ${this.countdown(this.nextReset(Date.now()) - Date.now())}.`;
+    const prize = tab.weekly === false ? null : ((CONFIG.RANK.REWARDS[this.scope] || {})[tab.id]) || null;
     const label = r => `${r.gold} Gold${r.crystals ? ` + ${r.crystals} Crystal` : ''}`;
     if (prize) info.textContent += ` Thưởng top 10: hạng 1 ${label(prize.top1)} · hạng 2 ${label(prize.top2)} · hạng 3 ${label(prize.top3)} · hạng 4–10 ${label(prize.top4_10)}.`;
     const seq = ++this.seq;
@@ -181,7 +188,7 @@ const Rank = {
   rows(tab, data) {
     const medals = ['🥇', '🥈', '🥉'], out = [];
     const mineNow = this.scoresFor(data.ws)[tab.field];   // điểm của mình luôn mới nhất (từ bản sao ở máy, không đọc Firestore)
-    if (!data.rows.length) out.push(el('p', 'rank-empty', 'Tuần này chưa có ai trên bảng này. Hãy là người đầu tiên!'));
+    if (!data.rows.length) out.push(el('p', 'rank-empty', tab.weekly === false ? 'Chưa có ai trên bảng này. Hãy là người đầu tiên!' : 'Tuần này chưa có ai trên bảng này. Hãy là người đầu tiên!'));
     data.rows.forEach((r, i) => {
       const me = r.id === Player.uid, row = el('div', 'rank-row' + (me ? ' is-me' : '') + (i < 3 ? ' is-top' : ''));
       row.append(el('span', 'rank-pos', medals[i] || String(i + 1)), el('span', 'rank-name', `${r.Nickname}${me ? ' (bạn)' : ''}`),
@@ -194,7 +201,7 @@ const Rank = {
         row.append(el('span', 'rank-pos', '—'), el('span', 'rank-name', `${Player.data.nick} (bạn)`),
           el('span', 'rank-lv', `Lv ${Player.data.level}`), el('span', 'rank-score', `${mineNow} ${tab.unit}`));
         out.push(el('p', 'rank-empty', 'Bạn đang ngoài top 10 (chỉ top 10 được xếp hạng và nhận thưởng).'), row);
-      } else out.push(el('p', 'rank-empty', 'Bạn chưa có điểm ở bảng này trong tuần.'));
+      } else out.push(el('p', 'rank-empty', tab.weekly === false ? 'Bạn chưa vượt tầng nào ở bảng này.' : 'Bạn chưa có điểm ở bảng này trong tuần.'));
     }
     return out;
   },

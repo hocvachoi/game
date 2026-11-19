@@ -1,5 +1,5 @@
 // Màn Cửa hàng (UI mô tả trong Shop_UI.png): TRÁI = danh mục vật phẩm theo ô trang bị (có thẻ lọc/Tag), PHẢI = túi đồ + tiền.
-// Mỗi thẻ vật phẩm hiển thị: icon, phẩm chất (quality), tên và nút giá; chỉ số, hiệu ứng, nghề dùng được xem ở tooltip khi rê chuột. Mua hàng kiểm tra số dư/giá
+// Mỗi thẻ vật phẩm (170×170) hiển thị: khung icon theo phẩm chất (trái), tên và nút giá (phải); chỉ số, hiệu ứng, nghề dùng được xem ở tooltip khi rê chuột. Mua hàng kiểm tra số dư/giá
 // trong transaction (Plan mục 10.3); Rules là chốt cuối.
 const Shop = {
   tag: 'all',          // 'all' hoặc id ô trang bị
@@ -8,7 +8,7 @@ const Shop = {
   open() { this.render(); show('screen-shop'); },
   msg(text, err) { Ui.msg('shop-msg', text, err); },
 
-  // Thẻ gọn: icon + phẩm chất + tên + nút giá. Chỉ số/hiệu ứng/nghề xem bằng tooltip khi rê chuột (Tip, js/inventory.js).
+  // Thẻ gọn: icon (khung theo phẩm chất) + tên + nút giá. Chỉ số/hiệu ứng/nghề xem bằng tooltip khi rê chuột (Tip, js/inventory.js).
   card(it) {
     const d = Player.data, q = CONFIG.quality(it.quality);
     const owned = d.inventory.includes(it.id), usable = Player.usable(it);
@@ -17,8 +17,6 @@ const Shop = {
     card.style.setProperty('--q', q.color);
     card.tabIndex = 0;
     Tip.attach(card, it);
-    const head = el('div', 'shop-item-head');
-    head.append(Inventory.icon(it), Inventory.qualityBadge(it));
     // Nút mua hiển thị SỐ TIỀN (không ghi chữ "Mua"); đã sở hữu thì ghi "Đã sở hữu".
     const buy = el('button', 'btn buy' + (poor && !owned ? ' is-poor' : ''));
     buy.type = 'button'; buy.disabled = owned || poor;
@@ -29,7 +27,10 @@ const Shop = {
     }
     buy.setAttribute('aria-label', owned ? `${it.name}: đã sở hữu` : `Mua ${it.name} giá ${it.price} Gold${it.gemPrice > 0 ? ` và ${it.gemPrice} Crystal` : ''}${poor ? ' (không đủ tiền)' : ''}`);
     buy.onclick = () => Ui.act('shop-msg', () => Player.buy(it.id), `Đã mua ${it.name}.`, () => this.render());
-    card.append(head, el('h3', '', it.name), buy);
+    // Bố cục 170×170: khung item-icon q-<phẩm chất> bên trái; tên + giá bên phải (phẩm chất đã thể hiện bằng khung nên không có q-badge)
+    const info = el('div', 'shop-item-info');
+    info.append(el('h3', '', it.name), buy);
+    card.append(Inventory.icon(it), info);
     return card;
   },
 

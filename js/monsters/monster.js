@@ -8,6 +8,8 @@ class Monster {
     const { attackStyle, ...rest } = data || {};
     Object.assign(this, rest);
   }
+  // Phẩm chất (normal | uncommon | rare | epic | legendary) lấy từ "type" (hoặc "Type") trong JSON; thiếu thì coi là normal. Dùng để chọn quái theo tầng hầm ngục.
+  get quality() { return String(this.type || this.Type || 'normal').toLowerCase(); }
   get classKey() { return 'monster'; }
   get defaultAttackStyle() { return 'melee'; }
   get attackStyle() { return this.attackStyle_ || this.defaultAttackStyle; }
