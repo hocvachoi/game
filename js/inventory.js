@@ -129,7 +129,7 @@ const Inventory = {
     $('#f-char').onchange = event => {
       const select = event.target, key = select.value;
       if (key === CONFIG.character().key) return;
-      if (CONFIG.classPrefix(CONFIG.character().key) !== CONFIG.classPrefix(key) && Player.classCooldownLeft() > 0) {   // đổi NGHỀ bị giới hạn 1 lần/ngày
+      if (CONFIG.classPrefix(CONFIG.character().key) !== CONFIG.classPrefix(key) && Player.classCooldownLeft() > 0) {   // đổi NGHỀ bị giới hạn theo CLASS_CHANGE_HOURS
         Ui.msg('equip-msg', `Chưa thể đổi nghề. Hãy chờ thêm ${Player.fmtLeft(Player.classCooldownLeft())} (đổi kiểu nhân vật cùng nghề thì không giới hạn).`, true);
         select.value = CONFIG.character().key;
         return;

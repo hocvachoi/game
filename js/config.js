@@ -182,8 +182,10 @@ CONFIG.RAID = {
 // Bảng xếp hạng THEO TUẦN theo khối (js/leaderboard.js). Mốc reset tuần: 07:00 sáng thứ Hai giờ Việt Nam (UTC+7),
 // trùng 00:00 UTC thứ Hai nên firestore.rules tính được bằng request.time.   [RULES] WeekStart
 // Đổi NGHỀ (Archer/Mage/Warrior) tối đa 1 lần mỗi CLASS_CHANGE_HOURS giờ (đổi giới tính/kiểu nhân vật CÙNG nghề không giới hạn).
-// Mốc đổi gần nhất lưu ở hồ sơ (ClassChangedAt, giờ máy chủ) nên đếm ngược ở trình duyệt không tốn thêm lượt đọc. [RULES] khớp validCharacter() trong firestore.rules.
-CONFIG.CLASS_CHANGE_HOURS = 24;
+// Mốc đổi trước CLASS_CHANGE_RESET_AT được bỏ qua một lần; giữ mốc này khớp timestamp.value(...) trong firestore.rules.
+// Các lần đổi sau reset lưu ClassChangedAt (giờ máy chủ), không tốn thêm lượt đọc khi đếm ngược.
+CONFIG.CLASS_CHANGE_HOURS = 5;
+CONFIG.CLASS_CHANGE_RESET_AT = Date.UTC(2026, 10, 19, 9, 47, 59);
 // Màn Trang bị: cắt bấy nhiêu px bên PHẢI mỗi khung sprite nhân vật (px của ảnh gốc), xem Inventory.startPortrait.
 CONFIG.PORTRAIT_CROP_RIGHT = 50;
 

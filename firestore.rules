@@ -133,7 +133,8 @@ service cloud.firestore {
       }
 
       // Đổi nhân vật: Character thuộc danh sách; đổi NGHỀ thì Equipment phải về rỗng cùng lúc, cùng nghề thì giữ nguyên Equipment.
-      // Đổi NGHỀ còn phải cách lần đổi trước ≥ 24 giờ (giờ máy chủ) và ghi ClassChangedAt = request.time. [RULES] khớp CONFIG.CLASS_CHANGE_HOURS.
+      // Đổi NGHỀ cách lần đổi trước ≥ 5 giờ; mốc cũ hơn thời điểm reset được bỏ qua một lần.
+      // CLASS_CHANGE_RESET_AT phải khớp CONFIG.CLASS_CHANGE_RESET_AT trong js/config.js.
       // Đổi kiểu nhân vật CÙNG nghề (vd Archer_F → Archer_M) không giới hạn và không đụng ClassChangedAt.
       function validCharacter() {
         let n = request.resource.data;
@@ -145,7 +146,9 @@ service cloud.firestore {
             ? (!('Equipment' in changed()) && !('ClassChangedAt' in changed()))
             : (n.Equipment is map && n.Equipment.size() == 0
               && n.ClassChangedAt == request.time
-              && (!('ClassChangedAt' in resource.data) || request.time >= resource.data.ClassChangedAt + duration.value(5, 'h'))));
+              && (!('ClassChangedAt' in resource.data)
+                || resource.data.ClassChangedAt < timestamp.value('2026-11-19T09:47:59Z')
+                || request.time >= resource.data.ClassChangedAt + duration.value(5, 'h'))));
       }
 
       // Lớp (Room, dạng '6/5'): hồ sơ cũ chưa có thì được đặt MỘT lần, phải thuộc đúng khối của tài khoản. Muốn sửa lại phải nhờ giáo viên (Console).

@@ -286,7 +286,8 @@ const Player = {
       if (CONFIG.classPrefix(before) !== CONFIG.classPrefix(key)) {
         // Đổi NGHỀ: tháo hết trang bị và chỉ được 1 lần / CLASS_CHANGE_HOURS giờ (Rules cũng kiểm tra bằng giờ máy chủ).
         const last = cur.ClassChangedAt && cur.ClassChangedAt.toMillis ? cur.ClassChangedAt.toMillis() : 0;
-        const left = last + CONFIG.CLASS_CHANGE_HOURS * 3600 * 1000 - Date.now();
+        const left = last < CONFIG.CLASS_CHANGE_RESET_AT
+          ? 0 : last + CONFIG.CLASS_CHANGE_HOURS * 3600 * 1000 - Date.now();
         if (left > 0) throw new Error(`Chưa thể đổi nghề. Hãy chờ thêm ${this.fmtLeft(left)}.`);
         fields.Equipment = {};
         fields.ClassChangedAt = firebase.firestore.FieldValue.serverTimestamp();
@@ -303,7 +304,11 @@ const Player = {
     }
   },
   // Thời gian còn lại (ms) trước khi được đổi nghề lần nữa — tính ở trình duyệt từ mốc đã có trong hồ sơ, KHÔNG tốn lượt đọc.
-  classCooldownLeft() { return Math.max(0, (this.data.classChangedAt || 0) + CONFIG.CLASS_CHANGE_HOURS * 3600 * 1000 - Date.now()); },
+  classCooldownLeft() {
+    const last = this.data.classChangedAt || 0;
+    return last < CONFIG.CLASS_CHANGE_RESET_AT
+      ? 0 : Math.max(0, last + CONFIG.CLASS_CHANGE_HOURS * 3600 * 1000 - Date.now());
+  },
   fmtLeft(ms) {
     const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
