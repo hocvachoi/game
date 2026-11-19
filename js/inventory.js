@@ -2,12 +2,17 @@
 // Màn Trang bị chia đôi: TRÁI = nhân vật, chỉ số và 4 ô đang mặc; PHẢI = kho đồ (cuộn được) + chi tiết vật phẩm đang chọn.
 const Ui = {
   busy: false,
+  timers: {},
+  // Thông báo nổi (CSS .ui-msg: position fixed, KHÔNG chiếm chỗ trong bố cục) và tự biến mất sau MSG_MS.
   msg(id, text, err) {
     const m = $('#' + id);
+    clearTimeout(this.timers[id]);
     m.textContent = text || '';
     m.classList.toggle('is-error', !!err);
     m.classList.toggle('is-success', !err && !!text);
+    if (text) this.timers[id] = setTimeout(() => { m.textContent = ''; m.classList.remove('is-error', 'is-success'); }, this.MSG_MS);
   },
+  MSG_MS: 10000,
   // Chạy thao tác ghi (mua/mặc/tháo/đổi nhân vật), chặn bấm đúp, vẽ lại màn bằng `redraw` rồi báo kết quả.
   async act(msgId, fn, okText, redraw) {
     if (this.busy) return;
@@ -107,6 +112,15 @@ const Inventory = {
     b.setAttribute('aria-label', `${it.name} (${q.name})${usable ? '' : ' — không dùng được với nghề hiện tại'}`);
     Tip.attach(b, it, opts.hint);
     b.append(this.icon(it));
+    const n = Player.count(it.id);
+    if (n > 1) b.append(el('span', 'tile-count', `×${n}`));   // kho đồ gộp: số lượng cùng loại (tối đa CONFIG.STACK_MAX)
+    if (opts.onSell) {   // nút Bán (span để không lồng button trong button); phím Enter/Space cũng dùng được
+      const sell = el('span', 'tile-sell', 'Bán');
+      sell.setAttribute('role', 'button'); sell.tabIndex = 0; sell.setAttribute('aria-label', `Bán ${it.name}`);
+      const go = e => { e.stopPropagation(); e.preventDefault(); Tip.hide(); opts.onSell(); };
+      sell.onclick = go; sell.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); };
+      b.append(sell);
+    }
     if (opts.worn) b.append(el('span', 'tile-flag', 'Đã mặc'));
     else if (!usable) b.append(el('span', 'tile-flag is-bad', '🚫'));
     if (opts.onClick) b.onclick = opts.onClick;
@@ -121,6 +135,15 @@ const Inventory = {
     }));
   },
 
+  // Bán 1 món cho NPC: thẻ xác nhận hiện số tiền nhận được. `msgId` = vùng thông báo của màn đang mở; `redraw` vẽ lại màn.
+  sell(it, msgId, redraw) {
+    if (Player.count(it.id) === 1 && Object.values(Player.data.equip).includes(it.id)) {
+      Ui.msg(msgId, `Hãy tháo ${it.name} trước khi bán bản cuối cùng.`, true); return;
+    }
+    ItemSheet.open({ mode: 'sell', item: it, price: Player.sellPrice(it), onConfirm: () => Player.sell(it.id),
+      onDone: () => { redraw(); Ui.msg(msgId, `Đã bán ${it.name}.`, false); } });
+  },
+
   // ----- màn Trang bị -----
   open() { this.render(); show('screen-equip'); },
   bind() {
@@ -129,7 +152,7 @@ const Inventory = {
     $('#f-char').onchange = event => {
       const select = event.target, key = select.value;
       if (key === CONFIG.character().key) return;
-      if (CONFIG.classPrefix(CONFIG.character().key) !== CONFIG.classPrefix(key) && Player.classCooldownLeft() > 0) {   // đổi NGHỀ bị giới hạn theo CLASS_CHANGE_HOURS
+      if (CONFIG.classPrefix(CONFIG.character().key) !== CONFIG.classPrefix(key) && Player.classCooldownLeft() > 0) {   // đổi NGHỀ bị giới hạn 1 lần/ngày
         Ui.msg('equip-msg', `Chưa thể đổi nghề. Hãy chờ thêm ${Player.fmtLeft(Player.classCooldownLeft())} (đổi kiểu nhân vật cùng nghề thì không giới hạn).`, true);
         select.value = CONFIG.character().key;
         return;
@@ -202,13 +225,14 @@ const Inventory = {
     if (this.selected && !d.inventory.includes(this.selected)) this.selected = null;
     bag.replaceChildren(...(owned.length ? owned.map(it => this.tile(it, {
       selected: it.id === this.selected, worn: d.equip[it.slot] === it.id,
+      onSell: () => this.sell(it, 'equip-msg', () => this.render()),
       hint: this.touch ? '' : (d.equip[it.slot] === it.id ? 'Bấm để tháo' : d.equip[it.slot] ? 'Bấm để thay thế' : 'Bấm để mặc'),
       onClick: () => {
         if (this.touch && this.selected !== it.id) { this.selected = it.id; this.render(); return; }
         this.selected = it.id; this.toggle(it);
       }
     })) : [el('p', 'bag-empty', d.inventory.length ? 'Không có vật phẩm thuộc loại này.' : 'Kho đồ trống. Hãy ghé Cửa hàng hoặc đánh quái để nhận vật phẩm.')]));
-    $('#equip-count').textContent = `${d.inventory.length} vật phẩm`;
+    $('#equip-count').textContent = `${d.inventory.length} loại · ${Object.values(d.stock).reduce((a, b) => a + b, 0)} vật phẩm`;
     this.detail();
     this.startPortrait();
   },

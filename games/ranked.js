@@ -88,19 +88,16 @@ const Ranked = {
   },
   fail(msg) { const s = $('#ranked-status'); s.textContent = msg; s.classList.add('is-error'); },
   render() {
-    const me = this.doc[Player.uid], rows = this.rows(), idx = rows.findIndex(r => r.uid === Player.uid);
-    const count = this.C().TOP, start = idx < 0 ? 0 : Math.min(Math.max(0, idx - Math.floor((count - 1) / 2)), Math.max(0, rows.length - count));
-    const visible = rows.slice(start, start + count);
+    const me = this.doc[Player.uid], rows = this.rows(), top = rows.slice(0, this.C().TOP), idx = rows.findIndex(r => r.uid === Player.uid);
     const left = this.leftToday(), room = Player.data.room;
     $('#ranked-title').textContent = `RANKED · LỚP ${room}`;
     $('#ranked-me').textContent = me
       ? `Điểm của bạn: ${me.Pt} · ${idx >= 0 && idx < this.C().TOP ? `hạng #${idx + 1}` : 'ngoài top 10'} · Trận hôm nay: ${this.C().DAILY_MATCHES - left}/${this.C().DAILY_MATCHES}`
       : '';
     const list = $('#ranked-top'), medals = ['🥇', '🥈', '🥉'];
-    list.replaceChildren(...visible.map((r, i) => {
-      const rank = start + i + 1;
-      const row = el('div', 'rank-row' + (r.uid === Player.uid ? ' is-me' : '') + (rank <= 3 ? ' is-top' : ''));
-      row.append(el('span', 'rank-pos', medals[rank - 1] || String(rank)), el('span', 'rank-name', `${r.N}${r.uid === Player.uid ? ' (bạn)' : ''}`),
+    list.replaceChildren(...top.map((r, i) => {
+      const row = el('div', 'rank-row' + (r.uid === Player.uid ? ' is-me' : '') + (i < 3 ? ' is-top' : ''));
+      row.append(el('span', 'rank-pos', medals[i] || String(i + 1)), el('span', 'rank-name', `${r.N}${r.uid === Player.uid ? ' (bạn)' : ''}`),
         el('span', 'rank-lv', `Lv ${r.Lv}`), el('span', 'rank-score', `${r.Pt} điểm`));
       return row;
     }));
@@ -109,7 +106,7 @@ const Ranked = {
     $('#ranked-status').classList.remove('is-error');
     $('#ranked-status').textContent = left <= 0 ? 'Hôm nay bạn đã đủ số trận Ranked. Hẹn bạn ngày mai!'
       : others < 1 ? 'Chưa có đối thủ: lớp bạn cần ít nhất một bạn khác vào Ranked.'
-        : `Đang hiển thị tối đa ${this.C().TOP} hạng quanh bạn. Đối thủ là một bạn cùng lớp trong khoảng ±${this.C().RANK_RANGE} hạng quanh bạn.`;
+        : `Chỉ top ${this.C().TOP} có hạng. Đối thủ là một bạn cùng lớp trong khoảng ±${this.C().RANK_RANGE} hạng quanh bạn.`;
   },
 
   // ----- tìm đối thủ + bắt đầu trận (1 transaction: đọc tài liệu lớp, ghi bản chụp mới + số trận + B) -----
@@ -193,7 +190,7 @@ const Ranked = {
       if (!A.active || A.combat !== fight || fight.finished) return;
       const dealt = Math.min(damage, fight.monsterHp);
       fight.monsterHp = Math.max(0, fight.monsterHp - damage);
-      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương${atk.smite ? ` (Trừng phạt +${atk.smite})` : ''}.`);
+      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương${Effects.describe(atk)}.`);
       const stolen = Effects.lifesteal(fight, dealt);
       if (stolen > 0) A.note(`Đoạt huyết: hồi ${stolen} HP.`);
       Stage.hp(fight.monsterHp / fight.maxMonsterHp, fight.monsterHp, fight.maxMonsterHp);

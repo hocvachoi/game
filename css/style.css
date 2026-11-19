@@ -505,10 +505,9 @@ select.bad,.slot.bad{border-color:var(--bad);background-color:rgba(147,42,42,.55
 .class-cd:empty{display:none}
 
 /* Ranked (hộp thoại xếp hạng lớp) */
-#ranked-dialog .card{display:grid;gap:10px;max-width:480px;width:100%;max-height:calc(100dvh - 32px);min-width:0;overflow-y:auto;overscroll-behavior:contain;padding:18px;background:#101B2D;border:3px solid #F5D68C;border-radius:10px;color:#fff7dc}
+#ranked-dialog .card{display:grid;gap:10px;max-width:480px;width:100%;padding:18px;background:#101B2D;border:3px solid #F5D68C;border-radius:10px;color:#fff7dc}
 #ranked-me{margin:0;font-size:20px;color:#F5D68C}
 #ranked-top .rank-row{grid-template-columns:40px 1fr auto auto}
-#ranked-top .rank-name{min-width:0}
 
 /* Bộ UI được cấp: khung 9-slice, thanh chỉ số và bộ nút/ô hình ảnh. */
 #screen-game .player-hp,#screen-game .player-xp{border:0;box-shadow:none}
@@ -753,3 +752,69 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 .char-stage{grid-template-columns:clamp(54px,10.5vh,78px) minmax(0,1fr) clamp(54px,10.5vh,78px)}
 .char-stage .slot-col{gap:22px;padding-top:0}
 .char-stage{min-height:200px}
+
+
+/* [25] ===== V5 · SỬA G1 + KHO ĐỒ GỘP + THẺ MUA/BÁN =====
+   (a) shop-item rộng 100px (cao 170px); (b) .tile-count = số lượng ×N, .tile-sell = nút Bán trên ô kho đồ/túi đồ;
+   (c) ItemSheet (js/item-sheet.js): .sheet-backdrop + .sheet-card — giữa màn hình trên máy tính, trượt từ đáy màn hình trên điện thoại (<=800px). */
+.shop-grid{grid-template-columns:repeat(auto-fill,100px);justify-content:start;gap:10px}
+.shop-item{width:100px;flex:0 0 100px;padding:4px 2px}
+.shop-item .item-icon{width:84px;height:84px}
+.shop-item .item-icon img{width:66px;height:66px}
+.shop-item h3{font-size:15px}
+.tile-count{position:absolute;left:3px;top:3px;z-index:2;padding:0 5px;font:700 16px/1.25 "VT323",var(--pixel),sans-serif;color:var(--c-void);background:var(--c-gold-lt);border:2px solid var(--c-bronze);border-radius:6px}
+.tile-sell{position:absolute;right:3px;top:3px;z-index:2;padding:0 5px;font:700 15px/1.3 "VT323",var(--pixel),sans-serif;color:var(--c-gold-lt);background:rgba(8,15,27,.85);border:2px solid var(--c-gold);border-radius:6px;cursor:pointer}
+.tile-sell:hover,.tile-sell:focus-visible{background:var(--c-bronze);outline:none}
+.sheet-backdrop{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:12px;background:rgba(8,15,27,.72)}
+.sheet-card{--q:var(--c-gold);box-sizing:border-box;width:min(380px,100%);max-height:calc(100dvh - 24px);overflow:auto;display:flex;flex-direction:column;gap:8px;padding:14px;
+  color:var(--ink);background:linear-gradient(var(--c-navy),var(--c-ink));border:4px solid var(--q);border-radius:14px;box-shadow:inset 0 0 0 2px var(--c-void),0 8px 0 var(--c-void)}
+.sheet-head{display:flex;align-items:center;gap:12px}
+.sheet-head .item-icon{width:84px;height:84px;flex:0 0 84px}
+.sheet-head .item-icon img{width:66px;height:66px}
+.sheet-names{min-width:0;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.sheet-name{font:700 22px/1.1 "VT323",var(--pixel),sans-serif;color:var(--c-gold-lt)}
+.sheet-sub,.sheet-stats,.sheet-effect,.sheet-have,.sheet-balance{margin:0;font-size:17px;line-height:1.2}
+.sheet-sub{color:#cfe0f5}.sheet-stats{color:#8fe08f}.sheet-effect{color:var(--c-gold)}.sheet-have,.sheet-balance{color:#cfe0f5}
+.sheet-price{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--c-void);border:2px solid var(--c-bronze);border-radius:8px;font-size:19px}
+.sheet-price b{color:var(--c-gold-lt)}
+.sheet-msg{min-height:1.2em;margin:0;font-size:17px;color:#cfe0f5}.sheet-msg.is-error{color:#ff9d8f}
+.sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet-actions .btn{min-height:44px}
+@media (max-width:800px){
+  .sheet-backdrop{place-items:end center;padding:0}
+  .sheet-card{width:100%;border-radius:16px 16px 0 0;border-bottom-width:0;animation:sheet-up .18s ease-out}
+}
+@keyframes sheet-up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@media (max-height:480px){   /* điện thoại ngang: thẻ gọn để thấy hết nút Hủy/Mua(Bán) */
+  .sheet-card{padding:8px 12px;gap:4px;max-height:100dvh}
+  .sheet-head .item-icon{width:52px;height:52px;flex:0 0 52px}
+  .sheet-head .item-icon img{width:42px;height:42px}
+  .sheet-name{font-size:19px}
+  .sheet-sub,.sheet-stats,.sheet-effect,.sheet-have,.sheet-balance,.sheet-msg{font-size:15px;line-height:1.1}
+  .sheet-price{padding:3px 8px;font-size:17px}
+  .sheet-actions{position:sticky;bottom:0}
+  .sheet-actions .btn{min-height:34px;padding:2px 6px}
+}
+
+
+/* [26] ===== Cài đặt (js/settings.js): ô nhập trong hộp thoại; 7 nút thao tác trên bản đồ (điện thoại dọc: 7 cột) ===== */
+.sheet-field{display:flex;flex-direction:column;gap:3px;font-size:17px;color:#cfe0f5}
+.sheet-field input{box-sizing:border-box;width:100%;min-height:40px;padding:6px 10px;color:var(--ink);background:var(--c-void);border:2px solid var(--c-bronze);border-radius:6px;font:inherit;font-size:18px}
+.sheet-field input:focus{outline:none;border-color:var(--c-gold-lt)}
+.sheet-msg.is-ok{color:#8fe08f}
+.settings-card .sheet-name{font-size:24px}
+@media (max-width:800px) and (orientation:portrait){#screen-levels .map-actions{grid-template-columns:repeat(7,minmax(0,1fr))}}
+@media (max-height:480px){.settings-card{gap:3px}.sheet-field{font-size:14px}.sheet-field input{min-height:30px;font-size:16px;padding:2px 8px}}
+
+
+/* [27] ===== V5.6: cuộn hộp thoại, nút thẻ mua/bán cân bằng, thông báo nổi tự tắt ===== */
+.modal .card{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain}   /* vd Ranked: danh sách dài cuộn được */
+/* hai nút Hủy / Mua(Bán/Đổi mật khẩu) cùng kích thước: cùng viền, cùng bóng, vòng focus nằm TRONG nút (không làm nút to ra) */
+.sheet-actions .btn{box-sizing:border-box;height:44px;min-height:44px;margin:0;border-width:3px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18),0 3px 0 var(--c-void)}
+.sheet-actions .btn:focus-visible{outline:2px solid #fff;outline-offset:-7px}
+@media (max-height:480px){.sheet-actions .btn{height:34px;min-height:34px}}
+/* #shop-msg / #equip-msg: nổi cố định ở đáy màn hình, không chiếm chỗ (không đổi kích thước vùng chọn); JS tự xóa sau 10 giây (Ui.MSG_MS) */
+.ui-msg{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:60;box-sizing:border-box;max-width:min(560px,92vw);min-height:0;padding:6px 14px;font-size:18px;line-height:1.2;text-align:center;
+  color:var(--c-gold-lt);background:rgba(8,15,27,.94);border:3px solid var(--c-gold);border-radius:10px;box-shadow:0 4px 0 var(--c-void);pointer-events:none}
+.ui-msg.is-error{color:#ffaaaa;border-color:#e0705f}.ui-msg.is-success{color:#a7f2a4}
+.ui-msg:empty{display:none}

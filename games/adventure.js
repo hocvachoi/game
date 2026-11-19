@@ -130,6 +130,7 @@ const Adventure = {
   // Quái bị hạ (đòn thường hoặc Gai góc): tính kill, hiệu ứng ngã, rồi hồi sinh/quái mới sau 650ms.
   killMonster(fight) {
     fight.monsterKills++;
+    Effects.resetBurn(fight);
     Stage.hp(0, 0, fight.maxMonsterHp);
     Stage.defeat();
     Stage.respawnTimer = setTimeout(() => {
@@ -187,7 +188,7 @@ const Adventure = {
         const actualDamage = Math.min(damage, fight.monsterHp);
         fight.damageDealt += actualDamage;
         fight.monsterHp = Math.max(0, fight.monsterHp - damage);
-        this.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương${atk.smite ? ` (Trừng phạt +${atk.smite})` : ''}${atk.berserk ? ` (Cuồng chiến +${atk.berserk}%)` : ''}.`);
+        this.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương${Effects.describe(atk)}.`);
         const stolen = Effects.lifesteal(fight, actualDamage);
         if (stolen > 0) this.note(`Đoạt huyết: hồi ${stolen} HP.`);
         if (fight.monsterHp === 0) this.killMonster(fight);

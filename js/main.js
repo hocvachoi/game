@@ -265,6 +265,7 @@ $('#open-shop').onclick = () => { Shop.msg(''); Shop.open(); };
 $('#open-equip').onclick = () => { Ui.msg('equip-msg', ''); Inventory.open(); };
 $('#open-rank').onclick = () => Rank.open();
 $('#open-raid').onclick = () => Raid.open();
+$('#open-settings').onclick = () => Settings.open();
 $('#open-ranked').onclick = () => Ranked.open();
 $('#shop-go-equip').onclick = () => { Ui.msg('equip-msg', ''); Inventory.open(); };
 $('#equip-go-shop').onclick = () => { Shop.msg(''); Shop.open(); };

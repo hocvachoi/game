@@ -147,7 +147,7 @@ CONFIG.RANKED = {
   RANK_RANGE: 10,          // chọn B ngẫu nhiên trong ±RANK_RANGE hạng quanh A (cả trên lẫn dưới)
   MIN_BATTLE_SEC: 30,      // [RULES] báo thắng phải cách lúc bắt đầu ≥ ngần này giây
   CACHE_SEC: 300,          // dùng lại tài liệu lớp đã đọc trong 5 phút khi mở bảng (chỉ ở trình duyệt)
-  TOP: 10                  // tối đa 10 thứ hạng hiển thị quanh người chơi
+  TOP: 10                  // chỉ top 10 được hiển thị/xếp hạng/thưởng
 };
 
 // Boss Raid (games/boss-battle.js). Mọi mục [RULES] phải khớp khối `match /raids/...` trong firestore.rules (sửa cả hai nơi rồi Publish lại rules).
@@ -182,10 +182,8 @@ CONFIG.RAID = {
 // Bảng xếp hạng THEO TUẦN theo khối (js/leaderboard.js). Mốc reset tuần: 07:00 sáng thứ Hai giờ Việt Nam (UTC+7),
 // trùng 00:00 UTC thứ Hai nên firestore.rules tính được bằng request.time.   [RULES] WeekStart
 // Đổi NGHỀ (Archer/Mage/Warrior) tối đa 1 lần mỗi CLASS_CHANGE_HOURS giờ (đổi giới tính/kiểu nhân vật CÙNG nghề không giới hạn).
-// Mốc đổi trước CLASS_CHANGE_RESET_AT được bỏ qua một lần; giữ mốc này khớp timestamp.value(...) trong firestore.rules.
-// Các lần đổi sau reset lưu ClassChangedAt (giờ máy chủ), không tốn thêm lượt đọc khi đếm ngược.
-CONFIG.CLASS_CHANGE_HOURS = 5;
-CONFIG.CLASS_CHANGE_RESET_AT = Date.UTC(2026, 10, 19, 9, 47, 59);
+// Mốc đổi gần nhất lưu ở hồ sơ (ClassChangedAt, giờ máy chủ) nên đếm ngược ở trình duyệt không tốn thêm lượt đọc. [RULES] khớp validCharacter() trong firestore.rules.
+CONFIG.CLASS_CHANGE_HOURS = 5;   // [RULES] khớp duration.value(5, 'h') trong validCharacter
 // Màn Trang bị: cắt bấy nhiêu px bên PHẢI mỗi khung sprite nhân vật (px của ảnh gốc), xem Inventory.startPortrait.
 CONFIG.PORTRAIT_CROP_RIGHT = 50;
 
@@ -224,7 +222,12 @@ CONFIG.normalizeClass = function (name) {
   return key === 'magical' ? 'mage' : key;
 };
 // Hiệu ứng trang bị (Giai đoạn 3): khóa = type viết thường bỏ ký tự lạ; text(x) = mô tả hiển thị. Cơ chế ở js/effects.js.
+// Kho đồ gộp: tối đa STACK_MAX món cùng loại (lưu "warlord_sword 5"); bán cho NPC = SELL_RATIO × giá mua (làm tròn LÊN, cả Gold và Crystal).
+CONFIG.STACK_MAX = 10;
+CONFIG.SELL_RATIO = 0.5;
+CONFIG.BURN_MAX_STACKS = 10;   // Thiêu đốt: tối đa 10 tầng
 CONFIG.EFFECTS = {
+  burn: { name: 'Thiêu đốt', text: x => `Mỗi đòn tấn công tích 1 tầng (tối đa 10), mỗi tầng gây thêm ${x} sát thương` },
   blessing: { name: 'Ban phước', text: x => `Hồi ${x}% HP tối đa mỗi lượt` },
   steallife: { name: 'Đoạt huyết', text: x => `Hồi HP bằng ${x}% sát thương đã gây ra` },
   thorns: { name: 'Gai góc', text: x => `Gây ${x} sát thương khi bị tấn công` },
@@ -265,6 +268,7 @@ CONFIG.loadItems = function () {
           }
           return {
             id, slot, name: item.name, price: gold, gemPrice: gems,
+            dropOnly: gold === 0 && gems === 0,   // không ghi giá (price rỗng/0) = chỉ nhận từ phần thưởng rơi, không bán trong Cửa hàng
             power: Object.values(item.stats).some(value => Number(value) !== 0),
             bonus: item.stats, effect: item.effect,
             // đường dẫn tương đối (catalog có thể ghi "/assets/..." → bỏ dấu "/" đầu để chạy được trên GitHub Pages)

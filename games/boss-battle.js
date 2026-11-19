@@ -325,7 +325,7 @@ const Raid = {
       if (!this.running || A.combat !== fight || fight.finished) return;
       const applied = Math.min(damage, this.remaining());
       this.pending += applied; fight.damageDealt += applied;
-      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${applied} sát thương${atk.smite ? ` (Trừng phạt +${atk.smite})` : ''}.`);
+      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${applied} sát thương${Effects.describe(atk)}.`);
       const stolen = Effects.lifesteal(fight, applied);
       if (stolen > 0) A.note(`Đoạt huyết: hồi ${stolen} HP.`);
       A.afterTurn(fight);

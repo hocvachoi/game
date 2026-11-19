@@ -19,13 +19,31 @@ const Player = {
     CONFIG.selectCharacter(key && CONFIG.CHARACTERS[key] ? key : CONFIG.DEFAULT_CHARACTER);
     if (!CONFIG.CHARACTERS[CONFIG.selectedCharacter]) CONFIG.selectedCharacter = CONFIG.character().key;
   },
+  // ----- Kho đồ GỘP: một trường Enventory (list chuỗi), "warlord_sword 5" = 5 món; chuỗi chỉ có id (hồ sơ cũ) = 1 món. Tối đa CONFIG.STACK_MAX / loại.
+  // Mọi thay đổi số lượng: gỡ mục cũ của id đó rồi THÊM mục mới ở CUỐI danh sách (Rules kiểm tra đúng quy ước này).
+  parseInv(list) {
+    const stock = {};
+    (Array.isArray(list) ? list : []).forEach(entry => {
+      const [id, n] = String(entry).split(' ');
+      const q = n === undefined ? 1 : parseInt(n, 10);
+      if (id && q > 0) stock[id] = Math.min(CONFIG.STACK_MAX, (stock[id] || 0) + q);
+    });
+    return stock;
+  },
+  invSet(list, id, qty) {
+    const rest = (Array.isArray(list) ? list : []).filter(entry => String(entry).split(' ')[0] !== id);
+    if (qty > 0) rest.push(`${id} ${qty}`);
+    return rest;
+  },
+  count(id) { return (this.data && this.data.stock && this.data.stock[id]) || 0; },
+  sellPrice(it) { return { gold: Math.ceil(it.price * CONFIG.SELL_RATIO), gem: Math.ceil(it.gemPrice * CONFIG.SELL_RATIO) }; },
   apply(p) {
     if (p.LastReward && typeof p.LastReward.toMillis === 'function') this.lastRewardMs = p.LastReward.toMillis();
     const exp = p.EXP || 0;
     this.data = {
       ...p, nick: p.Nickname, cls: this.u.cls,
       level: this.levelOf(exp), xp: exp, gold: p.Golds || 0, crystals: p.Crystals || 0,
-      equip: p.Equipment || {}, inventory: p.Enventory || [], progress: p.progress || {},
+      equip: p.Equipment || {}, stock: this.parseInv(p.Enventory), inventory: Object.keys(this.parseInv(p.Enventory)), progress: p.progress || {},
       character: p.Character || null,
       // Mốc đổi NGHỀ gần nhất (ms). Vừa ghi bằng serverTimestamp (chưa có giá trị thật) thì lấy giờ máy làm xấp xỉ.
       classChangedAt: p.ClassChangedAt ? (p.ClassChangedAt.toMillis ? p.ClassChangedAt.toMillis() : Date.now()) : 0,
@@ -53,7 +71,7 @@ const Player = {
       // Phiếu có thể gồm Gold, Crystal và/hoặc một trang bị (ItemId). Đã sở hữu trang bị thì không thêm lần nữa.
       const fields = { Golds: (cur.Golds || 0) + (v.Gold || 0), Crystals: (cur.Crystals || 0) + (v.Crystals || 0), LastClaim: id };
       const inv = Array.isArray(cur.Enventory) ? cur.Enventory : [];
-      if (v.ItemId && !inv.includes(v.ItemId)) fields.Enventory = inv.concat([v.ItemId]);
+      if (v.ItemId && !this.parseInv(inv)[v.ItemId]) fields.Enventory = inv.concat([`${v.ItemId} 1`]);   // đã có thì không thêm
       t.update(pref, fields);
       t.update(vref, { Claimed: true, ClaimedAt: firebase.firestore.FieldValue.serverTimestamp() });
       return { ...cur, ...fields };
@@ -215,10 +233,10 @@ const Player = {
       const exp = Math.min(this.maxExp(), (cur.EXP || 0) + rawExp);
       out.factor = f; out.gold = gold; out.exp = exp - (cur.EXP || 0); out.drop = null; out.crystals = crystals;
       out.levelUp = this.levelOf(exp) > this.levelOf(cur.EXP || 0);
-      const owned = cur.Enventory || [];
-      if (win) { // tối đa 1 vật phẩm rơi mỗi lượt, chỉ rơi món chưa sở hữu
+      const owned = cur.Enventory || [], stock = this.parseInv(owned);
+      if (win) { // tối đa 1 vật phẩm rơi mỗi lượt; món đã có vẫn rơi để cộng dồn, đến tối đa CONFIG.STACK_MAX
         for (const drop of base.drops || []) {
-          if (!owned.includes(drop.itemId) && this.item(drop.itemId) && Math.random() < drop.chance) { out.drop = drop.itemId; break; }
+          if ((stock[drop.itemId] || 0) < CONFIG.STACK_MAX && this.item(drop.itemId) && Math.random() < drop.chance) { out.drop = drop.itemId; break; }
         }
       }
       const pct = o.total ? Math.round(o.correct / o.total * 100) : 0;
@@ -227,7 +245,7 @@ const Player = {
         : { best: Math.max(old.best, pct), passed: old.passed || o.passed, tries: old.tries + 1 };
       const fields = { Golds: (cur.Golds || 0) + gold, EXP: exp, LV: this.levelOf(exp), LastReward: firebase.firestore.FieldValue.serverTimestamp() };
       if (crystals > 0) fields.Crystals = (cur.Crystals || 0) + crystals;
-      if (out.drop) fields.Enventory = [...owned, out.drop];
+      if (out.drop) fields.Enventory = this.invSet(owned, out.drop, (stock[out.drop] || 0) + 1);
       const result = { fields, progress: { id: level.id, entry } };
       if (needRank) {
         const rank = Rank.entry(rankPrev, { nick: cur.Nickname, room: cur.Room, lv: fields.LV, kind: dungeon ? 'dungeon' : 'stage', index: level.index, kills: o.kills, floor: o.floor || 0, passedNow: !dungeon && o.passed });
@@ -242,18 +260,34 @@ const Player = {
   async buy(itemId) {
     const it = this.item(itemId);
     if (!it) throw new Error('Vật phẩm không tồn tại.');
+    if (it.dropOnly) throw new Error('Vật phẩm này chỉ nhận được từ phần thưởng rơi trong game.');
     await this.tx(cur => {
       const inv = cur.Enventory || [];
-      if (inv.includes(itemId)) throw new Error('Bạn đã sở hữu vật phẩm này.');
+      if (this.parseInv(inv)[itemId]) throw new Error('Bạn đã sở hữu vật phẩm này. Chỉ có thể nhận thêm từ phần thưởng rơi trong game.');
       if ((cur.Golds || 0) < it.price) throw new Error('Không đủ Gold.');
       if ((cur.Crystals || 0) < it.gemPrice) throw new Error('Không đủ Crystal.');
       return {
         fields: {
           Golds: cur.Golds - it.price,
           Crystals: cur.Crystals - it.gemPrice,
-          Enventory: [...inv, itemId]
+          Enventory: [...inv, `${itemId} 1`]
         }
       };
+    });
+  },
+  // Bán 1 món cho NPC: nhận SELL_RATIO × giá mua (làm tròn lên). Không bán bản cuối đang mặc. Bán hết món → ghi LastSale (Rules cần để biết món nào bị gỡ).
+  async sell(itemId) {
+    const it = this.item(itemId);
+    if (!it) throw new Error('Vật phẩm không tồn tại.');
+    await this.tx(cur => {
+      const inv = cur.Enventory || [], q = this.parseInv(inv)[itemId] || 0;
+      if (q < 1) throw new Error('Bạn không có vật phẩm này.');
+      if (q === 1 && Object.values(cur.Equipment || {}).includes(itemId)) throw new Error('Hãy tháo trang bị này trước khi bán bản cuối cùng.');
+      const price = this.sellPrice(it);
+      const fields = { Golds: (cur.Golds || 0) + price.gold, Enventory: this.invSet(inv, itemId, q - 1) };
+      if (price.gem > 0) fields.Crystals = (cur.Crystals || 0) + price.gem;
+      if (q === 1) fields.LastSale = itemId;
+      return { fields };
     });
   },
   async setEquip(slot, itemId) { // itemId = null để tháo
@@ -266,10 +300,10 @@ const Player = {
       // Giữ lại vật phẩm đúng ô, đúng nghề và vẫn thuộc kho đồ; loại bỏ dữ liệu trang bị cũ bị sai lệch.
       Object.entries(cur.Equipment || {}).forEach(([s, id]) => {
         const it = this.item(id);
-        if (it && it.slot === s && (cur.Enventory || []).includes(id) && this.usable(it, cls)) eq[s] = id;
+        if (it && it.slot === s && this.parseInv(cur.Enventory)[id] && this.usable(it, cls)) eq[s] = id;
       });
       if (itemId) {
-        if (!(cur.Enventory || []).includes(itemId)) throw new Error('Bạn chưa sở hữu vật phẩm này.');
+        if (!this.parseInv(cur.Enventory)[itemId]) throw new Error('Bạn chưa sở hữu vật phẩm này.');
         if (!this.usable(item, cls)) throw new Error(`Vật phẩm này chỉ dành cho: ${this.classLabel(item)}.`);
         eq[slot] = itemId;
       } else delete eq[slot];
@@ -286,8 +320,7 @@ const Player = {
       if (CONFIG.classPrefix(before) !== CONFIG.classPrefix(key)) {
         // Đổi NGHỀ: tháo hết trang bị và chỉ được 1 lần / CLASS_CHANGE_HOURS giờ (Rules cũng kiểm tra bằng giờ máy chủ).
         const last = cur.ClassChangedAt && cur.ClassChangedAt.toMillis ? cur.ClassChangedAt.toMillis() : 0;
-        const left = last < CONFIG.CLASS_CHANGE_RESET_AT
-          ? 0 : last + CONFIG.CLASS_CHANGE_HOURS * 3600 * 1000 - Date.now();
+        const left = last + CONFIG.CLASS_CHANGE_HOURS * 3600 * 1000 - Date.now();
         if (left > 0) throw new Error(`Chưa thể đổi nghề. Hãy chờ thêm ${this.fmtLeft(left)}.`);
         fields.Equipment = {};
         fields.ClassChangedAt = firebase.firestore.FieldValue.serverTimestamp();
@@ -304,11 +337,7 @@ const Player = {
     }
   },
   // Thời gian còn lại (ms) trước khi được đổi nghề lần nữa — tính ở trình duyệt từ mốc đã có trong hồ sơ, KHÔNG tốn lượt đọc.
-  classCooldownLeft() {
-    const last = this.data.classChangedAt || 0;
-    return last < CONFIG.CLASS_CHANGE_RESET_AT
-      ? 0 : Math.max(0, last + CONFIG.CLASS_CHANGE_HOURS * 3600 * 1000 - Date.now());
-  },
+  classCooldownLeft() { return Math.max(0, (this.data.classChangedAt || 0) + CONFIG.CLASS_CHANGE_HOURS * 3600 * 1000 - Date.now()); },
   fmtLeft(ms) {
     const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;

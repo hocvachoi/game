@@ -74,16 +74,40 @@ service cloud.firestore {
         return request.resource.data.diff(resource.data).affectedKeys();
       }
 
-      // A reward drop appends exactly one new, valid, not-yet-owned item ID.
+      // ===== KHO ĐỒ GỘP: Enventory là list chuỗi, "warlord_sword 5" = 5 món (tối đa 10); chuỗi chỉ có id (hồ sơ cũ) = 1 món. [RULES] khớp CONFIG.STACK_MAX = 10.
+      // Quy ước mọi thay đổi SỐ LƯỢNG: gỡ mục cũ của id đó rồi thêm mục mới ở CUỐI danh sách (Player.invSet) — nhờ đó Rules kiểm tra được bằng removeAll + concat.
+      function pid(s) { return s.split(' ')[0]; }
+      function pq(s) { return s.split(' ').size() > 1 ? int(s.split(' ')[1]) : 1; }
+      function ownedAny(inv, id) {
+        return inv.hasAny([id, id + ' 1', id + ' 2', id + ' 3', id + ' 4', id + ' 5', id + ' 6', id + ' 7', id + ' 8', id + ' 9', id + ' 10']);
+      }
+      // Thêm đúng MỘT loại mới ("id 1") vào cuối, loại đó chưa sở hữu (dùng cho mua hàng và rơi đồ lần đầu).
+      function addNew(n, o) {
+        let last = n.Enventory[n.Enventory.size() - 1];
+        return n.Enventory.size() == o.Enventory.size() + 1
+          && n.Enventory == o.Enventory.concat([last])
+          && validItemId(pid(last))
+          && last == pid(last) + ' 1'
+          && !ownedAny(o.Enventory, pid(last));
+      }
+      // Tăng số lượng một loại đã có thêm đúng 1 (2..10): mục cũ gỡ đi, mục mới "id k" thêm cuối.
+      function addMore(n, o) {
+        let last = n.Enventory[n.Enventory.size() - 1];
+        let id = pid(last);
+        let k = pq(last);
+        let prevs = k == 2 ? [id, id + ' 1'] : [id + ' ' + string(k - 1)];
+        return n.Enventory.size() == o.Enventory.size()
+          && validItemId(id) && k >= 2 && k <= 10
+          && last == id + ' ' + string(k)
+          && o.Enventory.hasAny(prevs)
+          && n.Enventory == o.Enventory.removeAll(prevs).concat([last]);
+      }
+      // Một phần thưởng rơi: loại mới (addNew) hoặc cộng thêm 1 bản (addMore).
       function dropOk() {
         let n = request.resource.data;
         let o = resource.data;
         return !('Enventory' in changed())
-          || (n.Enventory is list
-            && n.Enventory.size() == o.Enventory.size() + 1
-            && n.Enventory.hasAll(o.Enventory)
-            && validItemId(n.Enventory[n.Enventory.size() - 1])
-            && !(n.Enventory[n.Enventory.size() - 1] in o.Enventory));
+          || (n.Enventory is list && (addNew(n, o) || addMore(n, o)));
       }
 
       // [RULES] Level curve: EXP needed to REACH level L = 25*(L-1)*(L+2)  (XP_BASE 100, XP_STEP 50),
@@ -111,7 +135,7 @@ service cloud.firestore {
       // An empty slot is fine; a filled slot must hold an owned ID that belongs to that slot.
       function slotOk(eq, slot, ids, inv) {
         let v = eq.get(slot, null);
-        return v == null || (v is string && v in ids && v in inv);
+        return v == null || (v is string && v in ids && ownedAny(inv, v));
       }
       function slotCount(eq, slot) {
         return eq.get(slot, null) == null ? 0 : 1;
@@ -133,8 +157,7 @@ service cloud.firestore {
       }
 
       // Đổi nhân vật: Character thuộc danh sách; đổi NGHỀ thì Equipment phải về rỗng cùng lúc, cùng nghề thì giữ nguyên Equipment.
-      // Đổi NGHỀ cách lần đổi trước ≥ 5 giờ; mốc cũ hơn thời điểm reset được bỏ qua một lần.
-      // CLASS_CHANGE_RESET_AT phải khớp CONFIG.CLASS_CHANGE_RESET_AT trong js/config.js.
+      // Đổi NGHỀ còn phải cách lần đổi trước ≥ 5 giờ (giờ máy chủ) và ghi ClassChangedAt = request.time. [RULES] khớp CONFIG.CLASS_CHANGE_HOURS.
       // Đổi kiểu nhân vật CÙNG nghề (vd Archer_F → Archer_M) không giới hạn và không đụng ClassChangedAt.
       function validCharacter() {
         let n = request.resource.data;
@@ -146,9 +169,7 @@ service cloud.firestore {
             ? (!('Equipment' in changed()) && !('ClassChangedAt' in changed()))
             : (n.Equipment is map && n.Equipment.size() == 0
               && n.ClassChangedAt == request.time
-              && (!('ClassChangedAt' in resource.data)
-                || resource.data.ClassChangedAt < timestamp.value('2026-11-19T09:47:59Z')
-                || request.time >= resource.data.ClassChangedAt + duration.value(5, 'h'))));
+              && (!('ClassChangedAt' in resource.data) || request.time >= resource.data.ClassChangedAt + duration.value(5, 'h'))));
       }
 
       // Lớp (Room, dạng '6/5'): hồ sơ cũ chưa có thì được đặt MỘT lần, phải thuộc đúng khối của tài khoản. Muốn sửa lại phải nhờ giáo viên (Console).
@@ -160,21 +181,52 @@ service cloud.firestore {
           && n.Room.matches('^' + className + '/[0-9]{1,2}$');
       }
 
+      // Mua: chỉ MỘT loại mới ("id 1"), chưa sở hữu (đã có thì chỉ nhận thêm từ phần thưởng rơi); tiền không tăng. (Giá không kiểm tra ở Rules: client sửa được cả giá lẫn chỉ số.)
       function validBuy() {
         let n = request.resource.data;
         let o = resource.data;
-        let item = n.Enventory[n.Enventory.size() - 1];
         return changed().hasAll(['Golds', 'Enventory'])
           && changed().hasOnly(['Golds', 'Crystals', 'Enventory'])
           && n.Enventory is list
-          && n.Enventory.size() == o.Enventory.size() + 1
-          && n.Enventory.hasAll(o.Enventory)
-          && validItemId(item)
-          && !(item in o.Enventory)
+          && addNew(n, o)
           && n.Golds is int && n.Golds >= 0
           && n.Crystals is int && n.Crystals >= 0
           && n.Golds <= o.Golds
           && n.Crystals <= o.Crystals;
+      }
+
+      // Bán cho NPC: bớt đúng 1 bản. Còn ≥ 1 bản: mục "id k" thay bằng "id k-1" ở cuối (sellKeep). Bán bản cuối: gỡ mục và ghi LastSale = id,
+      // món đó không được đang mặc (sellLast). Tiền chỉ tăng trong giới hạn hợp lý (không kiểm tra đúng 50% giá vì client sửa được giá).
+      function sellKeep(n, o) {
+        let last = n.Enventory[n.Enventory.size() - 1];
+        let id = pid(last);
+        let k = pq(last);
+        let prev = id + ' ' + string(k + 1);
+        return n.Enventory.size() == o.Enventory.size()
+          && validItemId(id) && k >= 1 && k <= 9
+          && last == id + ' ' + string(k)
+          && o.Enventory.hasAny([prev])
+          && n.Enventory == o.Enventory.removeAll([prev]).concat([last]);
+      }
+      function sellLast(n, o) {
+        let id = n.get('LastSale', '');
+        let eq = n.get('Equipment', {});
+        return n.Enventory.size() == o.Enventory.size() - 1
+          && validItemId(id)
+          && o.Enventory.hasAny([id, id + ' 1'])
+          && n.Enventory == o.Enventory.removeAll([id, id + ' 1'])
+          && eq.get('weapon', '') != id && eq.get('armor', '') != id
+          && eq.get('helmet', '') != id && eq.get('accessory', '') != id;
+      }
+      function validSell() {
+        let n = request.resource.data;
+        let o = resource.data;
+        return changed().hasAll(['Enventory'])
+          && changed().hasOnly(['Golds', 'Crystals', 'Enventory', 'LastSale'])
+          && n.Enventory is list
+          && n.Golds is int && n.Golds >= o.Golds && n.Golds - o.Golds <= 50000
+          && n.get('Crystals', 0) >= o.get('Crystals', 0) && n.get('Crystals', 0) - o.get('Crystals', 0) <= 50
+          && (sellKeep(n, o) || sellLast(n, o));
       }
 
       allow get: if isStudentIdentity()
@@ -226,13 +278,13 @@ service cloud.firestore {
         return !('ItemId' in vd)
           ? n.Enventory == o.Enventory
           : (validItemId(vd.ItemId)
-            && (vd.ItemId in o.Enventory ? n.Enventory == o.Enventory : n.Enventory == o.Enventory.concat([vd.ItemId])));
+            && (ownedAny(o.Enventory, vd.ItemId) ? n.Enventory == o.Enventory : n.Enventory == o.Enventory.concat([vd.ItemId + ' 1'])));
       }
 
       allow update: if isStudentIdentity()
         && resource.data.UID == request.auth.uid
         && !('Password' in resource.data)
-        && (validRun() || validEquip() || validBuy() || validCharacter() || validRoom() || validClaim());
+        && (validRun() || validEquip() || validBuy() || validSell() || validCharacter() || validRoom() || validClaim());
 
       allow delete: if false;
     }
