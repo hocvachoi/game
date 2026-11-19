@@ -9,7 +9,7 @@
     "DEF": 5,
     "CRIT": 5
   },
-  "ANSWER_TIMEOUT_SEC": 10,
+  "ANSWER_TIMEOUT_SEC": 15,
   "sprites": {
     "idle": {
      "src": "assets/monsters/giant_slime/Giant_Slime_Idle.png",

@@ -147,7 +147,7 @@ CONFIG.RANKED = {
   RANK_RANGE: 10,          // chọn B ngẫu nhiên trong ±RANK_RANGE hạng quanh A (cả trên lẫn dưới)
   MIN_BATTLE_SEC: 30,      // [RULES] báo thắng phải cách lúc bắt đầu ≥ ngần này giây
   CACHE_SEC: 300,          // dùng lại tài liệu lớp đã đọc trong 5 phút khi mở bảng (chỉ ở trình duyệt)
-  TOP: 10                  // chỉ top 10 được hiển thị/xếp hạng/thưởng
+  TOP: 10                  // tối đa 10 thứ hạng hiển thị quanh người chơi
 };
 
 // Boss Raid (games/boss-battle.js). Mọi mục [RULES] phải khớp khối `match /raids/...` trong firestore.rules (sửa cả hai nơi rồi Publish lại rules).

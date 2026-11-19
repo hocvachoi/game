@@ -505,9 +505,10 @@ select.bad,.slot.bad{border-color:var(--bad);background-color:rgba(147,42,42,.55
 .class-cd:empty{display:none}
 
 /* Ranked (hộp thoại xếp hạng lớp) */
-#ranked-dialog .card{display:grid;gap:10px;max-height:960px;max-width:480px;width:100%;padding:18px;background:#101B2D;border:3px solid #F5D68C;border-radius:10px;color:#fff7dc}
+#ranked-dialog .card{display:grid;gap:10px;max-width:480px;width:100%;max-height:calc(100dvh - 32px);min-width:0;overflow-y:auto;overscroll-behavior:contain;padding:18px;background:#101B2D;border:3px solid #F5D68C;border-radius:10px;color:#fff7dc}
 #ranked-me{margin:0;font-size:20px;color:#F5D68C}
 #ranked-top .rank-row{grid-template-columns:40px 1fr auto auto}
+#ranked-top .rank-name{min-width:0}
 
 /* Bộ UI được cấp: khung 9-slice, thanh chỉ số và bộ nút/ô hình ảnh. */
 #screen-game .player-hp,#screen-game .player-xp{border:0;box-shadow:none}
