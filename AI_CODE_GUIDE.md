@@ -365,3 +365,7 @@ Cũ: `Reduce DMG` (giảm sát thương nhận), `Increase DMG` (tăng sát thư
 **Cài đặt & đổi mật khẩu:** nút `#open-settings` (icon `assets/ui/btn_setting.png`) nằm cạnh Đăng xuất ở `.map-actions`; `js/settings.js` (`Settings.open`) mở hộp thoại kiểu `.sheet-*`. Đổi mật khẩu = xác thực lại bằng mật khẩu hiện tại (`reauthenticateWithCredential`) rồi `updatePassword` (Firebase Auth, mật khẩu không đi qua Firestore); mật khẩu mới ≥ 6 ký tự, khác mật khẩu cũ, nhập lại khớp. Thời gian đổi NGHỀ: 5 giờ (`CONFIG.CLASS_CHANGE_HOURS`, Rules `validCharacter`).
 
 **V5.6:** Ranked/hộp thoại `.modal .card` cuộn được; nút thẻ mua/bán/đổi mật khẩu cùng cỡ với nút Hủy; nút ở `shop-item` hiện GIÁ rút gọn (`Shop.priceLabel`: `10K / 15` = 10.000 Gold + 15 Crystal, không icon); `#shop-msg`/`#equip-msg` là thông báo nổi `position:fixed` (không chiếm chỗ vùng chọn) và tự xóa sau `Ui.MSG_MS` = 10 giây.
+**Cập nhật v5.7:** Cập nhật hầm ngục. mỗi lần hạ quái vật sẽ tính tỉ lệ rơt vật phẩm
+- Thêm tính năng: Cân bằng thăng cấp, mỗi 10 tầng quái tăng 10% mọi chỉ số trừ crit,thưởng và tỉ lệ ra vật phẩm cũng tăng 10% (lưu ý tăng dựa trên giá trị góc. 5% rớt iteim sau 10 tầng thì tỉ lệ rớt là 5+5*0.1 =5.5%).
+- Thêm tính năng: Trạng thái điên loạn ( madness) (chỉ hầm ngục). Trạng thái này tăng gấp đôi các chỉ số HP, ATK, DEF, Crit +10 (cộng sau khi qua cân bằng thăng cấp). Xuất hiện 100% ở tầng 10-20-30-40... và 10% xuất hiện ở tầng khác. Hạ quái Madness nhận 1 crystal
+- UI: thêm viền đỏ điên loạn và tên và hoạt ảnh (idle, animation) của quái madness 
