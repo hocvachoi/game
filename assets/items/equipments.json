@@ -13,7 +13,8 @@
       "CRIT": 5
     },
     "effect": {
-      "type": null
+      "type": "Berserk",
+      "value": 5
     },
     "image": "/assets/items/legendary/warlord_sword.png",
     "price": {
@@ -35,7 +36,8 @@
       "CRIT": 5
     },
     "effect": {
-      "type": null
+      "type": "Holyshield",
+      "value": 10
     },
     "image": "/assets/items/legendary/warlord_helmet.png",
     "price": {
@@ -57,7 +59,8 @@
       "CRIT": 0
     },
     "effect": {
-      "type": null
+      "type": "sturdy",
+      "value": 45
     },
     "image": "/assets/items/legendary/warlord_armor.png",
     "price": {
@@ -79,7 +82,8 @@
       "CRIT": 10
     },
     "effect": {
-      "type": null
+      "type": "blessing",
+      "value": 7
     },
     "image": "/assets/items/legendary/warlord_ring.png",
     "price": {
@@ -101,7 +105,8 @@
       "CRIT": 10
     },
     "effect": {
-      "type": null
+      "type": "Berserk",
+      "value": 15
     },
     "image": "/assets/items/legendary/warlord_axe.png",
     "price": {
@@ -123,7 +128,8 @@
       "CRIT": 20
     },
     "effect": {
-      "type": null
+      "type": "Ambush",
+      "value":30
     },
     "image": "/assets/items/legendary/warlord_spear.png",
     "price": {
@@ -145,7 +151,8 @@
       "CRIT": 10
     },
     "effect": {
-      "type": null
+      "type": "Smite",
+      "value": 20
     },
     "image": "/assets/items/legendary/chaos_staff.png",
     "price": {
@@ -167,7 +174,8 @@
       "CRIT": 5
     },
     "effect": {
-      "type": null
+      "type": "increasedmg",
+      "value": 5
     },
     "image": "/assets/items/legendary/chaos_crown.png",
     "price": {
@@ -189,7 +197,8 @@
       "CRIT": 5
     },
     "effect": {
-      "type": null
+      "type": "Holyshield",
+      "value": 15
     },
     "image": "/assets/items/legendary/chaos_cloak.png",
     "price": {
@@ -211,7 +220,8 @@
       "CRIT": 10
     },
     "effect": {
-      "type": null
+      "type": "steallife",
+      "value": 20
     },
     "image": "/assets/items/legendary/chaos_necklace.png",
     "price": {
@@ -233,7 +243,8 @@
       "CRIT": 15
     },
     "effect": {
-      "type": null
+      "type": "increasedmg",
+      "value": 20
     },
     "image": "/assets/items/legendary/chaos_spellbook.png",
     "price": {
@@ -255,7 +266,8 @@
       "CRIT": 0
     },
     "effect": {
-      "type": null
+      "type": "Smite",
+      "value": 10
     },
     "image": "/assets/items/legendary/chaos_gloves.png",
     "price": {
@@ -277,7 +289,8 @@
       "CRIT": 25
     },
     "effect": {
-      "type": null
+      "type": "Ambush",
+      "value": 40
     },
     "image": "/assets/items/legendary/hell_bow.png",
     "price": {
@@ -286,7 +299,7 @@
     }
   },
   "hell_helmet": {
-    "name": "Luyện Ngục Vương Miện",
+    "name": "Luyện Ngục Vương Mão",
     "slot": "helmet",
     "class": [
       "archer"
@@ -299,7 +312,8 @@
       "CRIT": 10
     },
     "effect": {
-      "type": null
+      "type": "steallife",
+      "value":10
     },
     "image": "/assets/items/legendary/hell_helmet.png",
     "price": {
@@ -321,7 +335,8 @@
       "CRIT": 0
     },
     "effect": {
-      "type": null
+      "type": "sturdy",
+      "value":40
     },
     "image": "/assets/items/legendary/hell_armor.png",
     "price": {
@@ -343,7 +358,8 @@
       "CRIT": 10
     },
     "effect": {
-      "type": null
+      "type": "Berserk",
+      "value": 10
     },
     "image": "/assets/items/legendary/hell_banner.png",
     "price": {
@@ -365,7 +381,8 @@
       "CRIT": 30
     },
     "effect": {
-      "type": null
+      "type": "Smite",
+      "value":15
     },
     "image": "/assets/items/legendary/hell_kunai.png",
     "price": {
