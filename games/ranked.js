@@ -180,25 +180,32 @@ const Ranked = {
         if (!A.active || A.combat !== fight || fight.finished) return;
         A.applyMonsterHit(fight, hit);
         const action = A.afterMonsterHit(fight, hit, 'trả lời sai');
-        if (action === true) A.quizCtl.end({ playerDefeated: true });
+        if (action === true) { A.quizCtl.end({ playerDefeated: true }); return; }
+        A.applyThorns(fight);
+        A.afterTurn(fight);
       });
     }
-    const base = Math.max(1, fight.playerStats.ATK - A.monsterStat('DEF'));
-    const bonus = A.equipmentEffect('increasedmg');
-    const crit = A.roll(fight.playerStats.CRIT);
-    let damage = Math.max(1, Math.round(base * (1 + bonus / 100)));
-    if (crit) damage *= 2;
+    const atk = Effects.attack(fight, A.monsterStat('DEF'), fight.monsterHp), damage = atk.damage, crit = atk.crit;
     return Stage.fx(true, sofar, total, () => {
       if (!A.active || A.combat !== fight || fight.finished) return;
+      const dealt = Math.min(damage, fight.monsterHp);
       fight.monsterHp = Math.max(0, fight.monsterHp - damage);
-      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương.`);
+      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương${atk.smite ? ` (Trừng phạt +${atk.smite})` : ''}.`);
+      const stolen = Effects.lifesteal(fight, dealt);
+      if (stolen > 0) A.note(`Đoạt huyết: hồi ${stolen} HP.`);
       Stage.hp(fight.monsterHp / fight.maxMonsterHp, fight.monsterHp, fight.maxMonsterHp);
       if (fight.monsterHp === 0) {
         fight.finished = true; this.won = true;
         Stage.defeat();
         A.quizCtl.end({ rankedWin: true });
-      }
+      } else A.afterTurn(fight);
     });
+  },
+  // Gai góc hạ đối thủ (gọi từ Adventure.applyThorns): thắng ngay như đòn thường.
+  thornWin(fight) {
+    fight.finished = true; this.won = true;
+    Stage.hp(0, 0, fight.maxMonsterHp); Stage.defeat();
+    Adventure.quizCtl.end({ rankedWin: true });
   },
   async finish(res, box) {
     const A = Adventure;

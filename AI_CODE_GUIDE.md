@@ -340,3 +340,16 @@ Cuồng chiến                   mỗi 10% HP mất tăng [x]% dmg gây ra
 [x] là giá trị của `value`.
 
 - **Sửa G1/G2 (khối `[24]` style.css):** `shop-item` 80×170 xếp dọc (icon → tên → nút Mua; bấm Mua hiện `confirm` kèm giá, thiếu tiền báo số cần); màn Trang bị: nhân vật `object-fit:contain`, `.slot-label` nằm trên khung ô; `firestore.rules` đã thêm `warlord_axe`, `warlord_spear` (giá/nghề/ô khớp `equipments.json`).
+
+**Giai đoạn 3 (ĐÃ LÀM) — hiệu ứng trang bị** (`js/effects.js`, bảng tên/mô tả `CONFIG.EFFECTS` trong config.js; `effectText` ở tooltip dùng bảng này). `type` trong `equipments.json` không phân biệt hoa/thường/ký tự lạ; nhiều trang bị cùng hiệu ứng thì CỘNG dồn `value`:
+| type (JSON) | Tên | Cơ chế |
+|---|---|---|
+| `Blessing` (alias cũ `Recovery`) | Ban phước | hồi x% HP tối đa mỗi LƯỢT (mỗi câu trả lời, đúng hay sai) |
+| `Steal_Life` | Đoạt huyết | hồi HP = x% sát thương đã gây ra (tính phần sát thương thực) |
+| `Thorns` | Gai góc | mỗi lần bị tấn công gây x sát thương cố định cho kẻ địch (có thể hạ quái / thắng Ranked / cộng vào sát thương Boss Raid) |
+| `Ambush` | Đột kích | chí mạng ×2 → ×2×(1+x/100) |
+| `Holy_Shield` | Thánh thuẫn | x% (tối đa 100) sát thương nhận vào = 0 |
+| `Sturdy` | Cường tráng | giảm x% (tối đa 100) sát thương khi bị chí mạng |
+| `Smite` | Trừng phạt | x% cơ hội gây thêm 25% HP HIỆN TẠI của kẻ địch (tối đa 2000) |
+| `Berserk` | Cuồng chiến | mỗi 10% HP đã mất tăng x% sát thương gây ra |
+Cũ: `Reduce DMG` (giảm sát thương nhận), `Increase DMG` (tăng sát thương gây ra) vẫn hoạt động; `Lucky` chưa có cơ chế. Áp dụng cho Phiêu lưu/Hầm ngục (`Adventure.resolveAnswer/monsterHit/applyThorns/afterTurn/killMonster`), Ranked (`Ranked.resolve/thornWin`) và Boss Raid (`Raid.resolve/counterTick/thorns`). Ví dụ: `"effect": { "type": "Thorns", "value": 30 }`.

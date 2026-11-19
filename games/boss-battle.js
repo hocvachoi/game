@@ -289,8 +289,10 @@ const Raid = {
       Stage.fx(false, 0, 0, () => {
         if (!this.running || A.combat !== fight || fight.finished || fight.downed) return;
         A.applyMonsterHit(fight, hit);
-        A.note(`${this.boss.name} phản công: ${hit.crit ? 'CHÍ MẠNG! ' : ''}-${hit.damage} HP.`);
-        if (fight.playerHp === 0) this.down(fight);
+        A.note(hit.blocked ? `${this.boss.name} phản công: Thánh thuẫn chặn hoàn toàn!` : `${this.boss.name} phản công: ${hit.crit ? 'CHÍ MẠNG! ' : ''}-${hit.damage} HP.`);
+        if (fight.playerHp === 0) { this.down(fight); return; }
+        A.applyThorns(fight);
+        A.afterTurn(fight);
       });
     }
     if (Date.now() >= this.nextCounterAt) this.nextCounterAt = Date.now() + R.COUNTER_SEC * 1000;   // bỏ lỡ quá 5 lần: bỏ phần còn lại
@@ -308,7 +310,8 @@ const Raid = {
         if (!this.running || A.combat !== fight || fight.finished) return;
         A.applyMonsterHit(fight, hit);
         const action = A.afterMonsterHit(fight, hit, 'trả lời sai');
-        if (action === true) A.quizCtl.end({ playerDefeated: true });
+        if (action === true) { A.quizCtl.end({ playerDefeated: true }); return; }
+        if (fight.playerHp > 0) { A.applyThorns(fight); A.afterTurn(fight); }
       });
       if (fight.playerHp <= hit.damage) {
         const reviveMs = this.R().REVIVE_SEC * 1000;
@@ -316,20 +319,31 @@ const Raid = {
       }
       return impact;
     }
-    const base = Math.max(1, fight.playerStats.ATK - A.monsterStat('DEF'));
-    const bonus = A.equipmentEffect('increasedmg');
-    const crit = A.roll(fight.playerStats.CRIT);
-    let damage = Math.max(1, Math.round(base * (1 + bonus / 100) * this.damageMult()));   // thiếu người → tăng sát thương
-    if (crit) damage *= 2;
+    const atk = Effects.attack(fight, A.monsterStat('DEF'), this.remaining()), crit = atk.crit;
+    const damage = Math.max(1, Math.round(atk.damage * this.damageMult()));   // thiếu người → tăng sát thương
     const impact = Stage.fx(true, sofar, total, () => {
       if (!this.running || A.combat !== fight || fight.finished) return;
       const applied = Math.min(damage, this.remaining());
       this.pending += applied; fight.damageDealt += applied;
-      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${applied} sát thương.`);
+      A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${applied} sát thương${atk.smite ? ` (Trừng phạt +${atk.smite})` : ''}.`);
+      const stolen = Effects.lifesteal(fight, applied);
+      if (stolen > 0) A.note(`Đoạt huyết: hồi ${stolen} HP.`);
+      A.afterTurn(fight);
       this.drawHp();
       if (this.remaining() <= 0) { Stage.defeat(); this.end('boss'); }
     });
     return impact;
+  },
+  // Gai góc (Adventure.applyThorns gọi khi đang ở Raid): cộng vào sát thương Boss như một đòn đánh.
+  thorns(fight, t) {
+    if (!this.running || fight.finished || fight.downed) return 0;
+    const applied = Math.min(t, this.remaining());
+    if (applied <= 0) return 0;
+    this.pending += applied; fight.damageDealt += applied;
+    Adventure.note(`Gai góc phản ${applied} sát thương.`);
+    this.drawHp();
+    if (this.remaining() <= 0) { Stage.defeat(); this.end('boss'); }
+    return applied;
   },
   // Người chơi hết HP: không kết thúc, hồi sinh sau REVIVE_SEC giây (Plan 5.2).
   down(fight) {

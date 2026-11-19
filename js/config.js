@@ -221,6 +221,17 @@ CONFIG.normalizeClass = function (name) {
   const key = String(name || '').trim().toLowerCase();
   return key === 'magical' ? 'mage' : key;
 };
+// Hiệu ứng trang bị (Giai đoạn 3): khóa = type viết thường bỏ ký tự lạ; text(x) = mô tả hiển thị. Cơ chế ở js/effects.js.
+CONFIG.EFFECTS = {
+  blessing: { name: 'Ban phước', text: x => `Hồi ${x}% HP tối đa mỗi lượt` },
+  steallife: { name: 'Đoạt huyết', text: x => `Hồi HP bằng ${x}% sát thương đã gây ra` },
+  thorns: { name: 'Gai góc', text: x => `Gây ${x} sát thương khi bị tấn công` },
+  ambush: { name: 'Đột kích', text: x => `Tăng ${x}% sát thương khi chí mạng` },
+  holyshield: { name: 'Thánh thuẫn', text: x => `${x}% sát thương nhận vào bằng 0` },
+  sturdy: { name: 'Cường tráng', text: x => `Giảm ${x}% sát thương khi bị chí mạng` },
+  smite: { name: 'Trừng phạt', text: x => `${x}% gây thêm sát thương bằng 25% HP kẻ địch (tối đa 2000)` },
+  berserk: { name: 'Cuồng chiến', text: x => `Mỗi 10% HP đã mất tăng ${x}% sát thương gây ra` }
+};
 CONFIG.EFFECT_NAMES = { recovery: 'Hồi phục', reducedmg: 'Giảm sát thương nhận', increasedmg: 'Tăng sát thương gây ra', steallife: 'Hút máu', lucky: 'May mắn' };
 
 // Metadata vật phẩm được nạp từ assets/items/equipments.json (khóa = ID dạng chữ); Firestore chỉ lưu ID đã sở hữu/đang mặc, chỉ số trang bị cộng ở trình duyệt.

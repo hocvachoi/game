@@ -76,7 +76,8 @@ const Inventory = {
   effectText(it) {
     const e = it.effect;
     if (!e || !e.type) return '';
-    const key = String(e.type).toLowerCase().replace(/[^a-z]/g, '');
+    const key = Effects.key(e.type), def = CONFIG.EFFECTS[key];
+    if (def && Number.isFinite(Number(e.value))) return `${def.name}: ${def.text(e.value)}`;
     return `${CONFIG.EFFECT_NAMES[key] || e.type}${Number.isFinite(Number(e.value)) ? ` ${e.value}%` : ''}`;
   },
   // Ảnh icon vật phẩm; thiếu ảnh thì hiện biểu tượng theo ô trang bị.

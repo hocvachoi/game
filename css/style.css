@@ -713,7 +713,7 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
    (a) Kẻ địch: <div class="enemy-info"><div class="enemy-name">Tên</div><div class="hp">…</div></div> + canvas#mob. Tên và thanh HP cùng chung
        lề phải 40% bề rộng sprite quái (margin-right % tính theo bề rộng .enemy = bề rộng sprite).
    (b) Thẻ shop-item cố định 170×170 (không phụ thuộc thanh cuộn): item-icon 80px (ảnh 64px) bên trái; tên + giá bên phải; không còn q-badge. */
-#screen-game .enemy .enemy-info{position:relative;align-self:stretch;margin-right:40%;display:flex;flex-direction:column;gap:2px;z-index:5}
+#screen-game .enemy .enemy-info{position:relative;align-self:stretch;margin-left:40%;display:flex;flex-direction:column;gap:2px;z-index:5}
 #screen-game .enemy .enemy-name{color:var(--c-gold-lt);font:700 clamp(15px,1.5vw,20px)/1.05 "VT323",var(--pixel),sans-serif;text-shadow:1px 1px 0 var(--c-void),-1px 1px 0 var(--c-void);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #shop-list{scrollbar-gutter:stable}
 .shop-grid{grid-template-columns:repeat(auto-fill,170px);justify-content:start;gap:10px}

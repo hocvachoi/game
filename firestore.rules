@@ -17,7 +17,7 @@ service cloud.firestore {
       }
 
      // Item metadata lives in assets/items/equipments.json; profiles store IDs only (ID dạng chữ, vd 'iron_sword').
-      // [RULES] Keep these lists, the slot lists and the prices in sync with equipments.json.
+      // [RULES] Keep the item ID and slot lists in sync with equipments.json.
       function validItemId(id) {
         return id in [
           'warlord_sword', 'warlord_helmet', 'warlord_armor', 'warlord_ring', 'warlord_axe', 'warlord_spear',
@@ -32,70 +32,9 @@ service cloud.firestore {
           'iron_sword', 'wooden_bow', 'magic_wand', 'leather_armor', 'leather_hood', 'silver_ring'
         ];
       }
-      // [RULES] Ràng buộc nghề (class) của trang bị — khớp trường "class" trong equipments.json (mage = Mage/Magical; trống = mọi nghề).
-      function classesOf(id) {
-        return {
-          'warlord_sword': ['warrior'],
-          'warlord_helmet': ['warrior'],
-          'warlord_armor': ['warrior'],
-          'warlord_ring': ['warrior'],
-          'warlord_axe': ['warrior'],
-          'warlord_spear': ['warrior'],
-          'chaos_staff': ['mage'],
-          'chaos_crown': ['mage'],
-          'chaos_cloak': ['mage'],
-          'chaos_necklace': ['mage'],
-          'chaos_spellbook': ['mage'],
-          'chaos_gloves': ['mage'],
-          'hell_bow': ['archer'],
-          'hell_helmet': ['archer'],
-          'hell_armor': ['archer'],
-          'hell_banner': ['archer'],
-          'hell_kunai': ['archer'],
-          'hell_ring': ['archer'],
-          'royal_spear': ['warrior'],
-          'royal_bow': ['archer'],
-          'royal_staff': ['mage'],
-          'royal_armor': ['warrior', 'archer'],
-          'royal_helmet': ['warrior', 'archer'],
-          'royal_emblem': ['warrior', 'archer', 'mage'],
-          'royal_hood': ['mage'],
-          'royal_cloak': ['mage'],
-          'love_sword': ['warrior'],
-          'mage_orb': ['mage'],
-          'sun_bow': ['archer'],
-          'dark_staff': ['mage'],
-          'brave_sword': ['warrior'],
-          'brave_armor': ['warrior'],
-          'brave_helmet': ['warrior'],
-          'brave_belt': ['warrior'],
-          'hunter_bow': ['archer'],
-          'hunter_helmet': ['archer'],
-          'hunter_armor': ['archer'],
-          'hunter_arrow': ['archer'],
-          'priest_book': ['mage'],
-          'priest_hood': ['mage'],
-          'priest_cloak': ['mage'],
-          'priest_cross': ['mage'],
-          'battle_axe': ['warrior'],
-          'steel_bow': ['archer'],
-          'magic_staff': ['mage'],
-          'iron_armor': ['warrior', 'archer', 'mage'],
-          'iron_helmet': ['warrior', 'archer', 'mage'],
-          'gold_necklace': ['warrior', 'archer', 'mage'],
-          'steel_arrow': ['archer'],
-          'iron_sword': ['warrior'],
-          'wooden_bow': ['archer'],
-          'magic_wand': ['mage'],
-          'leather_armor': ['warrior', 'archer', 'mage'],
-          'leather_hood': ['warrior', 'archer', 'mage'],
-          'silver_ring': ['warrior', 'archer', 'mage']
-        }[id];
-      }
       // [RULES] Nhân vật chọn được = tên thư mục assets/characters (CONFIG.CHARACTERS). Hồ sơ chưa có Character coi là Archer_F.
       function charKeys() { return ['Archer_F', 'Archer_M', 'Mage_F', 'Mage_M', 'Warrior_F', 'Warrior_M']; }
       function classPrefix(k) { return k.split('_')[0]; }
-      function classOfChar(k) { return { 'Archer': 'archer', 'Mage': 'mage', 'Warrior': 'warrior' }[classPrefix(k)]; }
       function weaponIds() {
         return [
           'warlord_sword', 'warlord_axe', 'warlord_spear',
@@ -130,124 +69,6 @@ service cloud.firestore {
           'brave_belt', 'hunter_arrow', 'priest_cross',
           'gold_necklace', 'steel_arrow', 'silver_ring'
         ];
-      }
-      function goldPriceOf(id) {
-        return {
-          'warlord_sword': 10000,
-          'warlord_helmet': 10000,
-          'warlord_armor': 10000,
-          'warlord_ring': 12000,
-          'warlord_axe': 0,
-          'warlord_spear': 0,
-          'chaos_staff': 10000,
-          'chaos_crown': 10000,
-          'chaos_cloak': 10000,
-          'chaos_necklace': 12000,
-          'chaos_spellbook': 0,
-          'chaos_gloves': 0,
-          'hell_bow': 12000,
-          'hell_helmet': 10000,
-          'hell_armor': 10000,
-          'hell_banner': 10000,
-          'hell_kunai': 0,
-          'hell_ring': 0,
-          'royal_spear': 5000,
-          'royal_bow': 5000,
-          'royal_staff': 5000,
-          'royal_armor': 4000,
-          'royal_helmet': 3000,
-          'royal_emblem': 7000,
-          'royal_hood': 3500,
-          'royal_cloak': 3000,
-          'love_sword': 0,
-          'mage_orb': 4000,
-          'sun_bow': 0,
-          'dark_staff': 0,
-          'brave_sword': 2000,
-          'brave_armor': 2500,
-          'brave_helmet': 1700,
-          'brave_belt': 2000,
-          'hunter_bow': 2500,
-          'hunter_helmet': 1500,
-          'hunter_armor': 2000,
-          'hunter_arrow': 2200,
-          'priest_book': 2500,
-          'priest_hood': 2000,
-          'priest_cloak': 1800,
-          'priest_cross': 1900,
-          'battle_axe': 500,
-          'steel_bow': 500,
-          'magic_staff': 500,
-          'iron_armor': 700,
-          'iron_helmet': 500,
-          'gold_necklace': 500,
-          'steel_arrow': 700,
-          'iron_sword': 100,
-          'wooden_bow': 100,
-          'magic_wand': 100,
-          'leather_armor': 150,
-          'leather_hood': 100,
-          'silver_ring': 150
-        }[id];
-      }
-      function crystalPriceOf(id) {
-        return {
-          'warlord_sword': 15,
-          'warlord_helmet': 10,
-          'warlord_armor': 15,
-          'warlord_ring': 10,
-          'warlord_axe': 0,
-          'warlord_spear': 0,
-          'chaos_staff': 15,
-          'chaos_crown': 10,
-          'chaos_cloak': 15,
-          'chaos_necklace': 10,
-          'chaos_spellbook': 0,
-          'chaos_gloves': 0,
-          'hell_bow': 10,
-          'hell_helmet': 15,
-          'hell_armor': 15,
-          'hell_banner': 15,
-          'hell_kunai': 0,
-          'hell_ring': 0,
-          'royal_spear': 5,
-          'royal_bow': 5,
-          'royal_staff': 5,
-          'royal_armor': 5,
-          'royal_helmet': 3,
-          'royal_emblem': 3,
-          'royal_hood': 5,
-          'royal_cloak': 3,
-          'love_sword': 0,
-          'mage_orb': 5,
-          'sun_bow': 0,
-          'dark_staff': 0,
-          'brave_sword': 0,
-          'brave_armor': 0,
-          'brave_helmet': 0,
-          'brave_belt': 0,
-          'hunter_bow': 0,
-          'hunter_helmet': 0,
-          'hunter_armor': 0,
-          'hunter_arrow': 0,
-          'priest_book': 0,
-          'priest_hood': 0,
-          'priest_cloak': 0,
-          'priest_cross': 0,
-          'battle_axe': 0,
-          'steel_bow': 0,
-          'magic_staff': 0,
-          'iron_armor': 0,
-          'iron_helmet': 0,
-          'gold_necklace': 0,
-          'steel_arrow': 0,
-          'iron_sword': 0,
-          'wooden_bow': 0,
-          'magic_wand': 0,
-          'leather_armor': 0,
-          'leather_hood': 0,
-          'silver_ring': 0
-        }[id];
       }
       function changed() {
         return request.resource.data.diff(resource.data).affectedKeys();
@@ -288,9 +109,9 @@ service cloud.firestore {
       }
 
       // An empty slot is fine; a filled slot must hold an owned ID that belongs to that slot.
-      function slotOk(eq, slot, ids, inv, cls) {
+      function slotOk(eq, slot, ids, inv) {
         let v = eq.get(slot, null);
-        return v == null || (v is string && v in ids && v in inv && cls in classesOf(v));
+        return v == null || (v is string && v in ids && v in inv);
       }
       function slotCount(eq, slot) {
         return eq.get(slot, null) == null ? 0 : 1;
@@ -299,17 +120,16 @@ service cloud.firestore {
       // Equipment and inventory store catalog IDs, never client-supplied item metadata.
       function validEquip() {
         let n = request.resource.data;
-        let cls = classOfChar(n.get('Character', 'Archer_F'));
         return changed().hasOnly(['Equipment'])
           && n.Equipment is map
           && n.Equipment.keys().hasOnly(['weapon', 'armor', 'helmet', 'accessory'])
           && n.Enventory is list
           && n.Equipment.size() == slotCount(n.Equipment, 'weapon') + slotCount(n.Equipment, 'armor')
             + slotCount(n.Equipment, 'helmet') + slotCount(n.Equipment, 'accessory')
-          && slotOk(n.Equipment, 'weapon', weaponIds(), n.Enventory, cls)
-          && slotOk(n.Equipment, 'armor', armorIds(), n.Enventory, cls)
-          && slotOk(n.Equipment, 'helmet', helmetIds(), n.Enventory, cls)
-          && slotOk(n.Equipment, 'accessory', accessoryIds(), n.Enventory, cls);
+          && slotOk(n.Equipment, 'weapon', weaponIds(), n.Enventory)
+          && slotOk(n.Equipment, 'armor', armorIds(), n.Enventory)
+          && slotOk(n.Equipment, 'helmet', helmetIds(), n.Enventory)
+          && slotOk(n.Equipment, 'accessory', accessoryIds(), n.Enventory);
       }
 
       // Đổi nhân vật: Character thuộc danh sách; đổi NGHỀ thì Equipment phải về rỗng cùng lúc, cùng nghề thì giữ nguyên Equipment.
@@ -325,7 +145,7 @@ service cloud.firestore {
             ? (!('Equipment' in changed()) && !('ClassChangedAt' in changed()))
             : (n.Equipment is map && n.Equipment.size() == 0
               && n.ClassChangedAt == request.time
-              && (!('ClassChangedAt' in resource.data) || request.time >= resource.data.ClassChangedAt + duration.value(24, 'h'))));
+              && (!('ClassChangedAt' in resource.data) || request.time >= resource.data.ClassChangedAt + duration.value(5, 'h'))));
       }
 
       // Lớp (Room, dạng '6/5'): hồ sơ cũ chưa có thì được đặt MỘT lần, phải thuộc đúng khối của tài khoản. Muốn sửa lại phải nhờ giáo viên (Console).
@@ -349,9 +169,9 @@ service cloud.firestore {
           && validItemId(item)
           && !(item in o.Enventory)
           && n.Golds is int && n.Golds >= 0
-          && n.Golds == o.Golds - goldPriceOf(item)
           && n.Crystals is int && n.Crystals >= 0
-          && n.Crystals == o.Crystals - crystalPriceOf(item);
+          && n.Golds <= o.Golds
+          && n.Crystals <= o.Crystals;
       }
 
       allow get: if isStudentIdentity()
