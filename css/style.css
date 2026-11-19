@@ -314,7 +314,7 @@ select.bad,.slot.bad{border-color:var(--bad);background-color:rgba(147,42,42,.55
 /* ===== Khung UI game dùng chung: Cửa hàng / Trang bị / Xếp hạng (Shop_UI.png, Equipment_UI.png) ===== */
 .ui-screen{min-height:100dvh;padding:2vh 2vw}
 .ui-screen:not([hidden]){display:grid;place-items:center}
-.ui-frame{--trim:#D8B65D;width:min(1180px,100%);height:min(94dvh,780px);display:flex;flex-direction:column;gap:8px;padding:8px;background:transparent;border:26px solid transparent;border-image:url("../assets/ui/Panel_square.png") 38 fill / 26px / 0 stretch;font-family:var(--pixel);font-size:21px;line-height:1.15}
+.ui-frame{--trim:#D8B65D;width:min(1180px,100%);height:min(94dvh,780px);display:flex;flex-direction:column;gap:8px;padding:8px;background:transparent;border:26px solid transparent;border-image:url("../assets/ui/panel_square.png") 38 fill / 26px / 0 stretch;font-family:var(--pixel);font-size:21px;line-height:1.15}
 .ui-top{display:flex;align-items:center;gap:12px;padding:6px 10px;background:rgba(4,17,42,.55);border:0}
 .ui-level{flex:0 0 54px;aspect-ratio:1;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 28%,#80602D,#3b2a1d 70%);border:3px solid var(--trim);font-size:30px;color:#fff7dc}
 .ui-xp{display:grid;gap:1px;min-width:150px}
@@ -338,7 +338,7 @@ select.bad,.slot.bad{border-color:var(--bad);background-color:rgba(147,42,42,.55
 .ui-body{flex:1;min-height:0;display:grid;gap:10px}
 .ui-split{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
 .ui-split--equal{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-.ui-panel{min-height:0;display:flex;flex-direction:column;gap:8px;padding:8px;background:transparent;border:20px solid transparent;border-image:url("../assets/ui/Panel_square.png") 38 fill / 20px / 0 stretch}
+.ui-panel{min-height:0;display:flex;flex-direction:column;gap:8px;padding:8px;background:transparent;border:20px solid transparent;border-image:url("../assets/ui/panel_square.png") 38 fill / 20px / 0 stretch}
 .ui-scroll{flex:1;min-height:0;overflow-y:auto;padding-right:4px;scrollbar-color:#D8B65D #101B2D}
 .ui-tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab{font:22px/1 var(--pixel);padding:8px 16px;color:#F5D68C;background:#243C5B;border:3px solid var(--trim);border-bottom-width:5px;border-radius:8px 8px 0 0;cursor:pointer}

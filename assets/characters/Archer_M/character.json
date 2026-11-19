@@ -1,5 +1,6 @@
 {
   "name": "Cung thủ nam",
+  "Class": "Archer",
   "attackStyle": "ranged",
   "stats": {
     "HP": 100,
@@ -10,19 +11,19 @@
   },
   "sprites": {
     "idle": {
-      "src": "assets/characters/Archer_M/Archer_M_Idle.png",
+      "src": "assets/characters/archer_m/archer_m_idle.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [0, 1, 2, 3, 4, 5]
     },
     "attack": {
-      "src": "assets/characters/Archer_M/Archer_M_Animation.png",
+      "src": "assets/characters/archer_m/archer_m_animation.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [4, 5, 6, 7, 8, 9, 10, 11]
     },
     "skill": {
-      "src": "assets/characters/Archer_M/Archer_M_Skill.png"
+      "src": "assets/characters/archer_m/archer_m_skill.png"
     }
   },
   "castSkill": {

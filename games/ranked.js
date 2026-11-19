@@ -147,7 +147,7 @@ const Ranked = {
   // Đối thủ B như một "quái": chỉ số tính từ bản chụp (cấp + nghề/nhân vật + trang bị), sprite là sprite nhân vật của B (lật ngang).
   monsterFrom(b) {
     const def = CONFIG.CHARACTERS[b.Ch] || CONFIG.character(), s = Player.statsOf(b.Lv, def.key, b.Eq);
-    return { key: 'rk_' + def.key, name: b.N, type: 'Ranked', flip: true, attackStyle: def.attackStyle, castSkill: def.castSkill,
+    return { key: 'rk_' + def.key, name: b.N, type: 'Ranked', Class: def.classKey, flip: true, attackStyle: def.attackStyle, castSkill: def.castSkill,
       stats: { HP: s.HP, ATK: s.ATK, DEF: s.DEF, CRIT: s.CRIT }, sprites: { idle: def.idle, attack: def.attack, skill: def.skill } };
   },
 

@@ -1,5 +1,6 @@
 {
   "name": "Cung thủ nữ",
+  "Class": "Archer",
   "attackStyle": "ranged",
   "stats": {
     "HP": 100,
@@ -10,19 +11,19 @@
   },
   "sprites": {
     "idle": {
-      "src": "assets/characters/Archer_F/Archer_F_Idle.png",
+      "src": "assets/characters/archer_f/archer_f_idle.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [0, 1, 2, 3, 4, 5]
     },
     "attack": {
-      "src": "assets/characters/Archer_F/Archer_F_Animation.png",
+      "src": "assets/characters/archer_f/archer_f_animation.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [4, 5, 6, 7, 8, 9, 10, 11]
     },
     "skill": {
-      "src": "assets/characters/Archer_F/Archer_F_Skill.png"
+      "src": "assets/characters/archer_f/archer_f_skill.png"
     }
   },
   "castSkill": {

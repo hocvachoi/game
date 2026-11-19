@@ -1,5 +1,6 @@
 {
   "name": "Chiến Binh Nữ",
+  "Class": "Warrior",
   "attackStyle": "melee",
   "stats": {
     "HP": 100,
@@ -10,13 +11,13 @@
   },
   "sprites": {
     "idle": {
-      "src": "assets/characters/Warrior_F/Warrior_F_Idle.png",
+      "src": "assets/characters/warrior_f/warrior_f_idle.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [0, 1, 2, 3, 4, 5]
     },
     "attack": {
-      "src": "assets/characters/Warrior_F/Warrior_F_Animation.png",
+      "src": "assets/characters/warrior_f/warrior_f_animation.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [4, 5, 6, 7, 8, 9, 10, 11]

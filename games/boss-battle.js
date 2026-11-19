@@ -102,7 +102,8 @@ const Raid = {
     if (!r.ok) throw new Error(`Không tải được ${this.R().BOSS_FILE} (${r.status}).`);
     const data = await r.json();
     if (!StageMonster.validate(data)) throw new Error('raid_boss.json không hợp lệ (cần name, stats, sprites.idle/attack).');
-    return (this.cache.boss = { ...data, key: 'raid_boss', stats: { CRIT: 0, ...data.stats } });
+    const boss = { ...data, key: 'raid_boss', stats: { CRIT: 0, ...data.stats } };
+    return (this.cache.boss = Monster.create(boss));
   },
   // Câu hỏi = TOÀN BỘ file Excel của mọi ải trong thế giới của khối (1 lần tải mỗi phiên).
   async loadQuestions(world) {

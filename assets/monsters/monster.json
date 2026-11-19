@@ -18,11 +18,11 @@
       "frameW": 256,
       "frameH": 202,
       "idle": {
-        "src": "assets/monsters/Undead_Knight_Idle.png",
+        "src": "assets/monsters/undead_knight/undead_knight_idle.png",
         "frames": [0, 1, 2, 3, 4, 5]
       },
       "animation": {
-        "src": "assets/monsters/Undead_Knight_Animation.png",
+        "src": "assets/monsters/undead_knight/undead_knight_animation.png",
         "frames": [4, 5, 6, 7, 8, 9, 10, 11]
       }
     }
@@ -46,11 +46,11 @@
       "frameW": 256,
       "frameH": 202,
       "idle": {
-        "src": "assets/monsters/Undead_Knight_Idle.png",
+        "src": "assets/monsters/undead_knight/undead_knight_idle.png",
         "frames": [0, 1, 2, 3, 4, 5]
       },
       "animation": {
-        "src": "assets/monsters/Undead_Knight_Animation.png",
+        "src": "assets/monsters/undead_knight/undead_knight_animation.png",
         "frames": [4, 5, 6, 7, 8, 9, 10, 11]
       }
     }
@@ -59,6 +59,7 @@
     "id": "MON_003",
     "key": "dark_dragon",
     "name": "Dark Dragon",
+    "Class": "Warrior",
     "type": "Legendary",
     "stats": {
       "HP": 500,
@@ -73,11 +74,11 @@
       "frameW": 256,
       "frameH": 202,
       "idle": {
-        "src": "assets/monsters/Undead_Knight_Idle.png",
+        "src": "assets/monsters/undead_knight/undead_knight_idle.png",
         "frames": [0, 1, 2, 3, 4, 5]
       },
       "animation": {
-        "src": "assets/monsters/Undead_Knight_Animation.png",
+        "src": "assets/monsters/undead_knight/undead_knight_animation.png",
         "frames": [4, 5, 6, 7, 8, 9, 10, 11]
       }
     }

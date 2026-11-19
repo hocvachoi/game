@@ -4,8 +4,8 @@ const StageMonster = {
   FALLBACK: Monster.create({ key: 'undead_knight', Class: 'Warrior', name: 'Undead Knight', type: 'Epic',
     stats: { HP: 200, ATK: 20, DEF: 10, CRIT: 0 },
     sprites: {
-      idle: { src: 'assets/monsters/undead_knight/Undead_Knight_Idle.png', frameW: 256, frameH: 202, frames: [0, 1, 2, 3, 4, 5] },
-      attack: { src: 'assets/monsters/undead_knight/Undead_Knight_Animation.png', frameW: 256, frameH: 202, frames: [4, 5, 6, 7, 8, 9, 10, 11] }
+      idle: { src: 'assets/monsters/undead_knight/undead_knight_idle.png', frameW: 256, frameH: 202, frames: [0, 1, 2, 3, 4, 5] },
+      attack: { src: 'assets/monsters/undead_knight/undead_knight_animation.png', frameW: 256, frameH: 202, frames: [4, 5, 6, 7, 8, 9, 10, 11] }
     } }),
   monsters: {}, map: { default: 'undead_knight', worlds: {} }, ready: null,
 

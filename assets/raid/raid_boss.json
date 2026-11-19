@@ -1,6 +1,7 @@
 {
   "_help": "Boss Raid. Thay ảnh bằng cách ghi đè Raid_Boss_Idle.png / Raid_Boss_Animation.png (cùng kích thước khung 256x202, đổi frames nếu số khung khác). HP tối đa của Boss KHÔNG đặt ở đây mà ở CONFIG.RAID.BOSS_HP (js/config.js) và bảng bossMax() trong firestore.rules. ATK/DEF/CRIT và ANSWER_TIMEOUT_SEC dùng khi Boss đánh người chơi (trả lời sai hoặc quá giờ).",
   "name": "Boss Slime Khổng Lồ",
+  "Class": "Warrior",
   "attackStyle": "melee",
   "Type": "Boss",
   "stats": {
@@ -12,13 +13,13 @@
   "ANSWER_TIMEOUT_SEC": 15,
   "sprites": {
     "idle": {
-      "src": "assets/raid/Raid_Boss_Idle.png",
+      "src": "assets/raid/raid_boss_idle.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [0, 1, 2, 3, 4, 5]
     },
     "attack": {
-      "src": "assets/raid/Raid_Boss_Animation.png",
+      "src": "assets/raid/raid_boss_animation.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [3, 4, 5, 6, 7, 8, 9, 10, 11]

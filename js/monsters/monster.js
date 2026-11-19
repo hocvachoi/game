@@ -18,7 +18,7 @@ class Monster {
 
   // Chọn lớp con theo "Class"; thiếu/không rõ thì dùng lớp cơ sở (cận chiến).
   static create(data) {
-    const cls = String((data && (data.Class || data.class)) || '').split('_')[0].toLowerCase();
+    const cls = String((data && (data.Class || data.class)) || '').trim().split(/[_\s-]+/)[0].toLowerCase();
     const Kind = { warrior: WarriorMonster, archer: ArcherMonster, mage: MageMonster }[cls] || Monster;
     const m = new Kind(data);
     m.attackStyle_ = data && (data.attackStyle === 'ranged' || data.attackStyle === 'melee') ? data.attackStyle : null;

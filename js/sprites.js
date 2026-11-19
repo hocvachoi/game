@@ -114,7 +114,7 @@ const Stage = {
     g.drawImage(this.background, (w - iw) / 2, (h - ih) / 2, iw, ih);
   },
 
-  // opts: { background: 'assets/maps/WorldN/Stage_i.jpg', monster: {…<key>.json…}, character: 'Archer_F' }
+  // opts: { background: 'assets/maps/worldn/stage_i.jpg', monster: {…<key>.json…}, character: 'Archer_F' }
   init(opts = {}) {
     const bg = opts.background || this.bgSrc;
     if (bg && bg !== this.bgSrc) { this.bgSrc = bg; this.background = this.loadImage(bg, () => this.drawScene()); }

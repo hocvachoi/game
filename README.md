@@ -21,7 +21,7 @@ Các hồ sơ tạo bởi phiên bản Firebase cũ có thể chứa trường `
 - Khối 6 vào **Rừng Lục Bảo**, khối 7 vào **Vương Quốc Cổ**, khối 8 vào **Miền Đất Huyền Thuật**. Khối được chọn khi đăng ký/đăng nhập và xác minh cùng tài khoản Firebase.
 - Tài khoản học sinh xác thực bằng Firebase Authentication; hồ sơ nhân vật được đọc từ Firestore sau khi UID được đối chiếu.
 - Mỗi thế giới có danh sách ải cấu hình riêng trong `js/config.js`; thứ tự trong danh sách quyết định tiến trình. Mặc định có 9 vị trí ải, và số lượng được quyết định bởi danh sách đó chứ không bị giới hạn ở 9.
-- Mỗi map có `assets/maps/World<N>/world.json` để chỉnh `id`, `name`, `stage_nodes`, `dungeon_nodes` và thưởng mẫu theo thứ tự trong `stage_rewards`/`dungeon_rewards`. Reward gồm `EXP`, `GOLD`, và `drops` với `itemId` cùng `chance` từ 0 đến 1 (0.05 = 5%). Node dùng tọa độ phần trăm; dungeon có `after` là stage cần vượt để mở. Hiện reward được nạp làm metadata của màn; transaction nhận thưởng chưa áp dụng các giá trị/drop riêng này.
+- Mỗi map có `assets/maps/world<N>/world.json` để chỉnh `id`, `name`, `stage_nodes`, `dungeon_nodes` và thưởng mẫu theo thứ tự trong `stage_rewards`/`dungeon_rewards`. Reward gồm `EXP`, `GOLD`, và `drops` với `itemId` cùng `chance` từ 0 đến 1 (0.05 = 5%). Node dùng tọa độ phần trăm; dungeon có `after` là stage cần vượt để mở. Hiện reward được nạp làm metadata của màn; transaction nhận thưởng chưa áp dụng các giá trị/drop riêng này.
 - Ải đầu tiên của cả ba thế giới tạm dùng chung `questions/tin_hoc.xlsx` để kiểm thử. Những vị trí còn lại là placeholder chưa có ngân hàng câu hỏi, nên vẫn khóa và không thể bắt đầu.
 - Trạng thái hoàn thành lấy từ `Player.data.progress`; thay đổi khi chơi hiện lưu trên trình duyệt này, còn hồ sơ Firestore được giữ nguyên khi đăng nhập.
 - Ảnh chọn bản đồ và nền chiến đấu của cả bốn thế giới dùng JPG; ảnh World4 được chuyển từ PNG ở chất lượng JPEG 95. Các biểu tượng và đường ải được vẽ bằng HTML/SVG/CSS.
@@ -38,7 +38,7 @@ Thêm một mục vào `stages` của thế giới tương ứng trong `js/confi
 
 ### Thay bản đồ hoặc ngân hàng câu hỏi
 
-- Để thay ảnh nền bản đồ hoặc chiến đấu, đặt JPG chất lượng cao trong thư mục `assets/maps/World<N>/`; `js/config.js` ghép tên `Selection_Stage_Map.jpg`, `Stage_<i>.jpg` và `Dungeon_<i>.jpg`.
+- Để thay ảnh nền bản đồ hoặc chiến đấu, đặt JPG chất lượng cao trong thư mục `assets/maps/world<N>/`; `js/config.js` ghép tên `Selection_Stage_Map.jpg`, `Stage_<i>.jpg` và `Dungeon_<i>.jpg`.
 - Để gán Excel khác cho ải, cập nhật trường `file` ở mục stage đó. File phải theo đúng cấu trúc Excel được mô tả bên dưới.
 
 ## Chạy thử trên máy
@@ -85,7 +85,7 @@ Rồi mở http://localhost:8000. Đăng nhập Firebase cần chạy website qu
 - Tiến trình không còn lưu `localStorage` (không tin dữ liệu phía máy học sinh).
 - Ải chọn bằng file Excel từ máy chỉ để chơi thử, không có thưởng.
 - Trong Adventure, đáp án đúng gây sát thương `max(1, người chơi ATK - quái DEF)`; đáp án sai khiến quái phản công với `max(1, quái ATK - người chơi DEF)`. Trang bị có effect `Increase DMG`/`Reduce DMG` chỉnh tương ứng theo phần trăm trong `effect.value`. Quái hồi sinh sau khi bị hạ; sống sót đến hết câu hỏi và hạ ít nhất một quái sẽ thắng, mỗi quái bị hạ cộng thêm 10% thưởng (cộng dồn, vẫn theo trần Rules).
-- Mỗi nhân vật có JSON riêng: `assets/characters/Archer_F/character.json` và `assets/characters/Magical_M/character.json`. JSON cấu hình HP/ATK/DEF, ảnh và frames idle/attack/skill; đặt `castSkill.frame` bằng số frame nguồn (0-based) có trong `attack.frames` để chọn thời điểm bắn. `castSkill.origin.y` đặt Y xuất phát theo sprite, đường bay giữ nguyên Y; `castSkill.target.x` đặt điểm đến theo chiều ngang, không cần `target.y`. Skill được gọi sau khi frame cast kết thúc; hurt/cập nhật HP chờ tới khi hoạt ảnh tấn công kết thúc và đạn tới đích. Các lớp `Character`/`Warrior`/`Archer`/`Mage` trong `js/characters/` nạp dữ liệu JSON (`stats.EXP_scale` = `[HP, ATK, DEF, CRIT]` cộng thêm mỗi cấp); chỉnh chỉ số hoặc hoạt ảnh tại file nhân vật tương ứng. Từ V3 hồ sơ Firestore chỉ lưu LV và EXP.
+- Mỗi nhân vật có JSON riêng: `assets/characters/archer_f/character.json` và `assets/characters/mage_m/character.json`. JSON cấu hình HP/ATK/DEF, ảnh và frames idle/attack/skill; đặt `castSkill.frame` bằng số frame nguồn (0-based) có trong `attack.frames` để chọn thời điểm bắn. `castSkill.origin.y` đặt Y xuất phát theo sprite, đường bay giữ nguyên Y; `castSkill.target.x` đặt điểm đến theo chiều ngang, không cần `target.y`. Skill được gọi sau khi frame cast kết thúc; hurt/cập nhật HP chờ tới khi hoạt ảnh tấn công kết thúc và đạn tới đích. Các lớp `Character`/`Warrior`/`Archer`/`Mage` trong `js/characters/` nạp dữ liệu JSON (`stats.EXP_scale` = `[HP, ATK, DEF, CRIT]` cộng thêm mỗi cấp); chỉnh chỉ số hoặc hoạt ảnh tại file nhân vật tương ứng. Từ V3 hồ sơ Firestore chỉ lưu LV và EXP.
 - Warrior lao lên đánh cận chiến; Mage/Archer đứng xa bắn skill theo đường ngang, giữ nguyên Y tại điểm bắn của nhân vật tới địch, không đổi quỹ đạo. Đạn bay trong 0,24 giây; hiệu ứng hurt và cập nhật HP chỉ xảy ra khi đòn đánh chạm đích. Quy tắc này áp dụng cho Adventure, Boss Raid và cả đối thủ Ranked có nhân vật tầm xa.
 
 ### Bảo mật V2 (mức cơ bản, Plan mục 10.4)

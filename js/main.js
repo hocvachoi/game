@@ -76,8 +76,9 @@ function drawMapPortrait() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight, 0, 0, canvas.width, canvas.height);
   };
-  image.onerror = () => console.warn(`Không tải được avatar: assets/characters/${key}/avatar.png`);
-  image.src = `assets/characters/${key}/avatar.png`;
+  const assetKey = key.toLowerCase();
+  image.onerror = () => console.warn(`Không tải được avatar: assets/characters/${assetKey}/avatar.png`);
+  image.src = `assets/characters/${assetKey}/avatar.png`;
 }
 
 // Hồ sơ cũ chưa có lớp (Room, vd 6/5): hỏi một lần. Trả về false nếu người dùng chọn đăng xuất.

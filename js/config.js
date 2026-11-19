@@ -7,9 +7,9 @@ const CONFIG = {
 
 // stageCount = số file Stage_<i>.xlsx hiện có (tối đa 12). Ải chưa có file hiển thị khóa/"sắp có".
 function makeWorld(n, grade, theme, description, stageCount) {
-  const dir = 'World' + n, w = {
+  const dir = 'World' + n, assetDir = dir.toLowerCase(), w = {
     id: `world${n}`, grade, folder: dir, name: '', theme, description,
-    mapImage: `assets/maps/${dir}/Selection_Stage_Map.jpg`,
+    mapImage: `assets/maps/${assetDir}/selection_stage_map.jpg`,
     stages: [], dungeons: []
   };
   for (let k = 0; k < 12; k++) {
@@ -18,7 +18,7 @@ function makeWorld(n, grade, theme, description, stageCount) {
       id: `g${grade}-stage-${String(i).padStart(2, '0')}`, kind: 'stage', index: i,
       key: `Stage_${i}`, name: `Ải ${i}`, x: 0, y: 0,
       file: has ? `questions/${dir}/Stage_${i}.xlsx` : null, placeholder: !has,
-      background: `assets/maps/${dir}/Stage_${i}.jpg`
+      background: `assets/maps/${assetDir}/stage_${i}.jpg`
     });
   }
   for (let k = 0; k < 2; k++) {
@@ -27,7 +27,7 @@ function makeWorld(n, grade, theme, description, stageCount) {
       id: `g${grade}-dungeon-${i}`, kind: 'dungeon', index: i,
       key: `Dungeon_${i}`, name: `Hầm ngục ${i}`, x: 0, y: 0, after: 1,
       file: `questions/${dir}/Dungeon_${i}.xlsx`, placeholder: false,
-      background: `assets/maps/${dir}/Dungeon_${i}.jpg`
+      background: `assets/maps/${assetDir}/dungeon_${i}.jpg`
     });
   }
   return w;
@@ -46,7 +46,7 @@ CONFIG.loadWorlds = function () {
   if (this.worldsLoaded) return Promise.resolve();
   if (!this.worldsPromise) {
     this.worldsPromise = Promise.all(this.WORLDS.map(async world => {
-      const response = await fetch(`assets/maps/${world.folder}/world.json`);
+      const response = await fetch(`assets/maps/${world.folder.toLowerCase()}/world.json`);
       if (!response.ok) throw new Error(`Không tải được cấu hình ${world.folder}/world.json (${response.status}).`);
       const data = await response.json();
       const validNodes = nodes => Array.isArray(nodes) && nodes.every(node =>

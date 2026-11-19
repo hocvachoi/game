@@ -5,7 +5,7 @@ class Character {
   constructor(key, name) {
     this.key = key;                       // tên thư mục, ví dụ 'Archer_F'
     this.name = name;                     // tên hiển thị tạm, được thay bằng "name" trong JSON khi nạp
-    this.configUrl = `assets/characters/${key}/character.json`;
+    this.configUrl = `assets/characters/${key.toLowerCase()}/character.json`;
     this.baseStats = { HP: 100, ATK: 10, DEF: 5, CRIT: 0 };
     // EXP_scale trong JSON = [HP, ATK, DEF, CRIT] cộng thêm cho MỖI cấp từ cấp 2 trở đi.
     this.expScale = { HP: 0, ATK: 0, DEF: 0, CRIT: 0 };

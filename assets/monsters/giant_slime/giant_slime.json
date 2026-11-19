@@ -12,13 +12,13 @@
   "ANSWER_TIMEOUT_SEC": 15,
   "sprites": {
     "idle": {
-     "src": "assets/monsters/giant_slime/Giant_Slime_Idle.png",
+     "src": "assets/monsters/giant_slime/giant_slime_idle.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [0, 1, 2, 3, 4, 5]
     },
     "attack": {
-      "src": "assets/monsters/giant_slime/Giant_Slime_Animation.png",
+      "src": "assets/monsters/giant_slime/giant_slime_animation.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [3 ,4 , 5, 6, 7, 8, 9, 10, 11]

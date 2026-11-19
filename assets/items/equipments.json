@@ -19,7 +19,7 @@
     "image": "/assets/items/legendary/warlord_sword.png",
     "price": {
       "gold": 10000,
-      "gem": 15
+      "gem": 25
     }
   },
   "warlord_helmet": {
@@ -42,7 +42,7 @@
     "image": "/assets/items/legendary/warlord_helmet.png",
     "price": {
       "gold": 10000,
-      "gem": 10
+      "gem": 20
     }
   },
   "warlord_armor": {
@@ -65,7 +65,7 @@
     "image": "/assets/items/legendary/warlord_armor.png",
     "price": {
       "gold": 10000,
-      "gem": 15
+      "gem": 25
     }
   },
   "warlord_ring": {
@@ -88,7 +88,7 @@
     "image": "/assets/items/legendary/warlord_ring.png",
     "price": {
       "gold": 12000,
-      "gem": 10
+      "gem": 20
     }
   },
   "warlord_axe": {
@@ -157,7 +157,7 @@
     "image": "/assets/items/legendary/chaos_staff.png",
     "price": {
       "gold": 10000,
-      "gem": 15
+      "gem": 25
     }
   },
   "chaos_crown": {
@@ -180,7 +180,7 @@
     "image": "/assets/items/legendary/chaos_crown.png",
     "price": {
       "gold": 10000,
-      "gem": 10
+      "gem": 20
     }
   },
   "chaos_cloak": {
@@ -203,7 +203,7 @@
     "image": "/assets/items/legendary/chaos_cloak.png",
     "price": {
       "gold": 10000,
-      "gem": 15
+      "gem": 25
     }
   },
   "chaos_necklace": {
@@ -226,7 +226,7 @@
     "image": "/assets/items/legendary/chaos_necklace.png",
     "price": {
       "gold": 12000,
-      "gem": 10
+      "gem": 20
     }
   },
   "chaos_spellbook": {
@@ -295,7 +295,7 @@
     "image": "/assets/items/legendary/hell_bow.png",
     "price": {
       "gold": 12000,
-      "gem": 10
+      "gem": 20
     }
   },
   "hell_helmet": {
@@ -318,7 +318,7 @@
     "image": "/assets/items/legendary/hell_helmet.png",
     "price": {
       "gold": 10000,
-      "gem": 15
+      "gem": 25
     }
   },
   "hell_armor": {
@@ -341,7 +341,7 @@
     "image": "/assets/items/legendary/hell_armor.png",
     "price": {
       "gold": 10000,
-      "gem": 15
+      "gem": 25
     }
   },
   "hell_banner": {
@@ -364,7 +364,7 @@
     "image": "/assets/items/legendary/hell_banner.png",
     "price": {
       "gold": 10000,
-      "gem": 15
+      "gem": 25
     }
   },
   "hell_kunai": {
@@ -433,7 +433,7 @@
     "image": "/assets/items/epic/royal_spear.png",
     "price": {
       "gold": 5000,
-      "gem": 5
+      "gem": 7
     }
   },
   "royal_bow": {
@@ -455,7 +455,7 @@
     "image": "/assets/items/epic/royal_bow.png",
     "price": {
       "gold": 5000,
-      "gem": 5
+      "gem": 7
     }
   },
   "royal_staff": {
@@ -477,7 +477,7 @@
     "image": "/assets/items/epic/royal_staff.png",
     "price": {
       "gold": 5000,
-      "gem": 5
+      "gem": 7
     }
   },
   "royal_armor": {
@@ -500,7 +500,7 @@
     "image": "/assets/items/epic/royal_armor.png",
     "price": {
       "gold": 4000,
-      "gem": 5
+      "gem": 7
     }
   },
   "royal_helmet": {
@@ -523,7 +523,7 @@
     "image": "/assets/items/epic/royal_helmet.png",
     "price": {
       "gold": 3000,
-      "gem": 3
+      "gem": 7
     }
   },
   "royal_emblem": {
@@ -547,7 +547,7 @@
     "image": "/assets/items/epic/royal_emblem.png",
     "price": {
       "gold": 7000,
-      "gem": 3
+      "gem": 5
     }
   },
   "royal_hood": {
@@ -569,7 +569,7 @@
     "image": "/assets/items/epic/royal_hood.png",
     "price": {
       "gold": 3500,
-      "gem": 5
+      "gem": 7
     }
   },
   "royal_cloak": {
@@ -591,7 +591,7 @@
     "image": "/assets/items/epic/royal_cloak.png",
     "price": {
       "gold": 3000,
-      "gem": 3
+      "gem": 5
     }
   },
   "love_sword": {
@@ -635,7 +635,7 @@
     "image": "/assets/items/epic/mage_orb.png",
     "price": {
       "gold": 4000,
-      "gem": 5
+      "gem": 7
     }
   },
   "sun_bow": {
