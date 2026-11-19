@@ -187,7 +187,7 @@ const Player = {
 
   // Kết thúc một lượt ải/dungeon: ghi tiến trình + thưởng bằng MỘT lần ghi (Plan mục 9.3).
   // level: stage/dungeon từ CONFIG.WORLDS (có .reward lấy từ world.json).
-  // o: { correct, total, passed, kills, floor (hầm ngục: tầng cao nhất vượt được trong lượt), damagePct, hpRatio }  (damagePct = sát thương đã gây / HP một quái, 0..1; hpRatio = HP còn lại / HP tối đa)
+  // o: { correct, total, passed, kills, floor (hầm ngục: tầng cao nhất vượt được trong lượt), damagePct }  (damagePct = sát thương đã gây / HP một quái, 0..1)
   // Thưởng (Plan 13.4): thắng stage = base * (1 + 10% * quái hạ); dungeon = base * (1 + 5% * quái hạ);
   // thua / chưa vượt ải = base * max(10%, %sát thương gây cho quái). Crystal: xem CONFIG.GAME.CRYSTAL.
   // Bản ghi xếp hạng (leaderboards/<khối>/entries/<UID>) ghi cùng transaction; nếu Rules từ chối riêng phần xếp hạng
@@ -217,7 +217,7 @@ const Player = {
     const ratio = o.total ? o.correct / o.total : 0, C = G.CRYSTAL;
     let crystals = 0;
     if (!dungeon) {
-      if (o.passed && (ratio > C.stage.minCorrectRatio || (o.hpRatio || 0) > C.stage.minHpRatio)) crystals = C.stage.amount;
+      if (o.passed && ratio > C.stage.minCorrectRatio) crystals = C.stage.amount;
     } else {
       crystals = Math.floor(o.kills / C.dungeon.floorsPerCrystal);
     }

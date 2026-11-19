@@ -283,7 +283,6 @@ const Adventure = {
     const ratio = res.total ? res.correct / res.total : 0;
     const passed = !dungeon && !defeated && kills > 0 && ratio >= this.PASS_RATIO;
     const damagePct = fight ? Math.min(1, fight.damageDealt / fight.maxMonsterHp) : 0;
-    const hpRatio = fight ? Math.max(0, fight.playerHp) / fight.maxPlayerHp : 0;   // HP còn lại, dùng cho điều kiện nhận Crystal
     const div = el('div', 'result'), status = el('p', 'save-status', 'Đang lưu kết quả…');
     const again = el('button', 'btn', 'Chơi lại'), back = el('button', 'btn ghost', 'Về bản đồ');
     again.onclick = () => this.run(); back.onclick = () => renderLevels();
@@ -299,7 +298,7 @@ const Adventure = {
       const C = CONFIG.GAME.CRYSTAL.stage;
       detail = `Bạn đã hạ ${kills} quái vật, đúng ${pctText} số câu; mỗi quái bị hạ tăng 10% phần thưởng.`
         + (this.level.kind === 'stage' && this.world.stages[this.level.index] && WorldMap.hasQuestions(this.world.stages[this.level.index]) ? ' Ải tiếp theo đã mở (nếu đủ cấp).' : '')
-        + ` Đúng trên ${Math.round(C.minCorrectRatio * 100)}% hoặc còn trên ${Math.round(C.minHpRatio * 100)}% HP sẽ nhận Crystal.`;
+        + ` Đúng trên ${Math.round(C.minCorrectRatio * 100)}% số câu sẽ nhận Crystal.`;
     } else if (defeated) {
       title = 'BẠN ĐÃ BỊ HẠ!';
       detail = `${name} đã hạ gục bạn sau ${res.answered || 0} câu. Thưởng tính theo sát thương bạn đã gây (tối thiểu 10%).`;
@@ -316,7 +315,7 @@ const Adventure = {
       try {
         const wait = Player.cooldownLeftMs();
         if (wait > 0) { status.textContent = `Đang chờ ${Math.ceil(wait / 1000)}s để lưu kết quả…`; await new Promise(r => setTimeout(r, wait)); status.textContent = 'Đang lưu kết quả…'; }
-        const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct, hpRatio });
+        const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct });
         const drop = r.drop && Player.item(r.drop);
         status.textContent = `+${r.gold} Gold · +${r.exp} EXP (${Math.round(r.factor * 100)}% thưởng)`
           + (r.crystals ? ` · +${r.crystals} Crystal` : '')

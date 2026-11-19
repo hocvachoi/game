@@ -130,10 +130,10 @@ CONFIG.GAME = {
     maxExp: 60000           // [RULES] trần EXP mỗi lượt
   },
   REWARD_COOLDOWN_SEC: 20,  // [RULES] khoảng cách tối thiểu giữa hai lần ghi thưởng
-  // Crystal (người dùng xác nhận): hoàn thành Stage với tỉ lệ đúng > 85% HOẶC HP còn lại > 80% → +1 Crystal;
+  // Crystal: hoàn thành Stage với tỉ lệ đúng > 85% → +1 Crystal;
   // Dungeon: mỗi 10 tầng vượt được nhận 1 Crystal. Không nhân với hệ số thưởng.
   CRYSTAL: {
-    stage: { minCorrectRatio: 0.85, minHpRatio: 0.80, amount: 1 },
+    stage: { minCorrectRatio: 0.85, amount: 1 },
     dungeon: { floorsPerCrystal: 10 }
   }
 };
