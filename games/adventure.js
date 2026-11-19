@@ -291,10 +291,9 @@ const Adventure = {
     let title, detail;
     if (dungeon) {
       title = res.exited ? 'ĐÃ THOÁT HẦM NGỤC' : 'HẦM NGỤC KẾT THÚC';
-      const D = CONFIG.GAME.CRYSTAL.dungeon;
       detail = (kills > 0 ? `Bạn đã vượt ${kills} tầng (tầng ${this.startFloor} → ${topFloor}) ` : `Bạn chưa vượt được tầng ${this.startFloor} `)
         + (res.exited ? 'rồi thoát hầm ngục' : 'trước khi hết HP') + '; mỗi quái bị hạ tăng 5% phần thưởng.'
-        + (this.level.index === D.index ? ` Mỗi ${D.killsPerCrystal} quái hạ được nhận 1 Crystal (tối đa ${D.max}).` : '');
+        + ` Mỗi ${CONFIG.GAME.CRYSTAL.dungeon.floorsPerCrystal} tầng vượt được nhận 1 Crystal.`;
     } else if (passed) {
       title = 'CHIẾN THẮNG!';
       const C = CONFIG.GAME.CRYSTAL.stage;

@@ -131,10 +131,10 @@ CONFIG.GAME = {
   },
   REWARD_COOLDOWN_SEC: 20,  // [RULES] khoảng cách tối thiểu giữa hai lần ghi thưởng
   // Crystal (người dùng xác nhận): hoàn thành Stage với tỉ lệ đúng > 85% HOẶC HP còn lại > 80% → +1 Crystal;
-  // Dungeon thứ 2: mỗi 5 quái hạ được +1 Crystal, tối đa 5 mỗi lượt. Không nhân với hệ số thưởng.
+  // Dungeon: mỗi 10 tầng vượt được nhận 1 Crystal. Không nhân với hệ số thưởng.
   CRYSTAL: {
     stage: { minCorrectRatio: 0.85, minHpRatio: 0.80, amount: 1 },
-    dungeon: { index: 2, killsPerCrystal: 5, max: 5 }   // [RULES] trần Crystal mỗi lượt = 5
+    dungeon: { floorsPerCrystal: 10 }
   }
 };
 

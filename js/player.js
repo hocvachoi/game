@@ -218,8 +218,8 @@ const Player = {
     let crystals = 0;
     if (!dungeon) {
       if (o.passed && (ratio > C.stage.minCorrectRatio || (o.hpRatio || 0) > C.stage.minHpRatio)) crystals = C.stage.amount;
-    } else if (level.index === C.dungeon.index) {
-      crystals = Math.min(C.dungeon.max, Math.floor(o.kills / C.dungeon.killsPerCrystal));
+    } else {
+      crystals = Math.floor(o.kills / C.dungeon.floorsPerCrystal);
     }
     // Chỉ GHI bản ghi xếp hạng khi lượt này có thể đổi điểm tuần (thắng ải, hoặc hầm ngục hạ ≥ 1 quái). KHÔNG đọc lại bản ghi của mình:
     // lấy từ bản sao ở máy (Rank.ownEntry: 0 lượt đọc nếu đã có, 1 lượt đọc lần đầu). Kiểm tra top 10 làm ở Rank.afterRun, không tốn đọc/ghi.
