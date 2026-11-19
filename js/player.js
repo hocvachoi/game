@@ -263,8 +263,11 @@ const Player = {
     await this.tx(cur => {
       const cls = this.classOfKey(cur.Character || CONFIG.DEFAULT_CHARACTER);
       const eq = {};
-      // dọn luôn trang bị sai nghề còn sót lại (Rules kiểm tra mọi ô khi đổi trang bị)
-      Object.entries(cur.Equipment || {}).forEach(([s, id]) => { const it = this.item(id); if (it && this.usable(it, cls)) eq[s] = id; });
+      // Giữ lại vật phẩm đúng ô, đúng nghề và vẫn thuộc kho đồ; loại bỏ dữ liệu trang bị cũ bị sai lệch.
+      Object.entries(cur.Equipment || {}).forEach(([s, id]) => {
+        const it = this.item(id);
+        if (it && it.slot === s && (cur.Enventory || []).includes(id) && this.usable(it, cls)) eq[s] = id;
+      });
       if (itemId) {
         if (!(cur.Enventory || []).includes(itemId)) throw new Error('Bạn chưa sở hữu vật phẩm này.');
         if (!this.usable(item, cls)) throw new Error(`Vật phẩm này chỉ dành cho: ${this.classLabel(item)}.`);

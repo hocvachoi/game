@@ -109,11 +109,16 @@ CONFIG.GAME = {
   // (xem như tốc độ tấn công: sau ngần ấy giây chưa trả lời thì quái đánh, lặp lại mỗi chu kỳ). Quái không khai báo thì dùng số này.
   ANSWER_TIMEOUT_SEC: 20,
   // HẦM NGỤC THEO TẦNG (vô hạn): mỗi tầng 1 quái; hạ quái = vượt tầng, lên tầng kế (HP người chơi giữ nguyên).
-  // Phẩm chất quái theo tầng = trường "type" trong <monster_key>.json (không phân biệt hoa/thường). Thiếu quái đúng phẩm chất thì lấy phẩm chất gần nhất (ưu tiên thấp hơn).
-  // Vào lại hầm ngục: nếu tầng cao nhất đã vượt là XY thì bắt đầu từ tầng X1 (37 → 31; 40 → 41). Kỷ lục tầng cao nhất vẫn giữ nguyên.
+  // Phẩm chất quái theo tầng, MỖI HẦM NGỤC MỘT BẢNG RIÊNG (khóa = số hầm ngục 1/2); phẩm chất = trường "type" trong <monster_key>.json (không phân biệt hoa/thường).
+  // Thiếu quái đúng phẩm chất trong pool của hầm ngục thì lấy phẩm chất gần nhất (ưu tiên thấp hơn).
+  // Vào lại hầm ngục: đã vượt tầng N thì bắt đầu từ tầng N - REENTRY_BACK (tối thiểu 1). Kỷ lục tầng cao nhất vẫn giữ nguyên.
   DUNGEON: {
-    TIERS: [{ to: 10, type: 'normal' }, { to: 20, type: 'uncommon' }, { to: 40, type: 'rare' }, { to: 70, type: 'epic' }, { to: Infinity, type: 'legendary' }],
-    BLOCK: 10,
+    ORDER: ['normal', 'uncommon', 'rare', 'epic', 'legendary'],
+    TIERS: {
+      1: [{ to: 10, type: 'normal' }, { to: 30, type: 'uncommon' }, { to: Infinity, type: 'rare' }],
+      2: [{ to: 10, type: 'rare' }, { to: 30, type: 'epic' }, { to: Infinity, type: 'legendary' }]
+    },
+    REENTRY_BACK: 5,
     MAX_FLOOR: 100000,   // [RULES] trần tầng ghi trong bảng xếp hạng (Dung1Floor / Dung2Floor)
     MAX_FLOORS_PER_RUN: 300   // [RULES] một lượt chơi tăng kỷ lục tối đa bấy nhiêu tầng
   },
@@ -268,12 +273,11 @@ CONFIG.loadItems = function () {
   return this.itemsPromise;
 };
 
-// ----- Hầm ngục theo tầng: phẩm chất quái của một tầng và tầng bắt đầu khi vào lại -----
-CONFIG.dungeonTier = function (floor) {
-  const tiers = this.GAME.DUNGEON.TIERS;
+// ----- Hầm ngục theo tầng: phẩm chất quái của một tầng (theo hầm ngục 1/2) và tầng bắt đầu khi vào lại -----
+CONFIG.dungeonTier = function (floor, dungeonIndex) {
+  const D = this.GAME.DUNGEON, tiers = D.TIERS[dungeonIndex] || D.TIERS[1];
   return (tiers.find(t => floor <= t.to) || tiers[tiers.length - 1]).type;
 };
 CONFIG.dungeonStartFloor = function (best) {
-  const block = this.GAME.DUNGEON.BLOCK;
-  return best >= 1 ? Math.floor(best / block) * block + 1 : 1;
+  return Math.max(1, (best || 0) - this.GAME.DUNGEON.REENTRY_BACK);
 };

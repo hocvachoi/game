@@ -67,7 +67,7 @@ const Adventure = {
       : [StageMonster.forStage(this.world, lv.key ? lv : { key: '' })];
     this.run();
   },
-  pickMonster() { return this.isDungeon() ? StageMonster.forFloor(this.monsterPool, this.floor) : this.monsterPool[Math.floor(Math.random() * this.monsterPool.length)]; },
+  pickMonster() { return this.isDungeon() ? StageMonster.forFloor(this.monsterPool, this.floor, this.level.index) : this.monsterPool[Math.floor(Math.random() * this.monsterPool.length)]; },
 
   run() {
     this.teardown();
@@ -76,7 +76,7 @@ const Adventure = {
     this.active = true;
     this.guard.bind(); this.guard.reset();
     show('screen-game');
-    // Hầm ngục: bắt đầu từ tầng X1 (kỷ lục XY), xem CONFIG.dungeonStartFloor
+    // Hầm ngục: đã vượt tầng N thì vào lại từ tầng N-5, xem CONFIG.dungeonStartFloor
     if (this.isDungeon()) this.floor = this.startFloor = CONFIG.dungeonStartFloor(((Player.data.progress || {})[this.level.id] || {}).best || 0);
     this.monster = this.pickMonster();
     this.syncDungeonUi();

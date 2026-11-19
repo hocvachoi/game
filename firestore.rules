@@ -16,7 +16,7 @@ service cloud.firestore {
           && request.auth.token.email == username + '.' + className + '@students.rpg-game.example';
       }
 
-// Item metadata lives in assets/items/equipments.json; profiles store IDs only (ID dạng chữ, vd 'iron_sword').
+     // Item metadata lives in assets/items/equipments.json; profiles store IDs only (ID dạng chữ, vd 'iron_sword').
       // [RULES] Keep these lists, the slot lists and the prices in sync with equipments.json.
       function validItemId(id) {
         return id in [
@@ -101,7 +101,7 @@ service cloud.firestore {
           'warlord_sword', 'warlord_axe', 'warlord_spear',
           'chaos_staff', 'chaos_spellbook',
           'hell_bow', 'hell_kunai',
-          'royal_spear', 'royal_bow', 'royal_staff', 'love_sword', 'mage_orb', 'sun_bow', 'dark_staff',
+          'royal_spear', 'royal_bow', 'royal_staff', 'love_sword', 'sun_bow', 'dark_staff',
           'brave_sword', 'hunter_bow', 'priest_book',
           'battle_axe', 'steel_bow', 'magic_staff',
           'iron_sword', 'wooden_bow', 'magic_wand'
@@ -126,7 +126,7 @@ service cloud.firestore {
       function accessoryIds() {
         return [
           'warlord_ring', 'chaos_necklace', 'chaos_gloves', 'hell_banner', 'hell_ring',
-          'royal_emblem',
+          'royal_emblem', 'mage_orb',
           'brave_belt', 'hunter_arrow', 'priest_cross',
           'gold_necklace', 'steel_arrow', 'silver_ring'
         ];
@@ -249,7 +249,6 @@ service cloud.firestore {
           'silver_ring': 0
         }[id];
       }
-
       function changed() {
         return request.resource.data.diff(resource.data).affectedKeys();
       }
@@ -303,6 +302,7 @@ service cloud.firestore {
         let cls = classOfChar(n.get('Character', 'Archer_F'));
         return changed().hasOnly(['Equipment'])
           && n.Equipment is map
+          && n.Equipment.keys().hasOnly(['weapon', 'armor', 'helmet', 'accessory'])
           && n.Enventory is list
           && n.Equipment.size() == slotCount(n.Equipment, 'weapon') + slotCount(n.Equipment, 'armor')
             + slotCount(n.Equipment, 'helmet') + slotCount(n.Equipment, 'accessory')

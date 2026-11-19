@@ -234,7 +234,7 @@ const Inventory = {
     const img = new Image(); let i = 0;
     // cắt PORTRAIT_CROP_RIGHT px bên phải mỗi khung (sprite lệch/thừa hiệu ứng) → canvas hẹp lại, vẫn giữ đúng tỉ lệ ảnh
     const CROP = CONFIG.PORTRAIT_CROP_RIGHT, srcW = Math.max(1, sheet.frameW - CROP), srcH = sheet.cropH || sheet.frameH;
-    cv.width = srcW; cv.height = srcH; cv.style.aspectRatio = srcW + ' / ' + srcH;
+    cv.width = srcW; cv.height = srcH;
     const draw = () => {
       const g = cv.getContext('2d');
       g.clearRect(0, 0, cv.width, cv.height);

@@ -601,7 +601,7 @@
   },
   "mage_orb": {
     "name": "Ngọc Pháp Sư",
-    "slot": "weapon",
+    "slot": "accessory",
     "class": [
       "mage"
     ],
