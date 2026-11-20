@@ -1,7 +1,7 @@
 {
   "name": "Dơi Sát thủ",
   "attackStyle": "melee",
-  "Type": "Uncommon",
+  "Type": "normal",
   "Class":"Warrior",
   "stats": {
     "HP": 200,
