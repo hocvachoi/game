@@ -221,7 +221,7 @@
     },
     "effect": {
       "type": "steallife",
-      "value": 20
+      "value": 10
     },
     "image": "/assets/items/legendary/chaos_necklace.png",
     "price": {
