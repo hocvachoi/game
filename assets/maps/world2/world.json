@@ -13,7 +13,7 @@
     { "x": 12.2, "y": 21.7, "after": 1 },
     { "x": 92.0, "y": 68.7, "after": 6 }
   ],
-  "dungeon_monsters": [ ["giant_slime","goblin","killer_bat","bog_witch","bandits"], ["undead_knight"] ],
+  "dungeon_monsters": [ ["giant_slime", "killer_bat", "bandits", "bog_witch"], ["undead_knight"] ],
   "stage_rewards": [
     { "EXP": 150, "GOLD": 50, "drops": [{ "itemId": "iron_sword", "chance": 0.05 }] },
     { "EXP": 300, "GOLD": 100, "drops": [{ "itemId": "iron_armor", "chance": 0.05 }] },
