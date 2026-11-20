@@ -45,10 +45,10 @@
       "Stage_12": "undead_knight"
     },
     "World4": {
-      "Stage_1": "bog_witch",
+      "Stage_1": "giant_slime",
       "Stage_2": "killer_bat",
-      "Stage_3": "undead_knight",
-      "Stage_4": "undead_knight",
+      "Stage_3": "bog_witch",
+      "Stage_4": "bandits",
       "Stage_5": "undead_knight",
       "Stage_6": "undead_knight",
       "Stage_7": "undead_knight",
