@@ -430,11 +430,13 @@ service cloud.firestore {
       function dayInt() { return request.time.year() * 10000 + request.time.month() * 100 + request.time.day(); }
       function isToday() { return int(parts()[1]) == dayInt(); }
       function minuteOfDay() { return request.time.hours() * 60 + request.time.minutes(); }
-      // [RULES] LỊCH RAID — khớp CONFIG.RAID.SCHEDULE (js/config.js). Khóa ở đây là dayOfWeek(): 1 = Thứ Hai … 7 = Chủ Nhật
-      // (= khóa của config trừ 1: config 2 = Thứ Hai → rules 1). UTC cùng ngày với giờ VN trong khung 19:00–22:30 VN. Mặc định:
-      // T2, T3, T5, T7 → khối 7 · T4, T6 → khối 6 và 8 · Chủ nhật → khối 9.
+      // [RULES] LỊCH RAID — khớp CONFIG.RAID.SCHEDULE (js/config.js). Thứ trong tuần theo UTC được TỰ TÍNH từ mili-giây (KHÔNG dùng dayOfWeek() vì quy ước
+      // đánh số của nó khác giả định cũ — đã làm khối 7 bị chặn vào thứ Năm và khối 8 bị chặn vào thứ Sáu). Ngày 1/1/1970 là Thứ Năm → 0 = Thứ Hai … 6 = Chủ Nhật.
+      // UTC cùng ngày với giờ VN trong khung 19:00–22:30 VN. Mặc định: T2, T3, T5, T7 → khối 7 · T4, T6 → khối 6 và 8 · Chủ nhật → khối 9.
+      function weekdayMon0() { return (math.floor(request.time.toMillis() / 86400000) + 3) % 7; }
       function scheduledGrades() {
-        return { 1: ['7'], 2: ['7'], 3: ['6', '8'], 4: ['7'], 5: ['6', '8'], 6: ['7'], 7: ['9'] }.get(request.time.dayOfWeek(), []);
+        return (weekdayMon0() == 0 || weekdayMon0() == 1 || weekdayMon0() == 3 || weekdayMon0() == 5) ? ['7']
+          : ((weekdayMon0() == 2 || weekdayMon0() == 4) ? ['6', '8'] : ['9']);
       }
       function isScheduled() { return raidGrade() in scheduledGrades(); }
       // [RULES] cửa kích hoạt Boss 1: 19:00–21:00 VN = phút 720–840 UTC (CONFIG.RAID.OPEN_MIN / CLOSE_MIN).

@@ -1,15 +1,19 @@
 {
-  "name": "Undead Knight",
+  "name": "Vong hồn hiệp sĩ",
   "attackStyle": "melee",
   "Type": "epic",
   "Class":"Warrior",
+  "effects":{
+    "type": "Blessing",
+    "value":5
+  },
   "stats": {
     "HP": 1000,
-    "ATK": 150,
-    "DEF": 80,
+    "ATK": 220,
+    "DEF": 150,
     "CRIT": 0
   },
-  "ANSWER_TIMEOUT_SEC": 15,
+  "ANSWER_TIMEOUT_SEC": 20,
   "sprites": {
     "idle": {
      "src": "assets/monsters/undead_knight/undead_knight_idle.png",

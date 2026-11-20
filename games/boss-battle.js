@@ -226,6 +226,7 @@ const Raid = {
     this.clearFx();
     $('#raid-bar').hidden = false; $('#raid-top').hidden = true;
     this.nextCounterAt = Date.now() + this.R().COUNTER_SEC * 1000;
+    this.ultDone = this.ultStage();   // vào trễ: không bù các kỹ năng cuối đã tung
     clearInterval(this.tick);
     this.tick = setInterval(() => this.onTick(), 1000);
     this.onTick();
@@ -249,6 +250,7 @@ const Raid = {
     $('#raid-time').textContent = `Boss ${this.slot} · còn ${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, s % 60)).padStart(2, '0')}${mult > 1 ? ` · +${Math.round((mult - 1) * 100)}% sát thương (ít người)` : ''}`;
     if (s <= 0) { this.end('time'); return; }   // hết giờ mà chưa hạ = thất bại
     this.counterTick();
+    this.checkUlt();
     if (!this.flushing && Date.now() - this.lastTryMs >= this.R().FLUSH_SEC * 1000) this.flush();
   },
   // Chia `total` thành các phần ngẫu nhiên, mỗi phần gắn một nickname và hiện dạng số bay lên Boss, rải đều trong một chu kỳ.
@@ -278,6 +280,46 @@ const Raid = {
     stage.append(f);
   },
   clearFx() { this.fxTimers.forEach(clearTimeout); this.fxTimers = []; this.hold = 0; document.querySelectorAll('.fx-float').forEach(n => n.remove()); },
+  // ----- KỸ NĂNG CUỐI: mỗi lần Boss mất thêm ULT_EVERY_PCT% HP tối đa → gây ULT_DAMAGE lên TẤT CẢ người chơi (xem CONFIG.RAID.ULT_*) -----
+  // Số mốc đã qua: 0 (chưa mất đủ 25%), 1 (mất ≥25%), 2 (≥50%), 3 (≥75%); không có mốc cho 100% (Boss đã bị hạ).
+  ultStage() {
+    const step = this.R().ULT_EVERY_PCT / 100, max = Math.max(0, Math.round(1 / step) - 1);
+    return Math.min(max, Math.floor((this.maxHp - this.remaining()) / (this.maxHp * step) + 1e-9));
+  },
+  // Gọi mỗi giây (onTick) — HP Boss lấy từ lần đồng bộ gần nhất (mỗi FLUSH_SEC) + sát thương của chính mình chưa gửi.
+  checkUlt() {
+    if (!this.running || this.ended || this.ultBusy) return;
+    if (this.ultDone >= this.ultStage()) return;
+    this.ultDone++;
+    this.castUlt();
+  },
+  castUlt() {
+    const A = Adventure, fight = A.combat, R = this.R(), def = this.boss.ultimate || {};
+    const dmg = Math.max(0, Number(def.damage) || R.ULT_DAMAGE), name = def.name || 'Kỹ năng cuối';
+    this.ultBusy = true;
+    this.showUltBanner(`💥 ${this.boss.name} dùng ${name}! Toàn đội mất ${dmg} HP`);
+    const done = () => { this.ultBusy = false; };
+    if (!fight || fight.finished) { done(); return; }
+    Stage.fx(false, 0, 0, () => {
+      try {
+        if (!this.running || A.combat !== fight || fight.finished) return;
+        A.note(`💥 ${this.boss.name} dùng ${name}: -${dmg} HP (gây sát thương lên TẤT CẢ người chơi).`);
+        if (fight.downed) return;   // đang chờ hồi sinh: không nhận thêm sát thương
+        fight.playerHp = Math.max(0, fight.playerHp - dmg);
+        Stage.playerHp(fight.playerHp / fight.maxPlayerHp, fight.playerHp, fight.maxPlayerHp);
+        Stage.popup('hero', `-${dmg}`, 'ult');
+        if (fight.playerHp === 0) this.down(fight);
+      } finally { setTimeout(done, 1200); }   // giãn cách nếu một lần đồng bộ vượt qua nhiều mốc cùng lúc
+    });
+  },
+  showUltBanner(text) {
+    const stage = document.getElementById('stage'); if (!stage) return;
+    const n = el('div', 'raid-ult', text);
+    n.setAttribute('role', 'alert');
+    n.addEventListener('animationend', () => n.remove());
+    stage.append(n);
+    stage.classList.add('is-ult'); setTimeout(() => stage.classList.remove('is-ult'), 700);
+  },
   // Phản công: đếm ngược ở trình duyệt, mỗi COUNTER_SEC giây Boss đánh người chơi (tab bị ẩn/throttle: bù lần bỏ lỡ, tối đa 5 lần).
   counterTick() {
     const A = Adventure, fight = A.combat, label = $('#raid-counter'), R = this.R();

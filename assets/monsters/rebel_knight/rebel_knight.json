@@ -1,0 +1,35 @@
+{
+  "name": "Kỵ sĩ lưu vong",
+  "attackStyle": "melee",
+  "Type": "epic",
+  "Class":"Warrior",
+  "effects":{
+    "type": "Burn",
+    "value":100
+  },
+  "stats": {
+    "HP": 1500,
+    "ATK": 400,
+    "DEF": 300,
+    "CRIT": 20
+  },
+  "ANSWER_TIMEOUT_SEC": 15,
+  "sprites": {
+    "idle": {
+     "src": "assets/monsters/rebel_knight/rebel_knight_idle.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [0, 1, 2, 3, 4, 5]
+    },
+    "attack": {
+      "src": "assets/monsters/rebel_knight/rebel_knight_animation.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [3 ,4 , 5, 6, 7, 8, 9, 10, 11]
+    },
+    "skill": {
+    }
+  },
+  "castSkill": {
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "Cận về điện ngục",
+  "attackStyle": "melee",
+  "Type": "epic",
+  "Class":"Warrior",
+  "effects":{
+    "type": "Holy_Shield ",
+    "value":25
+  },
+  "stats": {
+    "HP": 700,
+    "ATK": 450,
+    "DEF": 400,
+    "CRIT": 10
+  },
+  "ANSWER_TIMEOUT_SEC": 15,
+  "sprites": {
+    "idle": {
+     "src": "assets/monsters/rebel_knight/rebel_knight_idle.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [0, 1, 2, 3, 4, 5]
+    },
+    "attack": {
+      "src": "assets/monsters/rebel_knight/rebel_knight_animation.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [3 ,4 , 5, 6, 7, 8, 9, 10, 11]
+    },
+    "skill": {
+    }
+  },
+  "castSkill": {
+  }
+}

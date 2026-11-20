@@ -183,6 +183,11 @@ CONFIG.RAID = {
   // (5 người = +50%.) Số người lấy từ trường Players của Boss, đọc mỗi chu kỳ gửi — không tốn thêm lượt đọc.
   FEW_PLAYERS_UNTIL: 10, FEW_PLAYERS_BONUS: 0.10,
   COUNTER_SEC: 20,                         // Boss phản công mỗi 20 giây (đồng hồ đếm ngược ở trình duyệt, không đồng bộ), ngoài lần đánh khi trả lời sai
+  // KỸ NĂNG CUỐI của Boss: mỗi lần Boss mất thêm ULT_EVERY_PCT% HP tối đa (75% → 50% → 25% còn lại) Boss tung kỹ năng cuối gây ULT_DAMAGE sát thương lên TẤT CẢ người chơi
+  // (sát thương cố định, không trừ DEF). Kiểm tra mỗi giây ở trình duyệt từ HP Boss đã đồng bộ (cập nhật mỗi FLUSH_SEC); người vào trễ không bị "bù" các lần đã qua.
+  // File JSON của Boss có thể ghi "ultimate": { "name": "Tên kỹ năng", "damage": 800 } để đổi tên/sát thương.
+  ULT_EVERY_PCT: 25,
+  ULT_DAMAGE: 500,
   REVIVE_SEC: 10,                          // hồi sinh sau khi bị hạ gục (Plan 5.2)
   TOP: 10,                                 // chỉ top 10 sát thương được xếp hạng/thưởng
   BOSS_HP: { '6': 100000, '7': 100000, '8': 100000, '9': 100000 },   // [RULES] HP tối đa Boss mỗi khối — SỬA TẠI ĐÂY (và bossMax() trong rules)

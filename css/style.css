@@ -835,3 +835,14 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 .fx-crit{color:#ffc247}.fx-ambush{color:#ff7a45}.fx-shield{color:#7fd0ff}.fx-heal{color:#86ff94}
 @keyframes fx-pop{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}15%{opacity:1;transform:translate(-50%,0) scale(1.15)}70%{opacity:1;transform:translate(-50%,-14px) scale(1)}100%{opacity:0;transform:translate(-50%,-32px) scale(1)}}
 @media (prefers-reduced-motion:reduce){.fx-pop{animation-name:fx-pop-still}@keyframes fx-pop-still{0%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,0)}}}
+
+
+/* [30] ===== Boss Raid · KỸ NĂNG CUỐI (mỗi 25% HP Boss): biểu ngữ thông báo + rung màn hình + số sát thương nổi màu đỏ ===== */
+.raid-ult{position:absolute;left:19%;top:17%;z-index:12;max-width:34%;box-sizing:border-box;padding:6px 14px;transform:translateX(-50%);text-align:center;pointer-events:none;   /* nằm trong vùng chiến đấu bên trái (thẻ câu hỏi chiếm bên phải) */
+  font:700 clamp(16px,1.9vw,26px)/1.15 "VT323",var(--pixel),sans-serif;color:#fff;background:linear-gradient(#c4261d,#7d130e);border:4px solid #ffcf5c;border-radius:12px;
+  box-shadow:0 0 0 3px var(--c-void),0 0 28px 6px rgba(255,59,48,.65);animation:raid-ult 3.2s ease-out forwards}
+@keyframes raid-ult{0%{opacity:0;transform:translate(-50%,-14px) scale(.8)}8%{opacity:1;transform:translate(-50%,0) scale(1.08)}14%{transform:translate(-50%,0) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,0) scale(1)}}
+.fx-ult{color:#ff4b3a}
+#stage.is-ult{animation:ult-shake .35s linear 2}
+@keyframes ult-shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-4px,-3px)}80%{transform:translate(4px,3px)}}
+@media (prefers-reduced-motion:reduce){#stage.is-ult{animation:none}.raid-ult{animation-name:raid-ult-still}@keyframes raid-ult-still{0%,85%{opacity:1}100%{opacity:0}}}

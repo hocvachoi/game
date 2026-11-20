@@ -1,11 +1,11 @@
 {
   "name": "Phù thuỷ đầm lầy",
   "attackStyle": "ranged",
-  "Type": "rare",
+  "Type": "uncommon",
   "Class": "Mage",
   "effects":{
     "type": "smite",
-    "value":20
+    "value":15
   },
   "stats": {
     "HP": 500,

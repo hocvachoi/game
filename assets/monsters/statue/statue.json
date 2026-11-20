@@ -1,0 +1,35 @@
+{
+  "name": "Khổng lồ đá",
+  "attackStyle": "melee",
+  "Type": "epic",
+  "Class":"Warrior",
+  "effects":{
+    "type": "Thorns",
+    "value":70
+  },
+  "stats": {
+    "HP": 1500,
+    "ATK": 200,
+    "DEF": 250,
+    "CRIT": 5
+  },
+  "ANSWER_TIMEOUT_SEC": 25,
+  "sprites": {
+    "idle": {
+     "src": "assets/monsters/statue/statue_idle.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [0, 1, 2, 3, 4, 5]
+    },
+    "attack": {
+      "src": "assets/monsters/statue/statue_animation.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [3 ,4 , 5, 6, 7, 8, 9, 10, 11]
+    },
+    "skill": {
+    }
+  },
+  "castSkill": {
+  }
+}
