@@ -1,0 +1,31 @@
+{
+  "name": "Thunder_God",
+  "attackStyle": "melee",
+  "Type": "Legendary",
+  "Class":"Warrior",
+  "stats": {
+    "HP": 500,
+    "ATK": 70,
+    "DEF": 40,
+    "CRIT": 0
+  },
+  "ANSWER_TIMEOUT_SEC": 15,
+  "sprites": {
+    "idle": {
+     "src": "assets/monsters/thunder_god/thunder_god_idle.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [0, 1, 2, 3, 4, 5]
+    },
+    "attack": {
+     "src": "assets/monsters/thunder_god/thunder_god_animation_.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [2,3,4, 5, 6, 7, 8, 9, 10, 11]
+    },
+    "skill": {
+    }
+  },
+  "castSkill": {
+  }
+}

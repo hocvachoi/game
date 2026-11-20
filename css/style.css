@@ -1,0 +1,820 @@
+/* =====================================================================================================================
+   HƯỚNG DẪN CHỈNH GIAO DIỆN (style.css) — chỉ thêm chú thích, không đổi quy tắc nào.
+   ---------------------------------------------------------------------------------------------------------------------
+   QUY TẮC QUAN TRỌNG: CSS đọc từ trên xuống, quy tắc CÓ CÙNG ĐỘ ƯU TIÊN nằm SAU sẽ thắng. File này có nhiều lớp "ghi đè" theo phiên bản
+   (V1 → V2 → V3 → V4). Muốn chỉnh một thứ mà không thấy đổi, hãy tìm quy tắc cùng selector ở PHÍA DƯỚI, đặc biệt khối
+   `#screen-game ...` (màn chiến đấu) và các khối @media (desktop/điện thoại).
+
+   BẢNG TRA NHANH — muốn chỉnh... thì tìm mục:
+     Màu chủ đạo, phông chữ chung ................... [1] :root (biến --gold, --ink, --pixel ...)
+     Nền mờ phía sau toàn trang ..................... [2] #app-bg (blur/độ tối)
+     Màn đăng nhập / đăng ký / hộp nhập lớp ......... [3] AUTH, [14] .modal
+     Nút bấm vàng (.btn) ............................ [4] NÚT
+     MÀN CHIẾN ĐẤU (vị trí nhân vật/quái, thẻ câu hỏi, độ trong suốt, thanh HP) .... [8] "Adventure battle" (khối #screen-game)
+     Điện thoại (xoay ngang) ........................ [8] cuối khối #screen-game, và các @media (max-width:800px)
+     Bản đồ chọn ải (ảnh, nút ải, thanh trạng thái) . [9] BẢN ĐỒ, [10] THANH TRẠNG THÁI
+     Khung 9-slice và asset UI (Cửa hàng/Trang bị/Xếp hạng) [11] UI DÙNG CHUNG
+     Thẻ cửa hàng, ô túi đồ, tooltip ................ [12] CỬA HÀNG, [13] TRANG BỊ, [15] TOOLTIP
+     Bảng xếp hạng .................................. [13b] XẾP HẠNG
+     Che câu hỏi khi rời trang ...................... [16] quiz-shield
+     Boss Raid (thanh trên cùng, top 10, số bay) .... [17] BOSS RAID
+   ĐƠN VỊ HAY DÙNG: % = theo khung cha; vw/vh/dvh = theo màn hình; cqw = theo chiều rộng khung game (desktop); clamp(min, ưa thích, max)
+   = tự co giãn nhưng không nhỏ hơn min, không lớn hơn max. rgba(r,g,b,A): A (0–1) càng nhỏ càng TRONG SUỐT.
+   LƯU Ý: nếu sửa tên class/id ở đây phải sửa cả index.html và các file trong thư mục js (JS tạo nhiều phần tử bằng class này).
+   ===================================================================================================================== */
+
+/* [1] BIẾN DÙNG CHUNG: --pixel = phông kiểu pixel (VT323) cho chữ game; --ink = màu chữ chính; --gold/--gold-deep = vàng nhấn;
+   --ok/--bad = xanh/đỏ đúng-sai; --panel = nền thẻ bán trong suốt (alpha .52); --line = màu viền thẻ. */
+:root{--pixel:"VT323",monospace;--ink:#F7EDD3;--gold:#D8B65D;--gold-deep:#80602D;--ok:#70ed74;--bad:#ff6262;--panel:rgba(16,27,45,.52);--line:#D8B65D;--edge:#252b2b;--grass:#79c93b}
+/* [2] NỀN TOÀN TRANG & CHỮ CƠ BẢN — body: phông/màu chữ mặc định; #app-bg: ảnh nền mờ phía sau (blur = độ nhòe, brightness = độ tối);
+   h1: tiêu đề vàng; :focus-visible: viền vàng khi dùng bàn phím. */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:16px/1.5 "VT323",system-ui,sans-serif;color:var(--ink);background:#101B2D}
+#app-bg{position:fixed;inset:-24px;z-index:-1;background:#101B2D center/cover no-repeat;filter:blur(9px) brightness(.5) saturate(1.1);pointer-events:none}
+[hidden]{display:none!important}
+h1{font:700 23px/1.4 "VT323",sans-serif;color:var(--gold);margin:0 0 16px;text-shadow:2px 2px #111}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+/* [3] AUTH — Màn đăng nhập/đăng ký (.card = khung, .center = căn giữa, .auth-* = trạng thái/chữ gợi ý, .password-toggle = nút Hiện/Ẩn mật khẩu).
+   .card/.quiz dùng chung: nền var(--panel) (độ trong suốt), viền 3px, bóng đổ kiểu pixel, width mặc định 440px. */
+.center{min-height:100dvh;display:grid;place-items:center;padding:16px}
+.card,.quiz{position:relative;background:var(--panel);border:3px solid var(--line);box-shadow:inset 0 0 0 3px #353d3c,0 0 0 3px #202422,6px 7px 0 #080b0a;padding:24px;width:min(440px,100%);backdrop-filter:blur(2px)}
+.card:before,.quiz:before{content:"";position:absolute;inset:5px;border:1px solid rgba(255,255,255,.16);pointer-events:none}
+.card.wide{width:min(620px,100%);min-width:0}
+#screen-login h1{font:36px/1.2 var(--pixel);letter-spacing:0;color:#ffdf57}
+.card label{display:block;margin:14px 0;font-weight:600}
+.card input:not([type]),.card input[type=password]{display:block;width:100%;min-height:44px;margin-top:5px;padding:9px 11px;font:inherit;color:#fff7dc;background:rgba(4,8,7,.8);border:2px solid #80602D;box-shadow:inset 3px 3px #000}
+.card input:focus{border-color:var(--gold)}
+.card select{display:block;width:100%;min-height:44px;margin-top:5px}
+.auth-kicker{margin:0 0 7px;color:#a8e697;font:19px/1.3 var(--pixel);letter-spacing:.5px}
+.auth-switch{margin:18px 0 0;text-align:center}
+.auth-switch a{color:#F5D68C;font-weight:700}
+.auth-switch a:hover{color:#fff3b1}
+.auth-status{min-height:24px;margin:12px 0 0;font-weight:700}
+.auth-status:empty{display:none}
+.auth-status.is-error{color:#ffaaaa}
+.auth-status.is-success{color:#a7f2a4}
+.field-hint{display:block;margin-top:-10px;color:#e3e8cd;font-size:13px}
+.password-field{display:flex;align-items:stretch;gap:7px}
+.password-field input{min-width:0;flex:1}
+.password-toggle{align-self:flex-end;min-height:44px;margin-top:5px;padding:6px 10px;color:#fff7dc;background:#34443a;border:2px solid #80602D;font:600 14px "VT323",sans-serif;cursor:pointer}
+.password-toggle:hover{border-color:var(--gold)}
+.auth-submit{width:100%;margin-top:8px}
+.auth-submit:disabled{cursor:wait;filter:saturate(.6)}
+.button-loading{display:none;width:14px;height:14px;margin-left:8px;vertical-align:-2px;border:2px solid rgba(38,33,22,.35);border-top-color:#262116;border-radius:50%;animation:auth-spin .7s linear infinite}
+.auth-submit[aria-busy=true] .button-loading{display:inline-block}
+@keyframes auth-spin{to{transform:rotate(360deg)}}
+/* [4] NÚT — .btn = nút vàng chính (màu nền = gradient #F5D68C→#e7a72e); .btn.ghost = nút tối viền sáng (Đăng xuất, Về bản đồ...). */
+.note{font-size:16px;opacity:.9}
+.btn{position:relative;font:700 16px/1.4 "VT323",sans-serif;color:#262116;background:linear-gradient(#F5D68C,#e7a72e);border:3px solid #221b10;box-shadow:inset 0 0 0 2px #fff0a5,0 4px 0 #080a08;padding:10px 18px;min-height:44px;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(3px);box-shadow:inset 0 0 0 2px #fff0a5,0 1px 0 #080a08}
+.btn.ghost{background:rgba(16,27,45,.75);color:#fff7dc;border-color:#D8B65D;box-shadow:inset 0 0 0 2px #434b43;margin-top:12px}
+/* [5] RẢI RÁC — .map-landmarks (có thể không còn dùng), .game-back = nút "Về bản đồ" trong màn chiến đấu. */
+.map-landmarks{z-index:2;pointer-events:none}
+.game-back{display:block;margin:0 0 12px}
+/* [6] CHIẾN TRƯỜNG PHIÊN BẢN CŨ (V1/V2): lưới 2 cột (1fr | 2fr), .stage = khung cảnh bên trái, #hero/#mob = nhân vật/quái, .player-hud = HUD
+   người chơi, .hp = thanh HP quái, .qwrap = vùng câu hỏi. PHẦN LỚN BỊ GHI ĐÈ bởi khối [8] bên dưới — muốn chỉnh màn chiến đấu hãy sửa [8]. */
+.game{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);height:100dvh;overflow:hidden}
+.stage{position:relative;isolation:isolate;overflow:hidden;border-right:5px solid #181d19;background:#5bbd39;box-shadow:inset -5px 0 #9caa85}
+.stage canvas{position:absolute}
+.scene{z-index:-1;inset:0;width:100%;height:100%}
+#hero,#mob{z-index:1;height:auto;image-rendering:pixelated;image-rendering:crisp-edges}
+#skill-projectile{display:none;position:absolute;z-index:2;width:clamp(72px,12vw,144px);height:auto;transform:translate(-50%,-50%) scaleX(var(--skill-scale,1));pointer-events:none;image-rendering:pixelated}
+#skill-projectile.is-flying{display:block;animation:skill-flight .24s linear forwards}
+@keyframes skill-flight{to{transform:translate(calc(-50% + var(--skill-x)),calc(-50% + var(--skill-y))) scaleX(var(--skill-scale,1))}}
+#hero{left:-2%;bottom:33%;width:52%}
+#mob{right:8%;bottom:33%;width:32%}
+.player-hud{position:absolute;z-index:2;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:9px;min-height:62px;padding:6px 9px;background:rgba(16,27,45,.84);border:3px solid #D8B65D;box-shadow:inset 0 0 0 2px #535d50,3px 4px 0 rgba(0,0,0,.72)}
+.level-badge{flex:0 0 48px;aspect-ratio:1;display:grid;place-content:center;text-align:center;border-radius:50%;background:radial-gradient(circle at 35% 28%,#62665f,#292e2d 66%);border:3px solid #d9deca;box-shadow:inset 0 0 0 3px #171b1a,0 0 0 2px #111}
+.level-badge span{font:14px/1.1 var(--pixel);color:#e8e2c9}
+.level-badge b{font:700 19px/1.15 "VT323",sans-serif}
+.player-stats{flex:1;min-width:0}
+.hud-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;line-height:1.3;color:#f5e8bd}
+.player-hp,.player-xp{position:relative;overflow:hidden;border:2px solid #141716;background:#331b1b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.player-hp{height:20px;margin-top:3px}
+.player-hp i,.player-xp i{position:absolute;inset:0 auto 0 0;display:block}
+.player-hp i{width:100%;background:linear-gradient(#ff7163 0 42%,#c43127 43% 100%)}
+.player-hp b,.player-xp b{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:700 16px/1 "VT323",sans-serif;text-shadow:1px 1px #111}
+.player-xp{height:18px;margin-top:3px;background:#282719}
+.player-xp i{width:18.4%;background:#ffe04b}
+.player-xp b{justify-content:end;padding-right:4px;color:#fff6cf}
+.hp{position:absolute;z-index:2;right:9%;top:50%;width:34%;height:21px;border:3px solid #171918;background:#411d1b;box-shadow:0 2px rgba(0,0,0,.55)}
+.hp i{display:block;height:100%;width:100%;background:linear-gradient(#ff7763 0 40%,#d4332e 41% 100%);transition:width .4s steps(8)}
+.hp b{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:700 11px/1 "VT323",sans-serif;text-shadow:1px 1px #111}
+/* [6b] VÙNG CÂU HỎI & ĐÁP ÁN (còn hiệu lực): .quiz = thẻ câu hỏi; .qtext = chữ câu hỏi; .opt = ô đáp án (.good/.bad = đúng/sai khi chấm);
+   select/.slot/.pool/.chip = dạng "Danh sách" và "Kéo thả"; .fb = lời phản hồi; .result = màn kết quả. */
+.qwrap{overflow:auto;padding:18px;background-color:rgba(25,34,32,.76);background-image:linear-gradient(rgba(184,206,173,.075) 1px,transparent 1px),linear-gradient(90deg,rgba(184,206,173,.075) 1px,transparent 1px);background-size:16px 16px}
+.quiz{background:rgba(16,27,45,.52);padding:22px;width:100%;max-width:1640px;margin:0 auto}
+.qhead{position:relative;color:var(--gold);font-weight:700;margin-bottom:10px}
+.qtext{font-size:16px;line-height:1.6;max-width:100ch;color:#fff}
+.q img{max-width:100%;max-height:240px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;margin:9px 0;border:2px solid rgba(225,237,219,.58);background:rgba(9,14,15,.74);box-shadow:inset 0 0 0 2px rgba(255,255,255,.035);cursor:pointer;transition:background .12s,border-color .12s}
+.opt:hover{border-color:var(--gold)}
+.opt input{flex:0 0 auto;margin:6px 0 0;accent-color:var(--gold)}
+.opt:has(input:checked){border-color:var(--gold);background:rgba(145,104,23,.32)}
+.opt.good{border-color:var(--ok);background:rgba(53,155,62,.32)}
+.opt.bad{border-color:var(--bad);background:rgba(176,49,49,.32)}
+select{max-width:100%;font:inherit;padding:5px 8px;margin:0 4px;color:#fff7dc;background:#17201d;border:2px solid #bec9ba;box-shadow:inset 2px 2px #080c09}
+select.good,.slot.good{border-color:var(--ok);background-color:rgba(49,135,55,.55)}
+select.bad,.slot.bad{border-color:var(--bad);background-color:rgba(147,42,42,.55)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:8px 0;align-items:stretch}
+.slot{min-height:52px;border:2px dashed #d7bb5c;padding:4px;display:flex;align-items:center;background:rgba(7,12,12,.72);cursor:pointer}
+.pool{display:flex;flex-wrap:wrap;margin-top:12px;padding:8px;min-height:58px;border:2px solid rgba(225,237,219,.58);background:rgba(5,9,10,.5)}
+.chip{font:600 16px/1.4 "VT323",sans-serif;text-align:left;color:#fff7dc;background:#35463a;border:2px solid #c5d2bd;box-shadow:inset 0 0 0 2px #1a251c;padding:6px 10px;margin:4px;cursor:grab}
+.chip.sel{color:#fff1b1;border-color:var(--gold);background:#66511d;outline:2px solid var(--gold)}
+.locked{pointer-events:none}
+.fb{margin:14px 0;min-height:24px}
+.fb.good{color:var(--ok)}.fb.bad{color:var(--bad)}.fb.warn{color:var(--gold)}
+.fb div{color:#fff7dc;margin-top:4px}
+.result{text-align:center}
+.result .score{font:40px var(--pixel);margin:16px 0}
+.result .btn{margin:6px}
+/* [7] HIỆU ỨNG TẤN CÔNG/ĐAU (keyframes + .atk/.lunge/.hurt/.dead): thời gian (.54s, .35s...) và steps() = tốc độ/độ giật khung hình. Có dòng
+   `prefers-reduced-motion` (người dùng tắt hiệu ứng) ở dưới nên các hiệu ứng tự tắt khi hệ điều hành yêu cầu. */
+@keyframes atk{50%{transform:translateX(70%)}}
+@keyframes atkL{50%{transform:translateX(-70%)}}
+@keyframes lunge-right{0%,100%{transform:translateX(0)}38%,62%{transform:translateX(42%)}}
+@keyframes lunge-left{0%,100%{transform:translateX(0)}38%,62%{transform:translateX(-38%)}}
+@keyframes hurt{0%,100%{filter:none}25%{transform:translateX(-8px);filter:brightness(1.5)}75%{transform:translateX(8px)}}
+.atk{animation:atk .54s steps(5,end)}#mob.atk{animation-name:atkL}
+.stage #hero.lunge{animation:lunge-right .52s steps(6,end)}
+.stage #mob.lunge{animation:lunge-left .52s steps(6,end)}
+.hurt{animation:hurt .35s steps(4)}
+#mob.dead,#hero.dead{opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s}
+/* [7b] BỐ CỤC DESKTOP/ĐIỆN THOẠI CŨ (V2) — đã bị khối [8] ghi đè gần hết; giữ lại vì .player-hud/.level-badge/.hp vẫn dùng một số kích thước ở đây. */
+@media (min-width:1025px){.game{grid-template-columns:minmax(280px,1fr) 3fr}}
+@media (max-width:800px){.game{grid-template-columns:1fr;grid-template-rows:34dvh minmax(0,1fr)}.stage{border-right:0;border-bottom:5px solid #181d19;box-shadow:inset 0 -4px #9caa85}.player-hud{top:8px;left:9px;right:auto;width:min(330px,calc(100% - 18px))}#hero{left:3%;bottom:-1%;width:28%}#mob{left:23%;right:auto;bottom:3.75%;width:18%}.hp{top:auto;bottom:40%;right:12%;width:min(130px,32%)}.qwrap{padding:14px}.row{grid-template-columns:1fr}}
+@media (max-width:420px){.card,.quiz{padding:18px}.tag{max-width:52%}.qtext{font-size:17px}.opt{padding:9px}.player-hud{min-height:56px}.level-badge{flex-basis:44px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (min-width:801px){
+	#screen-game{min-height:100dvh;display:grid;place-items:center}
+	.game{position:relative;display:block;aspect-ratio:4 / 3;width:min(66.667vw,120vh);height:auto;margin:auto;border:4px solid #000;box-shadow:6px 6px 0 #000;overflow:hidden;container-type:inline-size;font-size:clamp(14px,1.25cqw,18px)}
+	.stage{position:absolute;inset:0;z-index:0;border:0}
+	.player-hud{top:2%;left:2%;right:auto;width:29%;gap:clamp(4px,.7cqw,10px);padding:clamp(4px,.7cqw,10px)}
+	.level-badge{flex-basis:clamp(40px,4cqw,54px)}
+	.level-badge b{font-size:clamp(16px,1.5cqw,21px)}
+	.hud-name{font-size:clamp(14px,1.25cqw,18px)}
+	.player-hp b,.player-xp b{font-size:clamp(14px,1.25cqw,18px)}
+	#hero,#mob{bottom:34%}
+	#hero{left:3%;width:11%}
+	#mob{left:19%;right:auto;width:12%}
+	.hp{top:48%;left:19%;right:auto;width:12%;height:clamp(12px,1.2cqw,18px)}
+	.qwrap{position:relative;z-index:1;margin-left:33.333%;height:100%;overflow:auto;padding:1.5cqw;background-color:transparent}
+	.quiz{width:100%;max-width:none;margin:0 auto;padding:1.5cqw;background:rgba(14,18,46,.5);backdrop-filter:blur(2px)}
+	.qhead{font-size:clamp(14px,1.25cqw,18px)}
+	.qtext{max-width:100ch;font-size:clamp(16px,1.8cqw,24px)}
+	.opt{gap:clamp(8px,.8cqw,14px);margin:clamp(6px,.65cqw,12px) 0;padding:clamp(8px,.8cqw,14px) clamp(10px,1cqw,18px);font-size:clamp(14px,1.25cqw,18px)}
+	.opt span{min-width:0;overflow-wrap:anywhere}
+	.quiz .btn,.chip{font-size:clamp(14px,1.25cqw,18px)}
+	.row{gap:1cqw;margin:1cqw 0}
+	.slot{min-width:0;min-height:clamp(44px,4cqw,60px);padding:clamp(3px,.5cqw,8px)}
+	.chip{max-width:100%;overflow-wrap:anywhere;padding:clamp(5px,.6cqw,10px) clamp(8px,.8cqw,14px)}
+	.pool{gap:.4cqw;margin-top:1cqw;padding:clamp(6px,.8cqw,12px)}
+}
+
+/* V2: cửa hàng / trang bị (xem mục [11]–[13] bên dưới) */
+/* V2: cửa hàng / trang bị */
+
+/* [7c] V3 — SPRITE: nhân vật/quái là canvas tỉ lệ 256:202. Các dòng `#hero{left;width}` `#mob{...}` `.hp{...}` ở đây là lớp ghi đè thứ hai;
+   lớp cuối cùng (thắng) nằm trong [8]. Keyframes atk/atkL: quãng lao tới khi tấn công (18% = lao 18% chiều rộng sprite). */
+/* ===== V3: bản đồ chọn ải bằng ảnh, sprite nhân vật/boss ===== */
+
+/* sprite 256×202 → canvas tỉ lệ 1.27:1. Desktop: % tính theo khung game 4:3, chiến trường chiếm 1/3 bên trái. */
+#hero,#mob{aspect-ratio:256/202}
+@media (min-width:801px){
+  #hero,#mob{bottom:33%}
+  #hero{left:0;width:22%}
+  #mob{left:9%;right:auto;width:24%}
+  .hp{top:39.5%;left:14%;right:auto;width:14%}
+}
+@media (max-width:800px){
+  #hero{left:-2%;width:40%;bottom:4%}
+  #mob{left:auto;right:-2%;width:44%;bottom:4%}
+  .hp{top:auto;bottom:52%;right:8%;width:min(130px,32%)}
+}
+@keyframes atk{50%{transform:translateX(18%)}}
+@keyframes atkL{50%{transform:translateX(-18%)}}
+
+/* [8] ===== MÀN CHIẾN ĐẤU (Adventure + Boss Raid) — ĐÂY LÀ NƠI CHỈNH CHÍNH =====
+   Bố cục: cảnh nền full màn hình (.stage), thẻ câu hỏi nổi bên PHẢI (.qwrap/.quiz), nhân vật bên trái.
+   - `#screen-game .player-hud`: HUD người chơi (top/left = vị trí, width = chiều rộng).
+   - `#hero` / `#mob` (nhân vật / quái-Boss): `left` = vị trí ngang, `bottom` = vị trí dọc (% từ đáy), `width` = kích thước
+     (min(vw, vh) để co theo cả chiều ngang lẫn dọc). Sprite phóng to = tăng width.
+   - `.hp`: thanh máu quái/Boss, `bottom: calc(...)` đặt phía trên đầu quái; chỉnh `left`/`width`/`height`.
+   - `#screen-game .qwrap` width:62% = bề rộng vùng câu hỏi (bên phải). Muốn thẻ câu hỏi rộng/hẹp hơn: đổi 62%.
+   - `#screen-game .quiz` height:90% = chiều cao thẻ; `background: rgba(16,27,45,.28)` → số .28 là ĐỘ ĐẶC của nền thẻ (Plan: nền câu hỏi
+     trong suốt ~50% → đặt .5; tăng để dễ đọc, giảm để thấy cảnh phía sau rõ hơn); `backdrop-filter: blur(3px)` = độ nhòe cảnh phía sau.
+   - `.qtext`/`.opt` font-size: cỡ chữ câu hỏi/đáp án trên máy tính (clamp theo vw).
+   - Khối @media (max-width:800px) bên dưới = ĐIỆN THOẠI ngang; @media ... portrait = hiện lời nhắc "Hãy xoay ngang". */
+/* Adventure battle: full-screen scene with a translucent question card on the right. */
+#screen-game{position:fixed;inset:0;width:100vw;height:100dvh;min-height:0;display:block;overflow:hidden}
+#screen-game .game-rotate-notice{display:none}
+#screen-game .game{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;margin:0;border:0;box-shadow:none;overflow:hidden;container-type:normal;font-size:16px}
+#screen-game .stage{position:absolute;inset:0;z-index:0;border:0;box-shadow:none}
+#screen-game .scene{position:absolute;inset:0;width:100%;height:100%}
+#screen-game .player-hud{top:2%;left:2%;right:auto;width:min(30%,380px);gap:10px;padding:10px}
+#screen-game #hero,#screen-game #mob{bottom:8%}
+#screen-game #hero{width:min(29.33vw,50.67vh);max-width:50.67vw}
+#screen-game #hero{left:2%}
+#screen-game #mob{left:17.6%;right:auto;width:min(32vw,56vh);max-width:56vw}
+#screen-game #mob.ranked-opponent{width:min(29.33vw,50.67vh);max-width:50.67vw}
+#screen-game .hp{top:auto;bottom:calc(8% + min(42vh, 30vw) + 12px);left:27%;right:auto;width:12%;height:16px}
+#screen-game .qwrap{position:absolute;z-index:2;top:0;right:0;width:62%;height:100%;display:flex;flex-direction:column;overflow:auto;padding:clamp(12px,2vw,32px) 0;background:transparent}
+#screen-game .game-back{align-self:flex-end;margin:0 2vw 12px 0}
+#screen-game .quiz{width:calc(100% - 2vw);height:90%;min-height:90%;max-width:none;max-height:90%;overflow:auto;margin:auto 2vw auto 0;padding:clamp(16px,2.2vw,36px);background:rgba(16,27,45,.28);backdrop-filter:blur(3px);border-color:rgba(229,236,215,.82);box-shadow:inset 0 0 0 3px rgba(53,61,60,.55),0 0 0 3px rgba(32,36,34,.5),6px 7px 0 rgba(8,11,10,.42)}
+#screen-game .qtext{font-size:clamp(15px,1.65vw,23px)}
+#screen-game .opt{font-size:clamp(13px,1.15vw,17px)}
+@media (max-width:800px){
+  #screen-game .player-hud{top:8px;left:8px;width:min(38%,300px);gap:5px;padding:6px}
+  #screen-game .player-hp b,#screen-game .player-xp b{font-size:12px}
+  #screen-game #hero,#screen-game #mob{bottom:6%}
+  #screen-game #hero{width:min(80vw,50.67vh);max-width:80vw}
+  #screen-game #hero{left:0}
+  #screen-game #mob{left:12%;right:auto;width:min(88vw,56vh);max-width:88vw}
+  #screen-game #mob.ranked-opponent{width:min(80vw,50.67vh);max-width:80vw}
+  #screen-game .hp{bottom:calc(6% + min(42vh, 30vw) + 8px);left:25%;width:14%;height:12px}
+  #screen-game .qwrap{width:62%;padding:8px 0}
+  #screen-game .game-back{min-height:38px;padding:5px 9px;margin:0 8px 8px 0}
+  #screen-game .quiz{width:calc(100% - 8px);height:90%;min-height:90%;max-height:90%;margin-right:8px;padding:14px;background:rgba(16,27,45,.28)}
+  #screen-game .qtext{font-size:clamp(13px,3.7vw,17px)}
+  #screen-game .opt{gap:6px;padding:7px;margin:6px 0;font-size:clamp(11px,3vw,14px)}
+  #screen-game .quiz .btn,#screen-game .chip{font-size:14px}
+}
+@media (max-width:800px) and (orientation:portrait){
+  #screen-game .game-rotate-notice{position:fixed;z-index:10;inset:0;display:grid;place-items:center;padding:32px;text-align:center;color:#fff7dc;background:rgba(9,14,15,.98);font-size:clamp(20px,6vw,30px);font-weight:700}
+  #screen-game .game{visibility:hidden}
+}
+
+/* [8b] ĐỒNG HỒ TRẢ LỜI & GHI CHÚ CHIẾN ĐẤU — .qtimer (⏱ giây, đỏ khi .is-low), .combat-note (dòng "Bạn gây ... sát thương"), .save-status. */
+/* V3: đồng hồ trả lời + ghi chú chiến đấu */
+.qtimer{float:right;font-weight:700;color:#fff7dc}
+.qtimer.is-low{color:var(--bad)}
+.combat-note{font-size:.9em;opacity:.9}
+
+.save-status{min-height:24px;font-weight:700;color:#F5D68C}
+
+/* [9] ===== MÀN CHỌN ẢI (bản đồ) =====
+   .world-map: khung ảnh bản đồ theo tỉ lệ ảnh; --ar = tỉ lệ ảnh, JS đặt theo ảnh thật.
+   .map-hud--left: thông tin người chơi đặt trên ảnh; .map-actions: nút thao tác nằm ngoài khung bản đồ.
+   .map-stage: nút tròn đặt đè lên số ải đã vẽ sẵn (vị trí x/y lấy từ world.json); trạng thái --unlocked (nhấp nháy), --completed (★ xanh),
+   --locked (🔒 tối). Nút to/nhỏ: width:clamp(28px,4.4%,60px). */
+/* ===== Màn chọn ải: bản đồ và thanh thao tác nằm cạnh nhau ===== */
+#screen-levels{min-height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) clamp(150px,13vw,220px);align-items:center;gap:clamp(8px,1vw,16px);padding:2vh 2vw}
+.world-map{--ar:1.7778;position:relative;justify-self:end;width:min(100%,calc(90dvh * var(--ar)));aspect-ratio:var(--ar);background:#18345A center/100% 100% no-repeat;border:3px solid #D8B65D;box-shadow:inset 0 0 0 2px rgba(30,35,25,.75),0 6px 0 rgba(0,0,0,.55);overflow:hidden}
+.map-stages{position:absolute;inset:0;z-index:2}
+.map-hud{position:absolute;z-index:4;top:1.2%;display:flex;gap:6px;max-width:30%}
+.map-hud--left{left:1.2%;flex-direction:column;gap:3px;max-width:34%;font:clamp(14px,1.8vw,20px)/1.1 var(--pixel);color:#fff7dc}
+.map-hud--left p{margin:0}.map-who{color:#F5D68C}.map-progress{color:#9be58f}
+.map-avatar canvas{position:absolute;left:2%;bottom:3%;width:32%;height:90%;object-fit:contain;image-rendering:pixelated}
+.map-avatar-copy{min-width:0;text-shadow:1px 2px #071326}
+.map-who,.map-class{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-level{color:#f4d875}.map-level b{font-weight:400;color:#fff}
+.map-class{color:#d9eaff}
+.map-currency{display:flex;gap:5px}
+.map-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,1.2vw,16px);justify-items:center;align-content:center}
+.map-action{display:grid;justify-items:center;gap:0;width:100%;max-width:76px;padding:0;color:#fff7dc;background:transparent;border:0;font:clamp(12px,1.3vw,16px)/1 var(--pixel);text-shadow:1px 2px #10131b;cursor:pointer}
+.map-action img{width:100%;aspect-ratio:1;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(2px 3px 1px rgba(0,0,0,.7));transition:transform .12s,filter .12s}
+.map-action:hover img{transform:translateY(-2px) scale(1.06);filter:drop-shadow(0 0 5px #F5D68C)}
+.map-action:focus-visible{outline:2px solid #fff4a8;outline-offset:1px}
+.map-action span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-message{position:absolute;z-index:4;left:50%;top:9%;transform:translateX(-50%);margin:0;padding:3px 12px;background:rgba(16,27,45,.8);font:20px var(--pixel);border:2px solid #D8B65D}
+.map-message:empty{display:none}
+.map-error{margin:12px;padding:12px;border:2px solid #ff8585;background:rgba(100,24,24,.55);color:#ffd2d2}
+.map-stage{position:absolute;display:grid;place-items:center;width:clamp(28px,4.4%,60px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:3px solid transparent;background:transparent;color:transparent;font-size:0;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.map-stage .stage-number{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.map-stage--unlocked{border-color:#fff4a8;animation:node-pulse 1.4s ease-in-out infinite}
+.map-stage--dungeon.map-stage--unlocked{border-color:#9ff6ff}
+.map-stage--completed{border-color:#7dff8a;background:rgba(40,160,70,.18)}
+.map-stage--completed:after{content:"★";position:absolute;right:-5px;top:-8px;display:grid;place-items:center;width:20px;height:20px;border:2px solid #24251f;border-radius:50%;color:#28200d;background:#ffe783;font:700 12px/1 "VT323",sans-serif}
+.map-stage--locked{border-color:rgba(16,27,45,.55);background:rgba(16,27,45,.55)}
+.map-stage--locked:after{content:"🔒";font-size:clamp(11px,1.5vw,20px)}
+.map-stage:hover,.map-stage.is-selected{z-index:3;transform:translate(-50%,-50%) scale(1.15);border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.35),0 0 14px 4px rgba(255,236,150,.7)}
+.map-stage:focus-visible{outline:3px solid #fff4a8;outline-offset:3px}
+@keyframes node-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,244,168,.7)}50%{box-shadow:0 0 0 9px rgba(255,244,168,0)}}
+
+/* [10] THANH TRẠNG THÁI ẢI — hiện ở cuối bản đồ khi bấm một ải (.stage-bar): tên ải, quái vật, yêu cầu cấp, nút "Vào ải". bottom/width chỉnh vị trí/độ rộng. */
+/* thanh trạng thái ải: chỉ hiện khi bấm một nút ải/hầm ngục */
+.stage-bar{position:absolute;z-index:5;left:50%;bottom:2.2%;transform:translateX(-50%);width:min(94%,820px);display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 12px;background:rgba(16,27,45,.88);border:3px solid #D8B65D;box-shadow:inset 0 0 0 2px #343e34,0 4px 0 rgba(0,0,0,.55)}
+.stage-bar[hidden]{display:none}
+.stage-bar-head{display:flex;align-items:center;gap:10px}
+.stage-bar h2{margin:0;color:#F5D68C;font:30px/1 var(--pixel)}
+.stage-status{padding:0 8px;border:2px solid currentColor;font:20px/1.3 var(--pixel);white-space:nowrap}
+.stage-status--unlocked{color:#9be58f}.stage-status--completed{color:#F5D68C}.stage-status--locked{color:#c9ccc4}
+.stage-bar-body{flex:1 1 220px;display:flex;flex-wrap:wrap;gap:2px 14px;font:20px/1.2 var(--pixel);min-width:0}
+.stage-monster{color:#ffb4a8}.stage-level{color:#e3e8cd}.stage-best{color:#F5D68C}
+.stage-note,.stage-locked-note{padding:0 8px;background:rgba(111,88,31,.4);border-left:3px solid #D8B65D;color:#fff2c2}
+.stage-bar-actions{display:flex;gap:8px;margin-left:auto}
+.stage-bar .btn{margin:0;min-height:38px;padding:2px 16px;font:24px/1.1 var(--pixel)}
+
+/* [11] ===== KHUNG UI GAME DÙNG CHUNG (Cửa hàng / Trang bị / Xếp hạng) — dùng asset UI 9-slice =====
+   .ui-frame: khung chính Panel_square 9-slice; width/height = kích thước tối đa; font-size:21px = cỡ chữ pixel mặc định trong khung.
+   .ui-top: thanh trên (cấp, EXP, nghề, Gold/Crystal, nút ✕); .ui-ribbon: dải tên màn; .ui-panel: ô nội dung; .ui-split: chia 2 cột (1.7fr | 1fr);
+   .tab/.tag: nhãn chuyển tab / lọc loại; .coin: ô tiền (Gold tròn vàng, .gem = Crystal hình thoi xanh). */
+/* ===== Khung UI game dùng chung: Cửa hàng / Trang bị / Xếp hạng (Shop_UI.png, Equipment_UI.png) ===== */
+.ui-screen{min-height:100dvh;padding:2vh 2vw}
+.ui-screen:not([hidden]){display:grid;place-items:center}
+.ui-frame{--trim:#D8B65D;width:min(1180px,100%);height:min(94dvh,780px);display:flex;flex-direction:column;gap:8px;padding:8px;background:transparent;border:26px solid transparent;border-image:url("../assets/ui/panel_square.png") 38 fill / 26px / 0 stretch;font-family:var(--pixel);font-size:21px;line-height:1.15}
+.ui-top{display:flex;align-items:center;gap:12px;padding:6px 10px;background:rgba(4,17,42,.55);border:0}
+.ui-level{flex:0 0 54px;aspect-ratio:1;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 28%,#80602D,#3b2a1d 70%);border:3px solid var(--trim);font-size:30px;color:#fff7dc}
+.ui-xp{display:grid;gap:1px;min-width:150px}
+.ui-xp small{font-size:18px;color:#F5D68C}.ui-xp b{font-size:22px;color:#fff7dc;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.ui-ribbon{flex:1;min-width:130px;text-align:center;padding:8px 20px;border-bottom:2px solid rgba(216,200,143,.55)}
+.ui-ribbon h1{margin:0;font:clamp(22px,3vw,34px)/1.1 var(--pixel);color:#F5D68C;text-shadow:2px 2px #09172d;letter-spacing:1px}
+.ui-money{display:grid;gap:2px;min-width:120px}
+.currency{position:relative;display:flex;align-items:center;min-width:116px;height:32px;padding:0 10px 0 34px;background-position:center;background-size:100% 100%;background-repeat:no-repeat;color:#fff7dc;font-size:20px;text-shadow:1px 1px #10131b}
+.currency-gold{background-image:url("../assets/ui/gold_bar.png")}
+.currency-crystal{background-image:url("../assets/ui/crystal_bar.png")}
+.currency b{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.coin{display:inline-flex;align-items:center;gap:6px;padding:0 10px 0 4px;background:#101B2D;border:2px solid #080F1B;border-radius:12px;color:#fff7dc;font-size:22px}
+.coin:before{content:"";width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff0a0,#e0a820 65%,#9c6a10);border:2px solid #6b4b10}
+.coin.gem:before{border-radius:3px;transform:rotate(45deg) scale(.85);background:linear-gradient(135deg,#bff4ff,#3aa7e0);border-color:#1b5e86}
+.coin.gold:before{width:20px;height:20px;border:0;border-radius:0;background:url("../assets/ui/gold.png") center/contain no-repeat}
+.coin.gem:before{width:20px;height:20px;border:0;border-radius:0;transform:none;background:url("../assets/ui/crystal.png") center/contain no-repeat}
+.ui-close{flex:0 0 42px;width:42px;height:42px;padding:0;border:0;background:transparent;cursor:pointer}
+.ui-close img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.ui-close:hover{filter:brightness(1.2)}
+.ui-msg{margin:0;min-height:22px;color:#F5D68C}.ui-msg:empty{min-height:0;display:none}.ui-msg.is-error{color:#ffaaaa}.ui-msg.is-success{color:#a7f2a4}
+.ui-body{flex:1;min-height:0;display:grid;gap:10px}
+.ui-split{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+.ui-split--equal{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.ui-panel{min-height:0;display:flex;flex-direction:column;gap:8px;padding:8px;background:transparent;border:20px solid transparent;border-image:url("../assets/ui/panel_square.png") 38 fill / 20px / 0 stretch}
+.ui-scroll{flex:1;min-height:0;overflow-y:auto;padding-right:4px;scrollbar-color:#D8B65D #101B2D}
+.ui-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:22px/1 var(--pixel);padding:8px 16px;color:#F5D68C;background:#243C5B;border:3px solid var(--trim);border-bottom-width:5px;border-radius:8px 8px 0 0;cursor:pointer}
+.tab.is-on{background:linear-gradient(#e24c3d,#a02a20);color:#fff}
+.tab:hover{filter:brightness(1.12)}
+.tag-bar{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:5px;font:20px/1 var(--pixel);padding:5px 9px;color:#F5D68C;background:#18345A;border:2px solid #80602D;border-radius:8px;cursor:pointer}
+.tag img{width:36px;height:30px;object-fit:contain;image-rendering:pixelated}
+.tag.is-on{color:#101B2D;background:#D8B65D;border-color:#fff0b0}
+.tag.toggle{margin-left:auto}
+.ribbon{margin:0;align-self:flex-start;padding:2px 0;border-bottom:2px solid rgba(216,200,143,.55);font:24px/1.2 var(--pixel);color:#fff7dc;letter-spacing:1px;text-shadow:1px 2px #071326}
+.ribbon small{margin-left:8px;color:#D8B65D;font-size:18px}
+.hint{margin:0;color:#D8B65D;font-size:19px}
+.bag-empty{grid-column:1/-1;margin:8px 0;color:#F5D68C}
+
+/* [12] CỬA HÀNG — thẻ vật phẩm: .shop-item (viền màu theo phẩm chất qua biến --q), .item-icon (ảnh vật phẩm 58px), .q-badge (nhãn phẩm chất),
+   .btn.buy (nút giá). LƯU Ý: .shop-grid được khai báo 2 lần — lần cuối (khối V4 bên dưới, minmax(112px,1fr)) mới có hiệu lực; muốn thẻ to/nhỏ hơn
+   hãy đổi số 112px ở khối V4. Các .item-bonus/.item-effect/.item-class không còn hiện trong thẻ (đã chuyển sang tooltip). */
+/* thẻ vật phẩm trong cửa hàng */
+.shop-section{margin-bottom:14px}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;margin-top:8px}
+.shop-item{--q:#b8c5a6;display:flex;flex-direction:column;gap:5px;padding:8px;background:#101B2D;border:3px solid var(--q);border-radius:8px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.5)}
+.shop-item.is-owned{opacity:.8}.shop-item.is-dim{opacity:.6}
+.shop-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+.item-icon{flex:0 0 auto;display:grid;place-items:center;width:58px;height:58px;background:radial-gradient(circle,#243C5B,#080F1B);border:2px solid var(--q,#80602D);border-radius:8px;overflow:hidden}
+.item-icon img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.item-icon-fallback{font-size:30px}
+.q-badge{padding:0 7px;color:#080F1B;background:var(--q,#b8c5a6);border-radius:10px;font-size:17px;white-space:nowrap}
+.shop-item h3{margin:0;font:700 17px/1.25 "VT323",sans-serif;color:#F5D68C}
+.shop-item p{margin:0}
+.item-bonus{color:#9be58f;font-size:20px}.item-effect{color:#9fd4ff;font-size:18px}.item-class{color:#D8B65D;font-size:18px}.item-class.is-bad{color:#ff9a8a}
+.item-price{display:flex;gap:6px;flex-wrap:wrap}
+.shop-item .btn.buy{margin-top:auto;min-height:36px;padding:2px 10px;font:22px/1 var(--pixel)}
+.shop-item .btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* [13] Ô VUÔNG TÚI ĐỒ/KHO ĐỒ (.bag-grid: minmax(66px) = cỡ ô; .tile: ô; .is-selected viền sáng; .is-worn nền xanh = đang mặc; .tile-flag = nhãn nhỏ). */
+/* ô vuông (túi đồ / kho đồ) */
+.bag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;align-content:start}
+.tile{--q:#80602D;position:relative;display:grid;place-items:center;aspect-ratio:1;padding:3px;background:#101B2D;border:3px solid var(--q);border-radius:8px;cursor:pointer}
+.tile .item-icon{width:100%;height:100%;border:0;background:none}
+.tile.is-selected{box-shadow:0 0 0 3px #fff,0 0 12px 3px rgba(255,236,150,.7)}
+.tile.is-worn{background:#2d4a22}.tile.is-dim .item-icon{opacity:.45}
+.tile-flag{position:absolute;left:0;right:0;bottom:0;font-size:15px;line-height:1.2;text-align:center;color:#fff;background:rgba(0,0,0,.6)}
+.tile-flag.is-bad{background:none;font-size:18px;right:3px;left:auto}
+
+/* [13a] MÀN TRANG BỊ — .char-stats (4 ô chỉ số), .char-stage (khung nhân vật ở giữa + 2 cột ô trang bị .slot-col/.slot-box, 78px/ô),
+   .char-portrait (hình nhân vật động). `.item-detail`/`.detail-*` là khung chi tiết CŨ, không còn dùng sau V4 (có thể xóa); thay bằng tooltip [15]. */
+/* màn Trang bị */
+.char-pick{display:flex;align-items:center;gap:8px;color:#F5D68C}
+.char-pick select{flex:1;margin:0;min-height:38px;font:20px var(--pixel)}
+.char-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:6px;background:#101B2D;border:2px solid #80602D;border-radius:8px}
+.stat{display:flex;flex-direction:column;align-items:center}.stat-k{color:#D8B65D;font-size:18px}.stat b{font-weight:400;color:#fff7dc;font-size:26px;line-height:1}
+.stat em{font-style:normal;font-size:18px}.stat .plus{color:#7dff8a}.stat .minus{color:#ff8a7a}
+.char-stage{flex:1;min-height:0;display:grid;grid-template-columns:78px minmax(0,1fr) 78px;align-items:center;gap:8px;padding:6px;background:radial-gradient(ellipse at 50% 70%,#243C5B,#18345A);border:2px solid #80602D;border-radius:8px}
+.slot-col{display:flex;flex-direction:column;gap:10px;justify-content:center}
+.slot-box{--q:#6f6a58;position:relative;display:grid;place-items:center;aspect-ratio:1;padding:3px;background-color:transparent;background-position:center;background-size:100% 100%;background-repeat:no-repeat;border:0;border-radius:0;cursor:pointer;color:#D8B65D}
+#screen-equip [data-slot=weapon]{background-image:url("../assets/ui/equip_sword.png")}
+#screen-equip [data-slot=helmet]{background-image:url("../assets/ui/equip_helmet.png")}
+#screen-equip [data-slot=armor]{background-image:url("../assets/ui/equip_armor.png")}
+#screen-equip [data-slot=accessory]{background-image:url("../assets/ui/equip_accessory.png")}
+.slot-box.is-selected{box-shadow:0 0 0 3px #fff,0 0 12px 3px rgba(255,236,150,.7)}
+.slot-box .item-icon{width:100%;height:100%;border:0;background:none}
+.slot-label{position:absolute;left:0;right:0;top:-2px;font-size:15px;line-height:1.1;text-align:center;color:#D8B65D;background:rgba(0,0,0,.55)}
+.slot-empty{font-size:0;opacity:0}
+.char-portrait{width:100%;max-height:100%;aspect-ratio:256/202;image-rendering:pixelated;image-rendering:crisp-edges;align-self:center;justify-self:center}
+.item-detail{display:grid;gap:5px;padding:8px;background:#101B2D;border:2px solid #80602D;border-radius:8px;min-height:150px}
+.item-detail .btn{margin:4px 0 0;min-height:38px;font:22px/1 var(--pixel)}
+.detail-head{display:flex;gap:10px;align-items:center}.detail-title{display:grid;gap:2px;justify-items:start}
+.detail-title h3{margin:0;font:700 18px/1.2 "VT323",sans-serif;color:#F5D68C}.detail-sub{color:#D8B65D;font-size:18px}
+.detail-stats{margin:0;color:#9be58f;font-size:22px}.detail-effect{margin:0;color:#9fd4ff}.detail-hint{margin:0;color:#D8B65D}
+
+/* [13b] XẾP HẠNG — .rank-row (mỗi dòng: hạng | tên | cấp | điểm; cột 48px 1fr auto auto), .is-top (top 3 viền vàng), .is-me (dòng của bạn nền xanh). */
+/* màn Xếp hạng */
+.rank-panel{gap:10px}
+.rank-row{display:grid;grid-template-columns:48px 1fr auto auto;gap:12px;align-items:center;padding:6px 10px;margin-bottom:5px;background:#101B2D;border:2px solid #80602D;border-radius:6px}
+.rank-row.is-top{border-color:#D8B65D}.rank-row.is-me{background:#2d4a22;border-color:#9be58f}
+.rank-pos{font-size:26px;text-align:center}.rank-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff7dc}.rank-lv{color:#D8B65D}.rank-score{color:#F5D68C;font-size:24px}
+.rank-empty{margin:10px 0;color:#F5D68C}.rank-empty.is-error{color:#ffaaaa}
+.rank-panel .btn{align-self:flex-start;margin:0;min-height:38px;font:22px/1 var(--pixel)}
+
+/* [13c] ĐIỆN THOẠI (≤800px) cho các màn UI/bản đồ: đổi 2 cột thành 1 cột, thu nhỏ nút và chữ trên bản đồ. */
+@media (max-width:800px){
+  .ui-frame{height:auto;min-height:94dvh;font-size:19px}
+  .ui-split,.ui-split--equal{grid-template-columns:1fr}
+  .ui-top{flex-wrap:wrap}.ui-ribbon{order:5;flex-basis:100%}
+  .ui-panel{max-height:62dvh}
+  .map-hud{max-width:48%}.map-hud .btn{font-size:17px;min-height:28px;padding:1px 7px}.map-hud--left{font-size:16px}
+  #screen-levels{grid-template-columns:minmax(0,1fr) clamp(120px,22vw,170px);gap:6px;padding:1vh 1vw}
+  .map-action{font-size:clamp(10px,2vw,13px)}
+  .map-action img{width:min(100%,56px)}
+  .stage-bar h2{font-size:24px}.stage-bar-body{font-size:17px}
+}
+
+/* [15] ===== V4 ===== TOOLTIP VẬT PHẨM (.item-tip: hộp nổi khi rê chuột; viền màu theo phẩm chất; max-width = độ rộng tối đa; tip-* = từng dòng chữ). */
+/* ===== V4: tooltip vật phẩm, thẻ cửa hàng gọn, thanh thao tác cảm ứng, hộp nhập lớp, che câu hỏi ===== */
+.item-tip{--q:#80602D;position:fixed;z-index:200;max-width:260px;display:grid;gap:3px;padding:8px 10px;background:#080F1B;border:3px solid var(--q);border-radius:8px;box-shadow:0 6px 0 rgba(0,0,0,.45);color:#fff7dc;pointer-events:none;font-size:19px;line-height:1.2}
+.item-tip[hidden]{display:none}
+.tip-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tip-name{font:700 16px/1.25 "VT323",sans-serif;color:#F5D68C}
+.tip-sub{margin:0;color:#D8B65D}.tip-stats{margin:0;color:#9be58f;font-size:22px}.tip-effect{margin:0;color:#9fd4ff}
+.tip-bad{margin:0;color:#ff9a8a}.tip-hint{margin:2px 0 0;color:#D8B65D;font-size:17px}
+
+/* [12b] CỬA HÀNG V4 — thẻ gọn (có hiệu lực cuối cùng): minmax(112px,1fr) = độ rộng tối thiểu mỗi thẻ; .btn.buy = nút hiển thị số tiền;
+   .is-poor = màu khi không đủ tiền. */
+/* Cửa hàng: thẻ gọn (icon + tên + nút giá) */
+.shop-grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
+.shop-item{align-items:center;text-align:center;outline:none}
+.shop-item:focus-visible{box-shadow:0 0 0 3px #fff}
+.shop-item-head{flex-direction:column;align-items:center}
+.shop-item h3{display:grid;place-items:center;width:100%;padding:0 12px;box-sizing:border-box;font-size:14px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shop-item .btn.buy{display:flex;flex-direction:column;align-items:stretch;gap:3px;width:100%;padding:3px 4px;min-height:36px;font:20px/1 var(--pixel)}
+.shop-item .btn.buy .coin{justify-content:flex-start;font-size:20px}
+.shop-item .btn.buy.is-poor{color:#5a4b33}
+
+/* [13d] THANH THAO TÁC GỌN CHO CẢM ỨNG — chỉ hiện trên thiết bị không có chuột (dòng @media (hover:hover) ẩn nó trên máy tính). */
+/* Màn Trang bị: thanh thao tác chỉ hiện trên thiết bị cảm ứng (máy có chuột dùng tooltip + bấm trực tiếp) */
+.item-action{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 8px;background:#101B2D;border:2px solid #80602D;border-radius:8px}
+.item-action[hidden]{display:none}
+.item-action .action-text{color:#9be58f;font-size:20px}
+.item-action .btn{margin:0;min-height:34px;font:22px/1 var(--pixel)}
+@media (hover:hover){.item-action{display:none}}
+
+/* [14] HỘP THOẠI NỔI (.modal): nền tối toàn màn hình, dùng cho hộp nhập lớp và hộp nhận phiếu thưởng. */
+/* Hộp nhập lớp (hồ sơ cũ) */
+.modal{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:16px;background:rgba(5,8,8,.78)}
+.modal[hidden]{display:none}
+
+/* [13e] Bảng xếp hạng: hàng nút chọn Lớp/Khối (dùng .tag). */
+/* Bảng xếp hạng: chọn Lớp / Khối */
+#rank-scope{margin-bottom:2px}
+
+/* [16] CHE CÂU HỎI KHI RỜI TRANG (chống gian lận) — #quiz.is-covered ẩn nội dung; .quiz-shield = tấm che; nền rgba(...,.94) càng đặc càng khó nhìn lén;
+   top/right/width/height trùng với thẻ câu hỏi (90% chiều cao) — nếu đổi kích thước .quiz ở [8] hãy đổi cả ở đây. */
+/* Chống gian lận: che câu hỏi khi rời trang */
+#quiz.is-covered>*{visibility:hidden}
+.quiz-shield{position:absolute;z-index:5;top:5%;right:2vw;width:calc(100% - 2vw);height:90%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;background:rgba(8,12,14,.94);border:3px solid #F5D68C;color:#fff7dc;font-size:20px}
+.quiz-shield[hidden]{display:none}
+.quiz-shield p{margin:0}.shield-count{color:#ffb02e;font:24px/1 var(--pixel)}
+
+/* [14b] HỘP NHẬN PHIẾU THƯỞNG (#reward-dialog): .reward-row = mỗi phiếu (tên phần thưởng + nút Nhận). */
+/* Hộp nhận phiếu thưởng xếp hạng */
+#reward-dialog .card{display:grid;gap:10px;max-width:440px;width:100%;padding:18px;background:#101B2D;border:3px solid #F5D68C;border-radius:10px;color:#fff7dc}
+.reward-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #4a3a26}
+.reward-row p{margin:0;font-size:20px}
+
+/* [17] ===== BOSS RAID =====
+   .raid-bar: thanh trên cùng bên phải màn chiến đấu (đếm ngược giờ, đồng hồ phản công, sát thương của bạn, nút Top 10): top/right = vị trí.
+   .raid-top: bảng Top 10 thả xuống dưới thanh (width/max-height).  #raid-counter: chữ đếm ngược phản công (đỏ khi còn ≤5s).
+   .fx-float + @keyframes fx-float: số sát thương "đồng đội" bay lên trên Boss (màu chữ, cỡ chữ 22px; 1.6s = thời gian bay; -40px = quãng bay lên;
+   vị trí xuất hiện ngẫu nhiên do JS: left 52–82%, top 22–44% của khung cảnh). */
+/* Boss Raid */
+.raid-bar{position:absolute;z-index:6;top:4px;right:2vw;display:flex;align-items:center;gap:10px;padding:3px 8px;background:rgba(20,12,8,.88);border:2px solid #c9a24a;border-radius:8px;color:#ffe9a8;font-size:18px}
+.raid-bar[hidden],.raid-top[hidden]{display:none}
+.raid-bar .btn{margin:0;min-height:28px;padding:0 10px;font:20px/1 var(--pixel)}
+.raid-top{position:absolute;z-index:7;top:44px;right:2vw;width:min(360px,70vw);max-height:60%;overflow:auto;padding:8px;background:rgba(14,10,8,.95);border:3px solid #c9a24a;border-radius:8px;color:#fff7dc}
+.raid-top-list{display:grid;gap:4px;margin:8px 0;text-align:left}
+#raid-counter{color:#ffb4a0}#raid-counter.is-low{color:#ff6a4a;font-weight:700}
+.fx-float{position:absolute;z-index:4;pointer-events:none;white-space:nowrap;color:#ff7a5a;font:22px/1 var(--pixel);text-shadow:2px 2px 0 #1b0d08;animation:fx-float 1.6s ease-out forwards}
+@keyframes fx-float{0%{opacity:0;transform:translateY(8px)}15%{opacity:1}100%{opacity:0;transform:translateY(-40px)}}
+@media (prefers-reduced-motion:reduce){.fx-float{animation-duration:.01s}}
+
+/* V4+: đếm ngược đổi nghề cạnh ô chọn nhân vật */
+.class-cd{display:block;margin-top:2px;color:#ffb4a0;font-size:18px}
+.class-cd:empty{display:none}
+
+/* Ranked (hộp thoại xếp hạng lớp) */
+#ranked-dialog .card{display:grid;gap:10px;max-width:480px;width:100%;padding:18px;background:#101B2D;border:3px solid #F5D68C;border-radius:10px;color:#fff7dc}
+#ranked-me{margin:0;font-size:20px;color:#F5D68C}
+#ranked-top .rank-row{grid-template-columns:40px 1fr auto auto}
+
+/* Bộ UI được cấp: khung 9-slice, thanh chỉ số và bộ nút/ô hình ảnh. */
+#screen-game .player-hp,#screen-game .player-xp{border:0;box-shadow:none}
+#screen-game .hp b{font-size:12px}
+.ui-panel .ui-scroll{padding:0 6px}
+
+@media (max-width:800px){
+  .map-hud--left{top:.5%;left:.5%;width:43%;max-width:43%;gap:2px;font-size:13px}
+  .map-avatar{width:100%;height:clamp(58px,17vw,82px);padding:4px 5px 4px 33%}
+  .map-avatar-copy{font-size:12px}
+  .map-currency{gap:2px}
+  .map-currency .currency{min-width:0;width:50%;height:24px;padding-left:23px;font-size:14px}
+  .map-progress{font-size:12px}
+  #screen-levels{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:2px;padding:1vh 2vw}
+  .world-map{justify-self:center;width:min(100%,calc(72dvh * var(--ar)))}
+  .map-actions{grid-template-columns:repeat(3,minmax(0,1fr));width:min(100%,360px);justify-self:center;gap:2px}
+  .map-action{max-width:none;font-size:10px}
+  .map-action img{width:clamp(32px,8vw,46px)}
+  .ui-frame{height:auto;min-height:94dvh;padding:3px;border-width:18px;border-image-width:18px;font-size:18px}
+  .ui-panel{padding:5px;border-width:14px;border-image-width:14px}
+  .ui-top{display:grid;grid-template-columns:38px minmax(0,1fr) auto 34px;grid-template-areas:"level xp money close" "title title title title";gap:5px;padding:2px}
+  .ui-top>.ui-level{grid-area:level;flex-basis:38px}
+  .ui-top>.ui-xp{grid-area:xp;min-width:0}
+  .ui-top>.ui-ribbon{grid-area:title;order:0;flex-basis:auto}
+  .ui-top>.ui-money{grid-area:money}
+  .ui-top>.ui-close{grid-area:close}
+  .ui-money{min-width:0}
+  .currency{min-width:94px;height:27px;padding-left:28px;font-size:17px}
+  .currency img{width:22px;height:22px}
+  .ui-close{flex-basis:34px;width:34px;height:34px}
+}
+
+
+/* [18] ===== V5 · BẢNG MÀU + BỐ CỤC BẢN ĐỒ =====
+   Bảng màu chủ đạo (biến CSS, chỉ đổi ở đây là cả giao diện đổi theo):
+   --c-navy #18345A (nền khung) · --c-ink #101B2D (nền ô/thẻ) · --c-steel #243C5B (nền nhấn/hover) · --c-gold #D8B65D (viền, nhấn)
+   --c-gold-lt #F5D68C (tiêu đề, chữ nhấn) · --c-bronze #80602D (viền tối, bóng) · --c-void #080F1B (nền sâu nhất, bóng đổ).
+   Khung lớn dùng 9-slice (border-image) từ Panel_square.png; ảnh có tỉ lệ riêng (nút tròn, huy hiệu, thanh vàng/crystal) giữ nguyên tỉ lệ
+   bằng aspect-ratio + object-fit:contain; nút chữ (.btn/.tab/.tag) được VẼ bằng CSS đúng bảng màu vì ảnh btn_brow/red/green khác tông. */
+:root{--c-navy:#18345A;--c-ink:#101B2D;--c-steel:#243C5B;--c-gold:#D8B65D;--c-gold-lt:#F5D68C;--c-bronze:#80602D;--c-void:#080F1B;
+  --gold:#D8B65D;--gold-deep:#80602D;--line:#D8B65D;--edge:#080F1B}
+body,#app-bg{background-color:var(--c-void)}
+h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
+.auth-kicker{color:var(--c-gold)}
+.card,.quiz,.modal .card{background:rgba(16,27,45,.78);border:3px solid var(--c-gold);box-shadow:inset 0 0 0 3px var(--c-bronze),0 0 0 3px var(--c-void),6px 7px 0 var(--c-void)}
+.card:before,.quiz:before{border-color:rgba(245,214,140,.2)}
+#screen-game .quiz{background:rgba(16,27,45,.5);border-color:var(--c-gold);box-shadow:inset 0 0 0 3px rgba(128,96,45,.7),0 0 0 3px rgba(8,15,27,.6),6px 7px 0 rgba(8,15,27,.5)}
+.card input:not([type]),.card input[type=password],.password-toggle,select{background:var(--c-void);border-color:var(--c-bronze);color:var(--ink);box-shadow:inset 3px 3px #000}
+.card input:focus,.password-toggle:hover{border-color:var(--c-gold-lt)}
+/* nút chính (vàng) + nút phụ (xanh) — góc vát kiểu pixel */
+.btn{color:var(--c-void);background:linear-gradient(var(--c-gold-lt),var(--c-gold));border:3px solid var(--c-bronze);box-shadow:inset 0 0 0 2px #fff1c4,0 4px 0 var(--c-void)}
+.btn:active{box-shadow:inset 0 0 0 2px #fff1c4,0 1px 0 var(--c-void)}
+.btn.ghost{color:var(--c-gold-lt);background:var(--c-navy);border-color:var(--c-gold);box-shadow:inset 0 0 0 2px var(--c-steel),0 4px 0 var(--c-void)}
+.tab{color:var(--c-gold-lt);background:var(--c-steel);border-color:var(--c-bronze)}
+.tab.is-on{color:var(--c-void);background:linear-gradient(var(--c-gold-lt),var(--c-gold));border-color:var(--c-gold-lt)}
+.tag{color:var(--c-gold-lt);background:var(--c-navy);border-color:var(--c-bronze)}
+.tag.is-on{color:var(--c-void);background:var(--c-gold);border-color:var(--c-gold-lt)}
+.opt{background:rgba(8,15,27,.72);border-color:rgba(216,182,93,.55)}
+.opt:hover{border-color:var(--c-gold-lt)}
+.opt:has(input:checked){border-color:var(--c-gold-lt);background:rgba(128,96,45,.42)}
+.chip{background:var(--c-steel);border-color:var(--c-gold);color:var(--ink);box-shadow:inset 0 0 0 2px var(--c-ink)}
+.chip.sel{background:var(--c-bronze);border-color:var(--c-gold-lt);outline-color:var(--c-gold-lt)}
+.slot,.pool{border-color:var(--c-gold);background:rgba(8,15,27,.6)}
+.ui-top,.char-stats,.item-action,.rank-row,.item-detail{background:var(--c-ink);border-color:var(--c-bronze)}
+.ui-top{background:rgba(8,15,27,.55)}
+.rank-row.is-top{border-color:var(--c-gold-lt)}
+.shop-item,.tile{background:var(--c-ink)}
+.char-stage{background:radial-gradient(ellipse at 50% 70%,var(--c-steel),var(--c-navy));border-color:var(--c-bronze)}
+.ui-level,.level-badge{background:radial-gradient(circle at 35% 28%,var(--c-steel),var(--c-ink) 70%);border-color:var(--c-gold)}
+.ui-scroll{scrollbar-color:var(--c-gold) var(--c-ink)}
+.item-tip{background:var(--c-void);border-color:var(--q,var(--c-bronze))}
+.raid-bar,.raid-top,.stage-bar{background:rgba(8,15,27,.92);border-color:var(--c-gold);color:var(--c-gold-lt)}
+.quiz-shield{background:rgba(8,15,27,.95);border-color:var(--c-gold)}
+.map-message{background:rgba(8,15,27,.85);border-color:var(--c-gold)}
+
+/* ===== Màn chọn ải: ảnh bản đồ CHỈ chứa các nút ải. Avatar, tiền, thanh thông tin ải và mọi nút thao tác nằm ở CỘT PHẢI (.map-rail),
+   hoàn toàn ngoài .world-map nên không bao giờ che ải, kể cả màn hình nhỏ. Màn hẹp dọc: cột phải xuống DƯỚI bản đồ. ===== */
+#screen-levels{display:block;min-height:100dvh;padding:1.5vh 1.5vw}
+#screen-levels .levels-layout{display:grid;grid-template-columns:minmax(0,1fr) clamp(168px,21vw,260px);gap:clamp(8px,1vw,16px);align-items:start;max-width:1700px;margin:0 auto}
+#screen-levels .map-col{display:grid;justify-items:center;min-width:0}
+#screen-levels .world-map{justify-self:center;width:min(100%,calc((100dvh - 3vh - 8px) * var(--ar)))}
+#screen-levels .map-rail{display:flex;flex-direction:column;gap:10px;max-height:calc(100dvh - 3vh);overflow-y:auto;padding:6px;scrollbar-width:thin;scrollbar-color:var(--c-gold) var(--c-ink);
+  background:linear-gradient(var(--c-navy),var(--c-ink));border:3px solid var(--c-gold);box-shadow:inset 0 0 0 2px var(--c-bronze),0 5px 0 var(--c-void)}
+#screen-levels .map-hud{position:static;max-width:none;width:100%;display:flex;flex-direction:column;gap:6px;font:clamp(15px,1.6vw,20px)/1.1 var(--pixel);color:var(--ink)}
+#screen-levels .map-avatar canvas{left:3%;bottom:6%;width:31%;height:88%}
+#screen-levels .map-avatar-copy{font-size:clamp(11px,1.05vw,15px);line-height:1;padding-top:2%}
+#screen-levels .map-who{color:var(--c-gold-lt)}#screen-levels .map-level{color:var(--c-gold)}#screen-levels .map-class{color:#cfe0f5}
+#screen-levels .map-currency{display:grid;gap:4px}
+#screen-levels .currency{width:100%;min-width:0;height:auto;aspect-ratio:298/77;padding:0 8% 0 24%;font-size:clamp(15px,1.6vw,21px);color:var(--c-gold-lt)}
+#screen-levels .map-progress{margin:0;color:var(--c-gold-lt);font-size:clamp(14px,1.4vw,18px);text-align:center}
+#screen-levels .map-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 6px;justify-items:center;padding-bottom:2px}
+#screen-levels .map-action{max-width:68px;color:var(--c-gold-lt)}
+#screen-levels .map-action img{width:100%;height:auto;aspect-ratio:1;object-fit:contain}
+#screen-levels .map-action:hover img{filter:drop-shadow(0 0 6px var(--c-gold-lt))}
+.map-stage--unlocked{border-color:var(--c-gold-lt)}
+.map-stage--completed:after{background:var(--c-gold-lt);color:var(--c-void);border-color:var(--c-void)}
+@media (max-width:800px) and (orientation:landscape){
+  #screen-levels{padding:1vh 1vw}
+  #screen-levels .levels-layout{grid-template-columns:minmax(0,1fr) clamp(150px,24vw,210px);gap:6px}
+  #screen-levels .world-map{width:min(100%,calc((100dvh - 2vh - 6px) * var(--ar)))}
+  #screen-levels .map-rail{max-height:calc(100dvh - 2vh);gap:6px;padding:4px}
+  #screen-levels .map-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 2px}
+  #screen-levels .map-action{font-size:11px;max-width:56px}
+}
+@media (max-width:800px) and (orientation:portrait){
+  #screen-levels .levels-layout{grid-template-columns:1fr}
+  #screen-levels .world-map{width:100%}
+  #screen-levels .map-rail{max-height:none;overflow:visible}
+  #screen-levels .map-hud{display:grid;grid-template-columns:1.4fr 1fr;align-items:center}
+  #screen-levels .map-progress{grid-column:1/-1}
+  #screen-levels .map-actions{grid-template-columns:repeat(6,minmax(0,1fr));gap:2px}
+  #screen-levels .map-action{font-size:10px}
+}
+
+
+/* [19] ===== V5.1 · KHUNG CSS BO GÓC (thay panel_avatar / hp_bar / exp_bar), THÔNG TIN ẢI Ở CUỐI BẢN ĐỒ, CHIẾN BINH LƯỚT VỀ ===== */
+.card,.quiz,.modal .card,.map-rail,.stage-bar,.raid-bar,.raid-top,.map-message,.quiz-shield,.item-tip,.ui-top,.char-stats,.item-action,.rank-row,.shop-item,.tile,.char-stage,.opt,.slot,.pool,.item-detail{border-radius:10px}
+.btn,.tab,.tag,.chip,.password-toggle,.card input:not([type]),.card input[type=password],select{border-radius:6px}
+.tab{border-radius:8px 8px 0 0}
+.ui-frame{border:3px solid var(--c-gold);border-image:none;border-radius:14px;padding:10px;background:linear-gradient(var(--c-navy),var(--c-ink));box-shadow:inset 0 0 0 2px var(--c-bronze),0 6px 0 var(--c-void)}
+.ui-panel{border:2px solid var(--c-bronze);border-image:none;border-radius:10px;padding:10px;background:rgba(8,15,27,.55);box-shadow:inset 0 0 0 2px rgba(216,182,93,.15)}
+.ui-xpbar{height:16px;padding:0;background:var(--c-void);border:2px solid var(--c-bronze);border-radius:6px;overflow:hidden}
+.ui-xpbar i{height:100%;border-radius:4px;background:linear-gradient(var(--c-gold-lt),var(--c-gold))}
+/* khung avatar trên bản đồ */
+#screen-levels .map-avatar{position:relative;width:100%;height:auto;aspect-ratio:auto;display:flex;align-items:center;gap:10px;padding:8px 10px;background:linear-gradient(var(--c-steel),var(--c-ink));border:2px solid var(--c-gold);border-radius:10px;box-shadow:inset 0 0 0 2px var(--c-void)}
+#screen-levels .map-avatar canvas{position:static;flex:0 0 34%;width:34%;height:auto;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,var(--c-navy),var(--c-void));border:2px solid var(--c-gold)}
+#screen-levels .map-avatar-copy{flex:1;min-width:0;padding:0;font-size:clamp(14px,1.4vw,19px);line-height:1.1}
+/* HUD người chơi + máu quái trong màn chiến đấu */
+#screen-game .player-hud{height:auto;padding:10px 12px;background:rgba(16,27,45,.88);border:2px solid var(--c-gold);border-radius:12px;box-shadow:inset 0 0 0 2px var(--c-void),3px 4px 0 rgba(8,15,27,.7)}
+#screen-game .player-hp,#screen-game .player-xp,#screen-game .hp{position:relative;padding:0;overflow:hidden;background:#2a1216;border:2px solid var(--c-void);border-radius:6px;box-shadow:inset 0 0 0 1px rgba(245,214,140,.25)}
+#screen-game .player-hp{height:22px}
+#screen-game .player-xp{height:18px;background:var(--c-void)}
+#screen-game .hp{height:18px}
+#screen-game .player-hp i,#screen-game .hp i{inset:0 auto 0 0;height:100%;border-radius:4px;background:linear-gradient(#ff8a7a 0 40%,#d23a30 41% 100%)}
+#screen-game .player-xp i{inset:0 auto 0 0;border-radius:4px;background:linear-gradient(var(--c-gold-lt),var(--c-gold))}
+#screen-game .player-xp b{color:var(--c-gold-lt)}
+/* Chiến binh: lao tới, giữ ở khung cuối, rồi lướt về */
+@keyframes lunge-go{0%{transform:translateX(0)}60%,100%{transform:translateX(42%)}}
+@keyframes lunge-back{from{transform:translateX(42%)}to{transform:translateX(0)}}
+@keyframes lunge-go-l{0%{transform:translateX(0)}60%,100%{transform:translateX(-38%)}}
+@keyframes lunge-back-l{from{transform:translateX(-38%)}to{transform:translateX(0)}}
+#hero.lunge-go{animation:lunge-go var(--lunge-ms,720ms) ease-out forwards}
+#hero.lunge-back{animation:lunge-back .3s ease-in-out}
+#mob.lunge-go{animation:lunge-go-l var(--lunge-ms,720ms) ease-out forwards}
+#mob.lunge-back{animation:lunge-back-l .3s ease-in-out}
+@media (max-width:800px){
+  .ui-frame{border-width:3px;border-image:none;padding:6px}
+  .ui-panel{border-width:2px;border-image:none;padding:6px}
+}
+#screen-levels .map-action{max-width:none;width:100%}
+#screen-levels .map-action img{width:min(100%,64px)}
+#screen-levels .map-action span{overflow:visible;text-overflow:clip}
+
+
+/* [20] ===== V5.2 · KHUNG ẢNH VẬT PHẨM THEO PHẨM CHẤT + VIỀN DÀY HƠN =====
+   .item-icon nhận class q-normal / q-uncommon / q-rare / q-epic / q-legendary (từ Inventory.icon) → nền là assets/ui/<q>_frame.png
+   (giữ nguyên hình, kéo vừa ô vuông); ảnh vật phẩm thu nhỏ vào trong lòng khung. Đã bỏ icon inv_* trên tab lọc và Panel_name ở tên vật phẩm. */
+.item-icon{background:center/100% 100% no-repeat;border:0;border-radius:0;overflow:visible;width:72px;height:72px;image-rendering:pixelated}
+.item-icon.q-normal{background-image:url("../assets/ui/normal_frame.png")}
+.item-icon.q-uncommon{background-image:url("../assets/ui/uncommon_frame.png")}
+.item-icon.q-rare{background-image:url("../assets/ui/rare_frame.png")}
+.item-icon.q-epic{background-image:url("../assets/ui/epic_frame.png")}
+.item-icon.q-legendary{background-image:url("../assets/ui/legendary_frame.png")}
+.item-icon img{width:62%;height:62%}
+.item-icon-fallback{font-size:26px}
+.tile{padding:0;border:0;background:none;border-radius:10px}
+.tile .item-icon,.slot-box .item-icon{width:100%;height:100%;background-size:100% 100%}
+.tile.is-worn{background:none;box-shadow:0 0 0 3px var(--c-gold-lt)}
+.tile.is-worn.is-selected{box-shadow:0 0 0 3px #fff,0 0 12px 3px rgba(255,236,150,.7)}
+#screen-equip .slot-box.is-filled{background-image:none;padding:0}
+.shop-item h3{background:none;aspect-ratio:auto;padding:0 4px;color:var(--c-gold-lt)}
+/* viền dày hơn */
+.card,.quiz,.modal .card,.map-rail,.stage-bar,.raid-bar,.raid-top,.item-tip{border-width:4px}
+.ui-frame{border-width:5px}.ui-panel{border-width:3px}
+.shop-item{border-width:5px}
+.ui-top,.char-stats,.item-action,.rank-row,.item-detail,.map-avatar{border-width:3px}
+.btn,.tab,.tag{border-width:4px}
+#screen-levels .map-avatar,#screen-game .player-hud{border-width:3px}
+@media (max-width:800px){.ui-frame{border-width:4px}.ui-panel{border-width:3px}}
+
+
+/* [21] ===== V5.3 · KẺ ĐỊCH = KHỐI .enemy { thanh HP (margin-right 20px) + sprite quái } + THỨ TỰ LỚP SPRITE =====
+   <div class="enemy"><div class="hp"> … </div><canvas id="mob"></canvas></div> — vị trí/kích thước đặt trên .enemy (thay cho #mob cũ),
+   thanh HP nằm ngay trên sprite quái nên luôn đi theo quái. Lớp: người chơi (3) luôn nằm trên quái (2); đang tấn công (.is-attacking / lunge-go / lunge-back)
+   thì sprite đó lên 4 (quái tấn công sẽ đè lên người chơi); thanh HP (5) và đạn skill (6) luôn trên cùng. */
+.enemy{position:absolute;display:flex;flex-direction:column;align-items:flex-end}
+#screen-game .enemy{bottom:8%;left:17.6%;width:min(32vw,56vh);max-width:56vw}
+#screen-game .enemy:has(#mob.ranked-opponent){width:min(29.33vw,50.67vh);max-width:50.67vw}
+#screen-game .enemy #mob{position:relative;left:auto;right:auto;bottom:auto;width:100%;max-width:none;z-index:2}
+#screen-game .enemy .hp{position:relative;top:auto;bottom:auto;left:auto;right:auto;width:100%;height:16px;margin:0;z-index:5}
+#screen-game #hero{z-index:3}
+#screen-game #hero.is-attacking,#screen-game #hero.lunge-go,#screen-game #hero.lunge-back,
+#screen-game .enemy #mob.is-attacking,#screen-game .enemy #mob.lunge-go,#screen-game .enemy #mob.lunge-back{z-index:4}
+#skill-projectile{z-index:6}
+@media (max-width:800px){
+  #screen-game .enemy{bottom:6%;left:12%;width:min(88vw,56vh);max-width:88vw}
+  #screen-game .enemy:has(#mob.ranked-opponent){width:min(80vw,50.67vh);max-width:80vw}
+  #screen-game .enemy .hp{height:12px}
+}
+
+
+/* [22] ===== V5 · GIAI ĐOẠN 1 =====
+   (a) Kẻ địch: <div class="enemy-info"><div class="enemy-name">Tên</div><div class="hp">…</div></div> + canvas#mob. Tên và thanh HP cùng chung
+       lề phải 40% bề rộng sprite quái (margin-right % tính theo bề rộng .enemy = bề rộng sprite).
+   (b) Thẻ shop-item cố định 170×170 (không phụ thuộc thanh cuộn): item-icon 80px (ảnh 64px) bên trái; tên + giá bên phải; không còn q-badge. */
+#screen-game .enemy .enemy-info{position:relative;align-self:stretch;margin-left:40%;display:flex;flex-direction:column;gap:2px;z-index:5}
+#screen-game .enemy .enemy-name{color:var(--c-gold-lt);font:700 clamp(15px,1.5vw,20px)/1.05 "VT323",var(--pixel),sans-serif;text-shadow:1px 1px 0 var(--c-void),-1px 1px 0 var(--c-void);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#shop-list{scrollbar-gutter:stable}
+.shop-grid{grid-template-columns:repeat(auto-fill,170px);justify-content:start;gap:10px}
+.shop-item{box-sizing:border-box;width:170px;height:170px;flex:0 0 170px;display:grid;grid-template-columns:80px minmax(0,1fr);align-items:center;align-content:center;gap:6px;padding:6px;text-align:left}
+.shop-item .item-icon{width:80px;height:80px}
+.shop-item .item-icon img{width:64px;height:64px}
+.shop-item-info{display:flex;flex-direction:column;gap:6px;min-width:0}
+.shop-item h3{display:block;width:100%;padding:0;font-size:16px;line-height:1.05;white-space:normal;overflow:hidden;text-overflow:clip;overflow-wrap:break-word;word-break:normal;color:var(--c-gold-lt)}
+.shop-item .btn.buy{margin-top:0;width:100%;padding:3px 2px;gap:2px;min-height:0}
+.shop-item .coin{padding:0;background:none;border:0;border-radius:0;color:inherit;font-size:17px;gap:3px}
+.shop-item .coin.gold:before,.shop-item .coin.gem:before{width:16px;height:16px}
+
+
+/* [23] ===== V5 · GIAI ĐOẠN 2 · HẦM NGỤC THEO TẦNG =====
+   #floor-badge = nhãn "Tầng N" (dưới HUD người chơi, chỉ hiện trong hầm ngục); #dungeon-exit = nút "Thoát hầm ngục" cạnh "Về bản đồ" (cùng hàng .game-actions). */
+.game-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;align-self:flex-end;margin:0 2vw 12px 0}
+#screen-game .game-actions .game-back{margin:0;align-self:auto}
+#screen-game .dungeon-exit{background:linear-gradient(#e0705f,#a8382d);border-color:#5a1912;color:#fff}
+.floor-badge{position:absolute;left:22px;top:94px;z-index:6;padding:3px 14px;font:700 clamp(18px,1.8vw,24px)/1.1 "VT323",var(--pixel),sans-serif;color:var(--c-void);background:linear-gradient(var(--c-gold-lt),var(--c-gold));border:3px solid var(--c-bronze);border-radius:8px;box-shadow:0 3px 0 var(--c-void)}
+.floor-badge[hidden],.dungeon-exit[hidden]{display:none}
+
+
+/* [24] ===== V5 · SỬA GIAI ĐOẠN 1/2 =====
+   (a) shop-item 80×170 xếp DỌC: icon → tên → nút "Mua" (giá hiện trong thông báo xác nhận khi bấm Mua), thay cho bố cục 170×170 ở [22].
+   (b) Màn Trang bị: nhân vật dùng object-fit:contain (không méo/lệch khi đổi cỡ màn hình); tên ô (.slot-label) nằm TRÊN khung, không đè lên khung. */
+.shop-grid{grid-template-columns:repeat(auto-fill,80px);justify-content:start;gap:10px}
+.shop-item{box-sizing:border-box;width:80px;height:170px;flex:0 0 80px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:2px;padding:3px 1px;border-width:3px;text-align:center}
+.shop-item .item-icon{width:70px;height:70px;flex:0 0 auto}
+.shop-item .item-icon img{width:56px;height:56px}
+.shop-item h3{flex:1;display:flex;align-items:center;justify-content:center;width:100%;margin:0;padding:0 1px;font-size:14px;line-height:1.05;text-align:center;white-space:normal;overflow:hidden;overflow-wrap:break-word;word-break:normal;color:var(--c-gold-lt)}
+.shop-item .btn.buy{flex:0 0 auto;width:100%;min-height:0;margin:0;padding:4px 2px;font-size:16px}
+.char-stage{grid-template-rows:minmax(0,1fr);align-items:stretch}
+.char-stage .char-portrait{width:100%;height:100%;max-height:none;min-height:0;aspect-ratio:auto;object-fit:contain;object-position:center bottom}
+.char-stage .slot-col{align-self:center;gap:30px;padding-top:20px}
+.slot-label{top:auto;bottom:100%;margin-bottom:2px;background:none;text-shadow:1px 1px 0 var(--c-void),-1px 1px 0 var(--c-void);white-space:nowrap}
+.char-stage{grid-template-columns:clamp(54px,10.5vh,78px) minmax(0,1fr) clamp(54px,10.5vh,78px)}
+.char-stage .slot-col{gap:22px;padding-top:0}
+.char-stage{min-height:200px}
+
+
+/* [25] ===== V5 · SỬA G1 + KHO ĐỒ GỘP + THẺ MUA/BÁN =====
+   (a) shop-item rộng 100px (cao 170px); (b) .tile-count = số lượng ×N, .tile-sell = nút Bán trên ô kho đồ/túi đồ;
+   (c) ItemSheet (js/item-sheet.js): .sheet-backdrop + .sheet-card — giữa màn hình trên máy tính, trượt từ đáy màn hình trên điện thoại (<=800px). */
+.shop-grid{grid-template-columns:repeat(auto-fill,100px);justify-content:start;gap:10px}
+.shop-item{width:100px;flex:0 0 100px;padding:4px 2px}
+.shop-item .item-icon{width:84px;height:84px}
+.shop-item .item-icon img{width:66px;height:66px}
+.shop-item h3{font-size:15px}
+.tile-count{position:absolute;left:3px;top:3px;z-index:2;padding:0 5px;font:700 16px/1.25 "VT323",var(--pixel),sans-serif;color:var(--c-void);background:var(--c-gold-lt);border:2px solid var(--c-bronze);border-radius:6px}
+.tile-sell{position:absolute;right:3px;top:3px;z-index:2;padding:0 5px;font:700 15px/1.3 "VT323",var(--pixel),sans-serif;color:var(--c-gold-lt);background:rgba(8,15,27,.85);border:2px solid var(--c-gold);border-radius:6px;cursor:pointer}
+.tile-sell:hover,.tile-sell:focus-visible{background:var(--c-bronze);outline:none}
+.sheet-backdrop{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:12px;background:rgba(8,15,27,.72)}
+.sheet-card{--q:var(--c-gold);box-sizing:border-box;width:min(380px,100%);max-height:calc(100dvh - 24px);overflow:auto;display:flex;flex-direction:column;gap:8px;padding:14px;
+  color:var(--ink);background:linear-gradient(var(--c-navy),var(--c-ink));border:4px solid var(--q);border-radius:14px;box-shadow:inset 0 0 0 2px var(--c-void),0 8px 0 var(--c-void)}
+.sheet-head{display:flex;align-items:center;gap:12px}
+.sheet-head .item-icon{width:84px;height:84px;flex:0 0 84px}
+.sheet-head .item-icon img{width:66px;height:66px}
+.sheet-names{min-width:0;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.sheet-name{font:700 22px/1.1 "VT323",var(--pixel),sans-serif;color:var(--c-gold-lt)}
+.sheet-sub,.sheet-stats,.sheet-effect,.sheet-have,.sheet-balance{margin:0;font-size:17px;line-height:1.2}
+.sheet-sub{color:#cfe0f5}.sheet-stats{color:#8fe08f}.sheet-effect{color:var(--c-gold)}.sheet-have,.sheet-balance{color:#cfe0f5}
+.sheet-price{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--c-void);border:2px solid var(--c-bronze);border-radius:8px;font-size:19px}
+.sheet-price b{color:var(--c-gold-lt)}
+.sheet-msg{min-height:1.2em;margin:0;font-size:17px;color:#cfe0f5}.sheet-msg.is-error{color:#ff9d8f}
+.sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet-actions .btn{min-height:44px}
+@media (max-width:800px){
+  .sheet-backdrop{place-items:end center;padding:0}
+  .sheet-card{width:100%;border-radius:16px 16px 0 0;border-bottom-width:0;animation:sheet-up .18s ease-out}
+}
+@keyframes sheet-up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@media (max-height:480px){   /* điện thoại ngang: thẻ gọn để thấy hết nút Hủy/Mua(Bán) */
+  .sheet-card{padding:8px 12px;gap:4px;max-height:100dvh}
+  .sheet-head .item-icon{width:52px;height:52px;flex:0 0 52px}
+  .sheet-head .item-icon img{width:42px;height:42px}
+  .sheet-name{font-size:19px}
+  .sheet-sub,.sheet-stats,.sheet-effect,.sheet-have,.sheet-balance,.sheet-msg{font-size:15px;line-height:1.1}
+  .sheet-price{padding:3px 8px;font-size:17px}
+  .sheet-actions{position:sticky;bottom:0}
+  .sheet-actions .btn{min-height:34px;padding:2px 6px}
+}
+
+
+/* [26] ===== Cài đặt (js/settings.js): ô nhập trong hộp thoại; 7 nút thao tác trên bản đồ (điện thoại dọc: 7 cột) ===== */
+.sheet-field{display:flex;flex-direction:column;gap:3px;font-size:17px;color:#cfe0f5}
+.sheet-field input{box-sizing:border-box;width:100%;min-height:40px;padding:6px 10px;color:var(--ink);background:var(--c-void);border:2px solid var(--c-bronze);border-radius:6px;font:inherit;font-size:18px}
+.sheet-field input:focus{outline:none;border-color:var(--c-gold-lt)}
+.sheet-msg.is-ok{color:#8fe08f}
+.settings-card .sheet-name{font-size:24px}
+@media (max-width:800px) and (orientation:portrait){#screen-levels .map-actions{grid-template-columns:repeat(7,minmax(0,1fr))}}
+@media (max-height:480px){.settings-card{gap:3px}.sheet-field{font-size:14px}.sheet-field input{min-height:30px;font-size:16px;padding:2px 8px}}
+
+
+/* [27] ===== V5.6: cuộn hộp thoại, nút thẻ mua/bán cân bằng, thông báo nổi tự tắt ===== */
+.modal .card{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain}   /* vd Ranked: danh sách dài cuộn được */
+/* hai nút Hủy / Mua(Bán/Đổi mật khẩu) cùng kích thước: cùng viền, cùng bóng, vòng focus nằm TRONG nút (không làm nút to ra) */
+.sheet-actions .btn{box-sizing:border-box;height:44px;min-height:44px;margin:0;border-width:3px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18),0 3px 0 var(--c-void)}
+.sheet-actions .btn:focus-visible{outline:2px solid #fff;outline-offset:-7px}
+@media (max-height:480px){.sheet-actions .btn{height:34px;min-height:34px}}
+/* #shop-msg / #equip-msg: nổi cố định ở đáy màn hình, không chiếm chỗ (không đổi kích thước vùng chọn); JS tự xóa sau 10 giây (Ui.MSG_MS) */
+.ui-msg{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:60;box-sizing:border-box;max-width:min(560px,92vw);min-height:0;padding:6px 14px;font-size:18px;line-height:1.2;text-align:center;
+  color:var(--c-gold-lt);background:rgba(8,15,27,.94);border:3px solid var(--c-gold);border-radius:10px;box-shadow:0 4px 0 var(--c-void);pointer-events:none}
+.ui-msg.is-error{color:#ffaaaa;border-color:#e0705f}.ui-msg.is-success{color:#a7f2a4}
+.ui-msg:empty{display:none}

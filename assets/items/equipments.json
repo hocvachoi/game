@@ -1,0 +1,1253 @@
+{
+  "warlord_sword": {
+    "name": "Kiếm Chiến Thần",
+    "slot": "weapon",
+    "class": [
+      "warrior"
+],
+    "quality": "legendary",
+    "stats": {
+      "HP": 300,
+      "ATK": 200,
+      "DEF": 50,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": "Berserk",
+      "value": 5
+    },
+    "image": "/assets/items/legendary/warlord_sword.png",
+    "price": {
+      "gold": 10000,
+      "gem": 25
+    }
+  },
+  "warlord_helmet": {
+    "name": "Mũ Chiến Thần",
+    "slot": "helmet",
+    "class": [
+      "warrior"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 600,
+      "ATK": 100,
+      "DEF": 50,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": "Holyshield",
+      "value": 10
+    },
+    "image": "/assets/items/legendary/warlord_helmet.png",
+    "price": {
+      "gold": 10000,
+      "gem": 20
+    }
+  },
+  "warlord_armor": {
+    "name": "Giáp Chiến Thần",
+    "slot": "armor",
+    "class": [
+      "warrior"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 800,
+      "ATK": 0,
+      "DEF": 200,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": "sturdy",
+      "value": 45
+    },
+    "image": "/assets/items/legendary/warlord_armor.png",
+    "price": {
+      "gold": 10000,
+      "gem": 25
+    }
+  },
+  "warlord_ring": {
+    "name": "Nhẫn Chiến Thần",
+    "slot": "accessory",
+    "class": [
+      "warrior"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 300,
+      "ATK": 100,
+      "DEF": 50,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": "blessing",
+      "value": 7
+    },
+    "image": "/assets/items/legendary/warlord_ring.png",
+    "price": {
+      "gold": 12000,
+      "gem": 20
+    }
+  },
+  "warlord_axe": {
+    "name": "Rìu Chiến Thần",
+    "slot": "weapon",
+    "class": [
+      "warrior"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 100,
+      "ATK": 300,
+      "DEF": 0,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": "Berserk",
+      "value": 15
+    },
+    "image": "/assets/items/legendary/warlord_axe.png",
+    "price": {
+      "gold": null,
+      "gem": null
+    }
+  },
+  "warlord_spear": {
+    "name": "Thương Chiến Thần",
+    "slot": "weapon",
+    "class": [
+      "warrior"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 300,
+      "ATK": 200,
+      "DEF": 0,
+      "CRIT": 20
+    },
+    "effect": {
+      "type": "Ambush",
+      "value":30
+    },
+    "image": "/assets/items/legendary/warlord_spear.png",
+    "price": {
+      "gold": null,
+      "gem": null
+    }
+  },
+  "chaos_staff": {
+    "name": "Quyền Trượng Hỗn Mang",
+    "slot": "weapon",
+    "class": [
+      "mage"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 0,
+      "ATK": 300,
+      "DEF": 100,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": "Smite",
+      "value": 20
+    },
+    "image": "/assets/items/legendary/chaos_staff.png",
+    "price": {
+      "gold": 10000,
+      "gem": 25
+    }
+  },
+  "chaos_crown": {
+    "name": "Vương Miện Hỗn Mang",
+    "slot": "helmet",
+    "class": [
+      "mage"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 400,
+      "ATK": 130,
+      "DEF": 50,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": "increasedmg",
+      "value": 5
+    },
+    "image": "/assets/items/legendary/chaos_crown.png",
+    "price": {
+      "gold": 10000,
+      "gem": 20
+    }
+  },
+  "chaos_cloak": {
+    "name": "Áo Choàng Hỗn Mang",
+    "slot": "armor",
+    "class": [
+      "mage"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 600,
+      "ATK": 50,
+      "DEF": 100,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": "Holyshield",
+      "value": 15
+    },
+    "image": "/assets/items/legendary/chaos_cloak.png",
+    "price": {
+      "gold": 10000,
+      "gem": 25
+    }
+  },
+  "chaos_necklace": {
+    "name": "Dây Chuyền Hỗn Mang",
+    "slot": "accessory",
+    "class": [
+      "mage"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 200,
+      "ATK": 150,
+      "DEF": 0,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": "steallife",
+      "value": 20
+    },
+    "image": "/assets/items/legendary/chaos_necklace.png",
+    "price": {
+      "gold": 12000,
+      "gem": 20
+    }
+  },
+  "chaos_spellbook": {
+    "name": "Sách Hỗn Mang",
+    "slot": "weapon",
+    "class": [
+      "mage"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 500,
+      "ATK": 300,
+      "DEF": 50,
+      "CRIT": 15
+    },
+    "effect": {
+      "type": "increasedmg",
+      "value": 20
+    },
+    "image": "/assets/items/legendary/chaos_spellbook.png",
+    "price": {
+      "gold": null,
+      "gem": null
+    }
+  },
+  "chaos_gloves": {
+    "name": "Găng Tay Hỗn Mang",
+    "slot": "accessory",
+    "class": [
+      "mage"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 500,
+      "ATK": 50,
+      "DEF": 100,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": "Smite",
+      "value": 10
+    },
+    "image": "/assets/items/legendary/chaos_gloves.png",
+    "price": {
+      "gold": null,
+      "gem": null
+    }
+  },
+  "hell_bow": {
+    "name": "Luyện Ngục Ma Cung",
+    "slot": "weapon",
+    "class": [
+      "archer"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 100,
+      "ATK": 250,
+      "DEF": 0,
+      "CRIT": 25
+    },
+    "effect": {
+      "type": "Ambush",
+      "value": 40
+    },
+    "image": "/assets/items/legendary/hell_bow.png",
+    "price": {
+      "gold": 12000,
+      "gem": 20
+    }
+  },
+  "hell_helmet": {
+    "name": "Luyện Ngục Vương Mão",
+    "slot": "helmet",
+    "class": [
+      "archer"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 300,
+      "ATK": 150,
+      "DEF": 50,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": "steallife",
+      "value":10
+    },
+    "image": "/assets/items/legendary/hell_helmet.png",
+    "price": {
+      "gold": 10000,
+      "gem": 25
+    }
+  },
+  "hell_armor": {
+    "name": "Luyện Ngục Chiến Bào",
+    "slot": "armor",
+    "class": [
+      "archer"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 600,
+      "ATK": 50,
+      "DEF": 100,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": "sturdy",
+      "value":40
+    },
+    "image": "/assets/items/legendary/hell_armor.png",
+    "price": {
+      "gold": 10000,
+      "gem": 25
+    }
+  },
+  "hell_banner": {
+    "name": "Luyện Ngục Chiến Kỳ",
+    "slot": "accessory",
+    "class": [
+      "archer"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 100,
+      "ATK": 150,
+      "DEF": 0,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": "Berserk",
+      "value": 10
+    },
+    "image": "/assets/items/legendary/hell_banner.png",
+    "price": {
+      "gold": 10000,
+      "gem": 25
+    }
+  },
+  "hell_kunai": {
+    "name": "Luyện Ngục Ma Tiêu",
+    "slot": "weapon",
+    "class": [
+      "archer"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 0,
+      "ATK": 250,
+      "DEF": 30,
+      "CRIT": 30
+    },
+    "effect": {
+      "type": "Smite",
+      "value":15
+    },
+    "image": "/assets/items/legendary/hell_kunai.png",
+    "price": {
+      "gold": null,
+      "gem": null
+    }
+  },
+  "hell_ring": {
+    "name": "Luyện Ngục Huyền Nhẫn",
+    "slot": "accessory",
+    "class": [
+      "archer"
+    ],
+    "quality": "legendary",
+    "stats": {
+      "HP": 300,
+      "ATK": 100,
+      "DEF": 40,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/legendary/hell_ring.png",
+    "price": {
+      "gold": null,
+      "gem": null
+    }
+  },
+
+
+  "royal_spear": {
+    "name": "Trường Thương Hoàng Gia",
+    "slot": "weapon",
+    "class": [
+      "warrior"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 200,
+      "ATK": 150,
+      "DEF": 0,
+      "CRIT": 15
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/royal_spear.png",
+    "price": {
+      "gold": 5000,
+      "gem": 7
+    }
+  },
+  "royal_bow": {
+    "name": "Cung Hoàng Gia",
+    "slot": "weapon",
+    "class": [
+      "archer"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 100,
+      "ATK": 170,
+      "DEF": 0,
+      "CRIT": 15
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/royal_bow.png",
+    "price": {
+      "gold": 5000,
+      "gem": 7
+    }
+  },
+  "royal_staff": {
+    "name": "Quyền Trượng Hoàng Gia",
+    "slot": "weapon",
+    "class": [
+      "mage"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 50,
+      "ATK": 170,
+      "DEF": 10,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/royal_staff.png",
+    "price": {
+      "gold": 5000,
+      "gem": 7
+    }
+  },
+  "royal_armor": {
+    "name": "Giáp Hoàng Gia",
+    "slot": "armor",
+    "class": [
+      "warrior",
+      "archer"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 700,
+      "ATK": -10,
+      "DEF": 150,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/royal_armor.png",
+    "price": {
+      "gold": 4000,
+      "gem": 7
+    }
+  },
+  "royal_helmet": {
+    "name": "Mũ Hoàng Gia",
+    "slot": "helmet",
+    "class": [
+      "warrior",
+      "archer"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 300,
+      "ATK": 30,
+      "DEF": 150,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/royal_helmet.png",
+    "price": {
+      "gold": 3000,
+      "gem": 7
+    }
+  },
+  "royal_emblem": {
+    "name": "Huy Hiệu Hoàng Gia",
+    "slot": "accessory",
+    "class": [
+      "warrior",
+      "archer",
+      "mage"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 100,
+      "ATK": 50,
+      "DEF": 50,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/royal_emblem.png",
+    "price": {
+      "gold": 7000,
+      "gem": 5
+    }
+  },
+  "royal_hood": {
+    "name": "Khăn Trùm Hoàng Gia",
+    "slot": "helmet",
+    "class": [
+      "mage"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 500,
+      "ATK": 50,
+      "DEF": 50,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/royal_hood.png",
+    "price": {
+      "gold": 3500,
+      "gem": 7
+    }
+  },
+  "royal_cloak": {
+    "name": "Áo Choàng Hoàng Gia",
+    "slot": "armor",
+    "class": [
+      "mage"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 500,
+      "ATK": 0,
+      "DEF": 100,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/royal_cloak.png",
+    "price": {
+      "gold": 3000,
+      "gem": 5
+    }
+  },
+  "love_sword": {
+    "name": "Uyên Ương Song Kiếm",
+    "slot": "weapon",
+    "class": [
+      "warrior"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 300,
+      "ATK": 120,
+      "DEF": 50,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/love_sword.png",
+    "price": {
+      "gold": null,
+      "gem": null
+    }
+  },
+  "mage_orb": {
+    "name": "Ngọc Pháp Sư",
+    "slot": "accessory",
+    "class": [
+      "mage"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 200,
+      "ATK": 150,
+      "DEF": 20,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/mage_orb.png",
+    "price": {
+      "gold": 4000,
+      "gem": 7
+    }
+  },
+  "sun_bow": {
+    "name": "Thái Dương Cung",
+    "slot": "weapon",
+    "class": [
+      "archer"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 100,
+      "ATK": 150,
+      "DEF": 0,
+      "CRIT": 20
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/sun_bow.png",
+    "price": {
+      "gold": null,
+      "gem": null
+    }
+  },
+  "dark_staff": {
+    "name": "Quyền Trượng Hắc Ám",
+    "slot": "weapon",
+    "class": [
+      "mage"
+    ],
+    "quality": "epic",
+    "stats": {
+      "HP": 0,
+      "ATK": 200,
+      "DEF": 50,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/epic/dark_staff.png",
+    "price": {
+      "gold": null,
+      "gem": null
+    }
+  },
+
+
+
+  "brave_sword": {
+    "name": "Đại Kiếm Dũng Sĩ",
+    "slot": "weapon",
+    "class": [
+      "warrior"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 50,
+      "ATK": 90,
+      "DEF": -10,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/brave_sword.png",
+    "price": {
+      "gold": 2000,
+      "gem": null
+    }
+  },
+  "brave_armor": {
+    "name": "Giáp Dũng Sĩ",
+    "slot": "armor",
+    "class": [
+      "warrior"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 400,
+      "ATK": 0,
+      "DEF": 50,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/brave_armor.png",
+    "price": {
+      "gold": 2500,
+      "gem": null
+    }
+  },
+  "brave_helmet": {
+    "name": "Mũ Dũng Sĩ",
+    "slot": "helmet",
+    "class": [
+      "warrior"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 200,
+      "ATK": 30,
+      "DEF": 30,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/brave_helmet.png",
+    "price": {
+      "gold": 1700,
+      "gem": null
+    }
+  },
+  "brave_belt": {
+    "name": "Đai Lưng Dũng Sĩ",
+    "slot": "accessory",
+    "class": [
+      "warrior"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 150,
+      "ATK": 20,
+      "DEF": 40,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/brave_belt.png",
+    "price": {
+      "gold": 2000,
+      "gem": null
+    }
+  },
+  "hunter_bow": {
+    "name": "Cung Thợ Săn",
+    "slot": "weapon",
+    "class": [
+      "archer"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 10,
+      "ATK": 70,
+      "DEF": 5,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/hunter_bow.png",
+    "price": {
+      "gold": 2500,
+      "gem": null
+    }
+  },
+  "hunter_helmet": {
+    "name": "Mũ Thợ Săn",
+    "slot": "helmet",
+    "class": [
+      "archer"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 100,
+      "ATK": 40,
+      "DEF": 15,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/hunter_helmet.png",
+    "price": {
+      "gold": 1500,
+      "gem": null
+    }
+  },
+  "hunter_armor": {
+    "name": "Giáp Thợ Săn",
+    "slot": "armor",
+    "class": [
+      "archer"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 300,
+      "ATK": 10,
+      "DEF": 40,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/hunter_armor.png",
+    "price": {
+      "gold": 2000,
+      "gem": null
+    }
+  },
+  "hunter_arrow": {
+    "name": "Tên Thợ Săn",
+    "slot": "accessory",
+    "class": [
+      "archer"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 0,
+      "ATK": 30,
+      "DEF": 0,
+      "CRIT": 15
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/hunter_arrow.png",
+    "price": {
+      "gold": 2200,
+      "gem": null
+    }
+  },
+  "priest_book": {
+    "name": "Kinh Thánh Linh Mục",
+    "slot": "weapon",
+    "class": [
+      "mage"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 20,
+      "ATK": 100,
+      "DEF": 0,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/priest_book.png",
+    "price": {
+      "gold": 2500,
+      "gem": null
+    }
+  },
+  "priest_hood": {
+    "name": "Mũ Trùm Linh Mục",
+    "slot": "helmet",
+    "class": [
+      "mage"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 50,
+      "ATK": 50,
+      "DEF": 10,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/priest_hood.png",
+    "price": {
+      "gold": 2000,
+      "gem": null
+    }
+  },
+  "priest_cloak": {
+    "name": "Áo Choàng Linh Mục",
+    "slot": "armor",
+    "class": [
+      "mage"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 200,
+      "ATK": 40,
+      "DEF": 40,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/priest_cloak.png",
+    "price": {
+      "gold": 1800,
+      "gem": null
+    }
+  },
+  "priest_cross": {
+    "name": "Thánh Giá Linh Mục",
+    "slot": "accessory",
+    "class": [
+      "mage"
+    ],
+    "quality": "rare",
+    "stats": {
+      "HP": 30,
+      "ATK": 50,
+      "DEF": 20,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/rare/priest_cross.png",
+    "price": {
+      "gold": 1900,
+      "gem": null
+    }
+  },
+"battle_axe": {
+    "name": "Rìu Chiến",
+    "slot": "weapon",
+    "class": [
+      "warrior"
+    ],
+    "quality": "uncommon",
+    "stats": {
+      "HP": 10,
+      "ATK": 30,
+      "DEF": 0,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/uncommon/battle_axe.png",
+    "price": {
+      "gold": 500,
+      "gem": null
+    }
+  },
+  "steel_bow": {
+    "name": "Cung Thép",
+    "slot": "weapon",
+    "class": [
+      "archer"
+    ],
+    "quality": "uncommon",
+    "stats": {
+      "HP": 10,
+      "ATK": 25,
+      "DEF": 5,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/uncommon/steel_bow.png",
+    "price": {
+      "gold": 500,
+      "gem": null
+    }
+  },
+  "magic_staff": {
+    "name": "Trượng Phép Thuật",
+    "slot": "weapon",
+    "class": [
+      "mage"
+    ],
+    "quality": "uncommon",
+    "stats": {
+      "HP": 10,
+      "ATK": 40,
+      "DEF": 0,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/uncommon/magic_staff.png",
+    "price": {
+      "gold": 500,
+      "gem": null
+    }
+  },
+  "iron_armor": {
+    "name": "Giáp Sắt",
+    "slot": "armor",
+    "class": [
+      "warrior",
+      "archer",
+      "mage"
+    ],
+    "quality": "uncommon",
+    "stats": {
+      "HP": 200,
+      "ATK": 0,
+      "DEF": 10,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/uncommon/iron_armor.png",
+    "price": {
+      "gold": 700,
+      "gem": null
+    }
+  },
+  "iron_helmet": {
+    "name": "Mũ Sắt",
+    "slot": "helmet",
+    "class": [
+      "warrior",
+      "archer",
+      "mage"
+    ],
+    "quality": "uncommon",
+    "stats": {
+      "HP": 150,
+      "ATK": 10,
+      "DEF": 20,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/uncommon/iron_helmet.png",
+    "price": {
+      "gold": 500,
+      "gem": null
+    }
+  },
+  "gold_necklace": {
+    "name": "Dây Chuyền Vàng",
+    "slot": "accessory",
+    "class": [
+      "warrior",
+      "archer",
+      "mage"
+    ],
+    "quality": "uncommon",
+    "stats": {
+      "HP": 50,
+      "ATK": 20,
+      "DEF": 10,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/uncommon/gold_necklace.png",
+    "price": {
+      "gold": 500,
+      "gem": null
+    }
+  },
+  "steel_arrow": {
+    "name": "Mũi Tên Thép",
+    "slot": "accessory",
+    "class": [
+      "archer"
+    ],
+    "quality": "uncommon",
+    "stats": {
+      "HP": 0,
+      "ATK": 20,
+      "DEF": 0,
+      "CRIT": 10
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/uncommon/steel_arrow.png",
+    "price": {
+      "gold": 700,
+      "gem": null
+    }
+  },
+
+
+
+  "iron_sword": {
+    "name": "Kiếm Sắt",
+    "slot": "weapon",
+    "class": [
+      "warrior"
+    ],
+    "quality": "normal",
+    "stats": {
+      "HP": 15,
+      "ATK": 10,
+      "DEF": 5,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/normal/iron_sword.png",
+    "price": {
+      "gold": 100,
+      "gem": null
+    }
+  },
+  "wooden_bow": {
+    "name": "Cung Gỗ",
+    "slot": "weapon",
+    "class": [
+      "archer"
+    ],
+    "quality": "normal",
+    "stats": {
+      "HP": 10,
+      "ATK": 10,
+      "DEF": 0,
+      "CRIT": 5
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/normal/wooden_bow.png",
+    "price": {
+      "gold": 100,
+      "gem": null
+    }
+  },
+  "magic_wand": {
+    "name": "Đũa Phép",
+    "slot": "weapon",
+    "class": [
+      "mage"
+    ],
+    "quality": "normal",
+    "stats": {
+      "HP": 10,
+      "ATK": 15,
+      "DEF": 0,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/normal/magic_wand.png",
+    "price": {
+      "gold": 100,
+      "gem": null
+    }
+  },
+  "leather_armor": {
+    "name": "Giáp Da",
+    "slot": "armor",
+    "class": [
+      "warrior",
+      "archer",
+      "mage"
+    ],
+    "quality": "normal",
+    "stats": {
+      "HP": 50,
+      "ATK": 0,
+      "DEF": 10,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/normal/leather_armor.png",
+    "price": {
+      "gold": 150,
+      "gem": null
+    }
+  },
+  "leather_hood": {
+    "name": "Mũ Trùm Da",
+    "slot": "helmet",
+    "class": [
+      "warrior",
+      "archer",
+      "mage"
+    ],
+    "quality": "normal",
+    "stats": {
+      "HP": 30,
+      "ATK": 5,
+      "DEF": 5,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/normal/leather_hood.png",
+    "price": {
+      "gold": 100,
+      "gem": null
+    }
+  },
+  "silver_ring": {
+    "name": "Nhẫn bạc",
+    "slot": "accessory",
+    "class": [
+      "warrior",
+      "archer",
+      "mage"
+    ],
+    "quality": "normal",
+    "stats": {
+      "HP": 10,
+      "ATK": 10,
+      "DEF": 5,
+      "CRIT": 0
+    },
+    "effect": {
+      "type": null
+    },
+    "image": "/assets/items/normal/silver_ring.png",
+    "price": {
+      "gold": 150,
+      "gem": null
+    }
+  }
+}
