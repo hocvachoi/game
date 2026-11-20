@@ -7,6 +7,23 @@ const Stage = {
   mob: null,   // { monster, images:{idle,attack,skill}, mode, i }
   lungeDone: { hero: null, mob: null }, heroTimer: null, mobTimer: null, impactTimers: [], respawnTimer: null, visibilityObserver: null, visibilityHandler: null,
 
+  // Chữ nổi (position:absolute trong #stage) ngay trên nhân vật kích hoạt hiệu ứng: who = 'hero' | 'mob'; kind = crit | ambush | shield | heal (màu theo CSS .fx-<kind>).
+  // Nhiều chữ cùng lúc ở một nhân vật được xếp chồng lên trên nhau và tự xóa sau khi hết hoạt ảnh.
+  popups: { hero: 0, mob: 0 },
+  popup(who, text, kind) {
+    const stage = document.getElementById('stage'), target = document.getElementById(who === 'hero' ? 'hero' : 'mob');
+    if (!stage || !target) return;
+    const s = stage.getBoundingClientRect(), r = target.getBoundingClientRect();
+    if (!r.width) return;
+    const n = this.popups[who]++, p = document.createElement('span');
+    p.className = `fx-pop fx-${kind}`; p.textContent = text;
+    p.style.left = (r.left - s.left + r.width * (who === 'mob' ? 0.3 : 0.5)) + 'px';   // quái: lệch trái vì phần phải sprite nằm dưới thẻ câu hỏi
+    p.style.top = Math.max(4, r.top - s.top + r.height * 0.18 - n * 28) + 'px';
+    stage.append(p);
+    let gone = false;
+    const done = () => { if (gone) return; gone = true; p.remove(); this.popups[who] = Math.max(0, this.popups[who] - 1); };
+    p.addEventListener('animationend', done); setTimeout(done, 1600);
+  },
   reduced() { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; },
   loadImage(src, onload) {
     const im = new Image();

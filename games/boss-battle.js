@@ -289,6 +289,7 @@ const Raid = {
       const hit = A.monsterHit(fight, false);
       Stage.fx(false, 0, 0, () => {
         if (!this.running || A.combat !== fight || fight.finished || fight.downed) return;
+        Effects.showAttack(hit, 'mob', 'hero');
         A.applyMonsterHit(fight, hit);
         A.note(hit.blocked ? `${this.boss.name} phản công: Thánh thuẫn chặn hoàn toàn!` : `${this.boss.name} phản công: ${hit.crit ? 'CHÍ MẠNG! ' : ''}-${hit.damage} HP.`);
         if (fight.playerHp === 0) { this.down(fight); return; }
@@ -309,6 +310,7 @@ const Raid = {
       const hit = A.monsterHit(fight, false);
       const impact = Stage.fx(false, sofar, total, () => {
         if (!this.running || A.combat !== fight || fight.finished) return;
+        Effects.showAttack(hit, 'mob', 'hero');
         A.applyMonsterHit(fight, hit);
         const action = A.afterMonsterHit(fight, hit, 'trả lời sai');
         if (action === true) { A.quizCtl.end({ playerDefeated: true }); return; }
@@ -320,12 +322,13 @@ const Raid = {
       }
       return impact;
     }
-    const atk = Effects.attack(fight, A.monsterStat('DEF'), this.remaining()), crit = atk.crit;
+    const atk = Effects.attack(fight, A.monsterStat('DEF'), this.remaining(), A.monster), crit = atk.crit;
     const damage = Math.max(1, Math.round(atk.damage * this.damageMult()));   // thiếu người → tăng sát thương
     const impact = Stage.fx(true, sofar, total, () => {
       if (!this.running || A.combat !== fight || fight.finished) return;
       const applied = Math.min(damage, this.remaining());
       this.pending += applied; fight.damageDealt += applied;
+      Effects.showAttack(atk, 'hero', 'mob');
       A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${applied} sát thương${Effects.describe(atk)}.`);
       const stolen = Effects.lifesteal(fight, applied);
       if (stolen > 0) A.note(`Đoạt huyết: hồi ${stolen} HP.`);

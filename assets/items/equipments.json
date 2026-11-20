@@ -13,8 +13,8 @@
       "CRIT": 5
     },
     "effect": {
-      "type": "Berserk",
-      "value": 5
+      "type": "burn",
+      "value": 50
     },
     "image": "/assets/items/legendary/warlord_sword.png",
     "price": {
@@ -152,7 +152,7 @@
     },
     "effect": {
       "type": "Smite",
-      "value": 20
+      "value": 10
     },
     "image": "/assets/items/legendary/chaos_staff.png",
     "price": {

@@ -33,9 +33,10 @@ const Quiz = {
       const parts = q.text.split('{D}');
       txt.innerHTML = parts.map((p, k) => p + (k < parts.length - 1 ? '<select></select>' : '')).join('');
       const sels = [...txt.querySelectorAll('select')];
+      const choices = shuffle(q.opts.map((o, k) => ({ o, n: k + 1 })));   // đảo thứ tự các lựa chọn trong ô chọn (mọi ô của cùng một câu dùng chung thứ tự đã đảo)
       sels.forEach(s => {
         s.append(new Option('— chọn —', ''));
-        q.opts.forEach((o, k) => s.append(new Option(o, k + 1)));
+        choices.forEach(c => s.append(new Option(c.o, c.n)));
       });
       check = () => ({ ready: sels.every(s => s.value), correct: sels.every((s, k) => +s.value === q.ans[k]) });
       mark = () => sels.forEach((s, k) => s.classList.add(+s.value === q.ans[k] ? 'good' : 'bad'));
@@ -46,11 +47,13 @@ const Quiz = {
       const pairs = q.opts.map(o => { const p = o.split(NL); return { l: p[0].trim(), r: p.slice(1).join(' ').trim() }; });
       const pool = el('div', 'pool'), box = el('div');
       const chips = pairs.map((p, i) => { const b = el('button', 'chip', p.r); b.type = 'button'; b.dataset.i = i; b.draggable = true; return b; });
-      const slots = pairs.map((p, i) => { const row = el('div', 'row'), s = el('div', 'slot'); s.dataset.i = i; row.append(el('div', '', p.l), s); box.append(row); return s; });
-      chips.forEach(b => pool.append(b));
+      const rows = pairs.map((p, i) => { const row = el('div', 'row'), s = el('div', 'slot'); s.dataset.i = i; row.append(el('div', '', p.l), s); return { row, s }; });
+      const slots = rows.map(r => r.s);   // slots[i] ứng với pairs[i] (dùng để chấm điểm)
+      shuffle(rows.slice()).forEach(r => box.append(r.row));   // đảo thứ tự các dòng (vế trái)
+      shuffle(chips.slice()).forEach((b, p) => { b.dataset.p = p; pool.append(b); });   // đảo thứ tự các đáp án để kéo; dataset.p = vị trí đã đảo
       let sel = null, drag = null;
-      const returnToPool = chip => {
-        const next = [...pool.children].find(b => +b.dataset.i > +chip.dataset.i);
+      const returnToPool = chip => {   // trả đáp án về đúng vị trí đã đảo (KHÔNG xếp lại theo thứ tự đúng)
+        const next = [...pool.children].find(b => +b.dataset.p > +chip.dataset.p);
         pool.insertBefore(chip, next || null);
       };
       const put = (slot, chip) => { const old = slot.firstElementChild; if (old) returnToPool(old); slot.append(chip); if (sel) sel.classList.remove('sel'); sel = null; };

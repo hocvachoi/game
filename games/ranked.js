@@ -178,6 +178,7 @@ const Ranked = {
       const hit = A.monsterHit(fight, false);
       return Stage.fx(false, sofar, total, () => {
         if (!A.active || A.combat !== fight || fight.finished) return;
+        Effects.showAttack(hit, 'mob', 'hero');
         A.applyMonsterHit(fight, hit);
         const action = A.afterMonsterHit(fight, hit, 'trả lời sai');
         if (action === true) { A.quizCtl.end({ playerDefeated: true }); return; }
@@ -185,9 +186,10 @@ const Ranked = {
         A.afterTurn(fight);
       });
     }
-    const atk = Effects.attack(fight, A.monsterStat('DEF'), fight.monsterHp), damage = atk.damage, crit = atk.crit;
+    const atk = Effects.attack(fight, A.monsterStat('DEF'), fight.monsterHp, A.monster), damage = atk.damage, crit = atk.crit;
     return Stage.fx(true, sofar, total, () => {
       if (!A.active || A.combat !== fight || fight.finished) return;
+      Effects.showAttack(atk, 'hero', 'mob');
       const dealt = Math.min(damage, fight.monsterHp);
       fight.monsterHp = Math.max(0, fight.monsterHp - damage);
       A.note(`${crit ? 'CHÍ MẠNG! ' : ''}Bạn gây ${damage} sát thương${Effects.describe(atk)}.`);
