@@ -17,7 +17,42 @@ const Stage = {
   },
   ready(im) { return im && im.complete && im.naturalWidth; },
   mobSheet() {
-    return this.mob.monster.sprites[this.mob.mode === 'idle' ? 'idle' : 'attack'];
+    const mode = this.mob.mode === 'idle' ? 'idle' : 'attack', m = this.mob;
+    return (this.useMadness(mode) && m.monster.madness && m.monster.madness[mode]) || m.monster.sprites[mode];   // sprite Điên loạn mặc định cùng bố cục khung với sprite thường
+  },
+  // Quái Điên loạn đang hiện bằng ảnh riêng (đã nạp xong)?
+  useMadness(mode) {
+    const m = this.mob, key = mode === 'idle' ? 'idle' : 'attack';
+    return Boolean(m && m.madness && m.madImages && this.ready(m.madImages[key]));
+  },
+  mobImage(mode) {
+    const m = this.mob, key = mode === 'idle' ? 'idle' : 'attack';
+    return this.useMadness(key) ? m.madImages[key] : m.images[key];
+  },
+  // Điên loạn: nạp <key>_madness_idle.png / _animation.png (hoặc monster.madness.<mode>.src trong JSON); lỗi nạp → dùng ảnh thường.
+  loadMadness() {
+    const m = this.mob, mon = m.monster;
+    if (m.madImages || !mon.key) return;
+    m.madImages = {};
+    const names = { idle: 'idle', attack: 'animation' };
+    for (const mode of ['idle', 'attack']) {
+      const src = (mon.madness && mon.madness[mode] && mon.madness[mode].src) || `assets/monsters/${mon.key}/${mon.key}_madness_${names[mode]}.png`;
+      const im = new Image();
+      im.onload = () => { this.drawMob(); this.applyMadnessClass(); };
+      im.onerror = () => { m.madFailed = true; this.applyMadnessClass(); };
+      im.src = src; m.madImages[mode] = im;
+    }
+  },
+  setMadness(on) {
+    const m = this.mob; if (!m) return;
+    m.madness = Boolean(on);
+    if (m.madness) this.loadMadness();
+    document.getElementById('screen-game').classList.toggle('is-madness', m.madness);
+    this.applyMadnessClass();
+  },
+  applyMadnessClass() {
+    const m = this.mob; if (!m) return;
+    document.getElementById('mob').classList.toggle('madness-tint', Boolean(m.madness));
   },
 
   // ----- vẽ khung sprite -----
@@ -42,7 +77,8 @@ const Stage = {
     const m = this.mob; if (!m) return;
     const sheet = this.mobSheet();
     document.getElementById('mob').classList.toggle('is-attacking', m.mode === 'attack');
-    const image = m.images[m.mode === 'idle' ? 'idle' : 'attack'];
+    document.getElementById('mob').classList.toggle('madness-tint', Boolean(m.madness));
+    const image = this.mobImage(m.mode);
     this.drawFrame('mob', image, sheet, sheet.frames[m.i % sheet.frames.length], Boolean(m.monster.flip));
   },
 
@@ -135,6 +171,7 @@ const Stage = {
     const monster = opts.monster || StageMonster.FALLBACK;
     document.getElementById('mob').classList.toggle('ranked-opponent', monster.type === 'Ranked');
     if (!this.mob || this.mob.monster.key !== monster.key) this.createMob(monster);
+    this.setMadness(Boolean(opts.madness));
     this.observe();
     this.drawHero(); this.drawMob(); this.sync();
   },
@@ -146,9 +183,12 @@ const Stage = {
     });
   },
   // Dungeon: thay quái mới (khác key thì nạp sprite mới) rồi hồi sinh với HP đầy.
-  setMonster(monster) {
+  setMonster(monster, madness = false) {
     this.stopTimers();
     if (!this.mob || this.mob.monster.key !== monster.key) this.createMob(monster);
+    else this.mob.monster = monster;
+    this.setMadness(madness);
+    this.updateMobName();
     this.respawn();
   },
   reset() {
@@ -164,10 +204,15 @@ const Stage = {
     if (this.hero) { this.hero.mode = 'idle'; this.hero.i = 0; this.hero.attackState = null; }
     if (this.mob) { this.mob.mode = 'idle'; this.mob.i = 0; this.mob.attackState = null; }
     this.drawHero(); this.drawMob(); this.sync();
-    const nameEl = document.getElementById('mob-name');
-    if (nameEl) nameEl.textContent = (this.mob && this.mob.monster.name) || '';   // tên quái nằm trên thanh HP
+    this.updateMobName();
     const hp = this.mob && Number(this.mob.monster.stats && this.mob.monster.stats.HP);
     this.hp(1, hp > 0 ? hp : 1, hp > 0 ? hp : 1);
+  },
+  updateMobName() {
+    const nameEl = document.getElementById('mob-name');
+    if (nameEl) nameEl.textContent = this.mob
+      ? (this.mob.madness ? CONFIG.GAME.DUNGEON.MADNESS.NAME_PREFIX : '') + this.mob.monster.name
+      : '';
   },
   hp(f, current, max) {
     document.querySelector('#mobhp i').style.width = Math.max(0, Math.min(1, f)) * 100 + '%';

@@ -54,11 +54,11 @@ const StageMonster = {
   forStage(world, stage) {
     return this.get((this.map.worlds[world.folder] || {})[stage.key] || this.map.default);
   },
-  // Quái cho một TẦNG của hầm ngục số `dungeonIndex`: ngẫu nhiên trong pool theo phẩm chất của tầng (CONFIG.dungeonTier); thiếu thì lấy phẩm chất gần nhất (thấp hơn trước).
+  // Quái cho một TẦNG của hầm ngục số `dungeonIndex`: ngẫu nhiên trong pool theo phẩm chất của tầng (CONFIG.dungeonTier); thiếu thì ưu tiên phẩm chất cao hơn nếu ngang khoảng cách.
   forFloor(pool, floor, dungeonIndex) {
     const order = CONFIG.GAME.DUNGEON.ORDER, want = order.indexOf(CONFIG.dungeonTier(floor, dungeonIndex));
     for (let d = 0; d < order.length; d++) {
-      for (const i of d ? [want - d, want + d] : [want]) {
+      for (const i of d ? [want + d, want - d] : [want]) {
         const same = i >= 0 && i < order.length ? pool.filter(m => m.quality === order[i]) : [];
         if (same.length) return same[Math.floor(Math.random() * same.length)];
       }

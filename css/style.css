@@ -818,3 +818,12 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
   color:var(--c-gold-lt);background:rgba(8,15,27,.94);border:3px solid var(--c-gold);border-radius:10px;box-shadow:0 4px 0 var(--c-void);pointer-events:none}
 .ui-msg.is-error{color:#ffaaaa;border-color:#e0705f}.ui-msg.is-success{color:#a7f2a4}
 .ui-msg:empty{display:none}
+
+
+/* [28] ===== V5.7 · ĐIÊN LOẠN (Madness, hầm ngục): viền đỏ nhấp nháy quanh khung, tên quái đỏ; sprite giữ nguyên màu, chỉ có drop-shadow đỏ ===== */
+@keyframes madness-pulse{0%,100%{box-shadow:inset 0 0 0 4px #b3201c,inset 0 0 26px 6px rgba(214,43,43,.45)}50%{box-shadow:inset 0 0 0 6px #ff3b30,inset 0 0 46px 12px rgba(255,59,48,.7)}}
+#screen-game.is-madness #stage::after{content:"";position:absolute;inset:0;z-index:7;pointer-events:none;animation:madness-pulse 1.1s ease-in-out infinite}
+#screen-game.is-madness .enemy .enemy-name{color:#ff6b5f}
+#screen-game.is-madness .enemy .hp{border-color:#ff3b30}
+#mob.madness-tint{filter:drop-shadow(0 0 8px #ff2a1f)}
+@media (prefers-reduced-motion:reduce){#screen-game.is-madness #stage::after{animation:none;box-shadow:inset 0 0 0 5px #ff3b30}}

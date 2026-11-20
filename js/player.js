@@ -188,7 +188,7 @@ const Player = {
   // Kết thúc một lượt ải/dungeon: ghi tiến trình + thưởng bằng MỘT lần ghi (Plan mục 9.3).
   // level: stage/dungeon từ CONFIG.WORLDS (có .reward lấy từ world.json).
   // o: { correct, total, passed, kills, floor (hầm ngục: tầng cao nhất vượt được trong lượt), damagePct }  (damagePct = sát thương đã gây / HP một quái, 0..1)
-  // Thưởng (Plan 13.4): thắng stage = base * (1 + 10% * quái hạ); dungeon = base * (1 + 5% * quái hạ);
+  // Thưởng (Plan 13.4): stage = base * (1 + 10% * quái hạ); dungeon tăng theo tầng cao nhất đạt được.
   // thua / chưa vượt ải = base * max(10%, %sát thương gây cho quái). Crystal: xem CONFIG.GAME.CRYSTAL.
   // Bản ghi xếp hạng (leaderboards/<khối>/entries/<UID>) ghi cùng transaction; nếu Rules từ chối riêng phần xếp hạng
   // (ví dụ đồng hồ máy lệch tuần) thì lưu lại thưởng không kèm xếp hạng và đặt out.rankSkipped = true.
@@ -206,20 +206,21 @@ const Player = {
   },
   async runSave(level, o, withRank) {
     const G = this.G(), R = G.REWARD, dungeon = level.kind === 'dungeon';
-    const out = { gold: 0, exp: 0, crystals: 0, levelUp: false, factor: 0, drop: null, rankSkipped: false };
+    const out = { gold: 0, exp: 0, crystals: 0, levelUp: false, factor: 0, drop: null, drops: [], rankSkipped: false };
     if (!Number.isInteger(o.kills) || o.kills < 0) throw new Error('Số quái vật bị hạ không hợp lệ.');
     if (dungeon && (!Number.isInteger(o.floor) || o.floor < 0)) throw new Error('Tầng hầm ngục không hợp lệ.');
     const base = level.reward || { EXP: 0, GOLD: 0, drops: [] };
     const win = dungeon ? o.kills > 0 : o.passed;
     const factor = win
-      ? 1 + o.kills * (dungeon ? G.KILL_BONUS.dungeon : G.KILL_BONUS.stage)
+      ? 1 + (dungeon ? CONFIG.dungeonRewardBonus(o.floor) : o.kills * G.KILL_BONUS.stage)
       : Math.max(G.MIN_LOSE_FACTOR, Math.min(1, o.damagePct || 0));
     const ratio = o.total ? o.correct / o.total : 0, C = G.CRYSTAL;
     let crystals = 0;
     if (!dungeon) {
       if (o.passed && ratio > C.stage.minCorrectRatio) crystals = C.stage.amount;
     } else {
-      crystals = Math.floor(o.kills / C.dungeon.floorsPerCrystal);
+      const mk = Number.isInteger(o.madnessKills) && o.madnessKills > 0 ? o.madnessKills : 0;   // Crystal hầm ngục CHỈ từ quái Điên loạn
+      crystals = Math.min(G.DUNGEON.MAX_CRYSTALS_PER_RUN, mk * G.DUNGEON.MADNESS.CRYSTALS);
     }
     // Chỉ GHI bản ghi xếp hạng khi lượt này có thể đổi điểm tuần (thắng ải, hoặc hầm ngục hạ ≥ 1 quái). KHÔNG đọc lại bản ghi của mình:
     // lấy từ bản sao ở máy (Rank.ownEntry: 0 lượt đọc nếu đã có, 1 lượt đọc lần đầu). Kiểm tra top 10 làm ở Rank.afterRun, không tốn đọc/ghi.
@@ -234,7 +235,14 @@ const Player = {
       out.factor = f; out.gold = gold; out.exp = exp - (cur.EXP || 0); out.drop = null; out.crystals = crystals;
       out.levelUp = this.levelOf(exp) > this.levelOf(cur.EXP || 0);
       const owned = cur.Enventory || [], stock = this.parseInv(owned);
-      if (win) { // tối đa 1 vật phẩm rơi mỗi lượt; món đã có vẫn rơi để cộng dồn, đến tối đa CONFIG.STACK_MAX
+      out.drop = null; out.drops = [];
+      if (win && dungeon) {   // hầm ngục: vật phẩm đã roll theo từng quái (Adventure.rollDrop), gom ở o.drops và ghi MỘT lần; mỗi loại tối đa CONFIG.STACK_MAX
+        const st = { ...stock };
+        for (const id of Array.isArray(o.drops) ? o.drops : []) {
+          if (!this.item(id) || (st[id] || 0) >= CONFIG.STACK_MAX) continue;
+          st[id] = (st[id] || 0) + 1; out.drops.push(id);
+        }
+      } else if (win) { // tối đa 1 vật phẩm rơi mỗi lượt; món đã có vẫn rơi để cộng dồn, đến tối đa CONFIG.STACK_MAX
         for (const drop of base.drops || []) {
           if ((stock[drop.itemId] || 0) < CONFIG.STACK_MAX && this.item(drop.itemId) && Math.random() < drop.chance) { out.drop = drop.itemId; break; }
         }
@@ -245,7 +253,13 @@ const Player = {
         : { best: Math.max(old.best, pct), passed: old.passed || o.passed, tries: old.tries + 1 };
       const fields = { Golds: (cur.Golds || 0) + gold, EXP: exp, LV: this.levelOf(exp), LastReward: firebase.firestore.FieldValue.serverTimestamp() };
       if (crystals > 0) fields.Crystals = (cur.Crystals || 0) + crystals;
-      if (out.drop) fields.Enventory = this.invSet(owned, out.drop, (stock[out.drop] || 0) + 1);
+      if (dungeon) {
+        if (out.drops.length) {
+          let list = owned; const st = { ...stock };
+          out.drops.forEach(id => { st[id] = (st[id] || 0) + 1; list = this.invSet(list, id, st[id]); });
+          fields.Enventory = list;
+        }
+      } else if (out.drop) { out.drops = [out.drop]; fields.Enventory = this.invSet(owned, out.drop, (stock[out.drop] || 0) + 1); }
       const result = { fields, progress: { id: level.id, entry } };
       if (needRank) {
         const rank = Rank.entry(rankPrev, { nick: cur.Nickname, room: cur.Room, lv: fields.LV, kind: dungeon ? 'dungeon' : 'stage', index: level.index, kills: o.kills, floor: o.floor || 0, passedNow: !dungeon && o.passed });

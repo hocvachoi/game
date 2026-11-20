@@ -110,19 +110,29 @@ CONFIG.GAME = {
   ANSWER_TIMEOUT_SEC: 20,
   // HẦM NGỤC THEO TẦNG (vô hạn): mỗi tầng 1 quái; hạ quái = vượt tầng, lên tầng kế (HP người chơi giữ nguyên).
   // Phẩm chất quái theo tầng, MỖI HẦM NGỤC MỘT BẢNG RIÊNG (khóa = số hầm ngục 1/2); phẩm chất = trường "type" trong <monster_key>.json (không phân biệt hoa/thường).
-  // Thiếu quái đúng phẩm chất trong pool của hầm ngục thì lấy phẩm chất gần nhất (ưu tiên thấp hơn).
+  // Thiếu quái đúng phẩm chất trong pool của hầm ngục thì lấy phẩm chất gần nhất (nếu ngang khoảng cách, ưu tiên cao hơn).
   // Vào lại hầm ngục: đã vượt tầng N thì bắt đầu từ tầng N - REENTRY_BACK (tối thiểu 1). Kỷ lục tầng cao nhất vẫn giữ nguyên.
   DUNGEON: {
     ORDER: ['normal', 'uncommon', 'rare', 'epic', 'legendary'],
     TIERS: {
-      1: [{ to: 10, type: 'normal' }, { to: 30, type: 'uncommon' }, { to: Infinity, type: 'rare' }],
-      2: [{ to: 10, type: 'rare' }, { to: 30, type: 'epic' }, { to: Infinity, type: 'legendary' }]
+      1: [{ to: 20, type: 'normal' }, { to: 50, type: 'uncommon' }, { to: Infinity, type: 'rare' }],
+      2: [{ to: 20, type: 'rare' }, { to: 50, type: 'epic' }, { to: Infinity, type: 'legendary' }]
     },
     REENTRY_BACK: 5,
+    // v5.7 — CÂN BẰNG THEO TẦNG: mỗi STEP tầng quái tăng SCALE_PER_STEP của giá trị GỐC (cộng thẳng, không nhân dồn) cho HP/ATK/DEF (không CRIT);
+    // tỉ lệ rơi vật phẩm tăng cùng hệ số (5% → 5,5% ở tầng 11–20, 6% ở 21–30…). Tầng 1–10 ×1,0; 11–20 ×1,1; 21–30 ×1,2 …
+    STEP: 10,
+    SCALE_PER_STEP: 0.10,
+    // Thưởng Gold/EXP cuối lượt tăng thêm (cộng vào hệ số thưởng): đạt tầng XY → +X0% (tầng 37 → +30%, tầng 9 → +0%). Crystal không nhân.
+    REWARD_PER_TENS: 0.10,
+    // ĐIÊN LOẠN (Madness, chỉ hầm ngục): HP/ATK/DEF ×MULT, CRIT +CRIT_BONUS (cộng SAU cân bằng theo tầng). 100% ở tầng bội số của EVERY, CHANCE ở các tầng khác.
+    // Hạ quái Điên loạn nhận CRYSTALS Crystal (Crystal hầm ngục CHỈ đến từ Điên loạn). Sprite riêng: <key>_madness_idle.png / <key>_madness_animation.png.
+    MADNESS: { EVERY: 10, CHANCE: 0.10, MULT: 1.5, CRIT_BONUS: 10, CRYSTALS: 1, NAME_PREFIX: 'Điên loạn · ' },
+    MAX_CRYSTALS_PER_RUN: 30,   // [RULES] trần Crystal mỗi lượt lưu
     MAX_FLOOR: 100000,   // [RULES] trần tầng ghi trong bảng xếp hạng (Dung1Floor / Dung2Floor)
     MAX_FLOORS_PER_RUN: 300   // [RULES] một lượt chơi tăng kỷ lục tối đa bấy nhiêu tầng
   },
-  KILL_BONUS: { stage: 0.10, dungeon: 0.05 },   // cộng dồn thẳng (không lũy tiến): 3 quái dungeon = +15%
+  KILL_BONUS: { stage: 0.10 },   // stage: cộng dồn thẳng 10% mỗi quái bị hạ
   MIN_LOSE_FACTOR: 0.10,    // thua: thưởng = % sát thương gây cho quái, tối thiểu 10%
   REWARD: {
     repeatFactor: 1,        // Plan không giảm thưởng khi chơi lại; chỉnh <1 nếu muốn chống farm
@@ -134,7 +144,7 @@ CONFIG.GAME = {
   // Dungeon: mỗi 10 tầng vượt được nhận 1 Crystal. Không nhân với hệ số thưởng.
   CRYSTAL: {
     stage: { minCorrectRatio: 0.85, amount: 1 },
-    dungeon: { floorsPerCrystal: 10 }
+    dungeon: { fromMadness: true }   // Crystal hầm ngục chỉ từ quái Điên loạn (GAME.DUNGEON.MADNESS.CRYSTALS mỗi con)
   }
 };
 
@@ -294,6 +304,15 @@ CONFIG.loadItems = function () {
 CONFIG.dungeonTier = function (floor, dungeonIndex) {
   const D = this.GAME.DUNGEON, tiers = D.TIERS[dungeonIndex] || D.TIERS[1];
   return (tiers.find(t => floor <= t.to) || tiers[tiers.length - 1]).type;
+};
+// Hệ số cân bằng của tầng (cộng thẳng): tầng 1–10 → 1,0; 11–20 → 1,1; …  Dùng cho chỉ số quái và tỉ lệ rơi vật phẩm.
+CONFIG.dungeonScale = function (floor) {
+  const D = this.GAME.DUNGEON;
+  return 1 + D.SCALE_PER_STEP * Math.floor((Math.max(1, floor) - 1) / D.STEP);
+};
+// Thưởng thêm (phần trăm dạng số thập phân) khi lượt chơi đạt tầng topFloor: X0% với topFloor = XY.
+CONFIG.dungeonRewardBonus = function (topFloor) {
+  return this.GAME.DUNGEON.REWARD_PER_TENS * Math.floor(Math.max(0, topFloor) / 10);
 };
 CONFIG.dungeonStartFloor = function (best) {
   return Math.max(1, (best || 0) - this.GAME.DUNGEON.REENTRY_BACK);

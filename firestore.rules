@@ -102,25 +102,35 @@ service cloud.firestore {
           && o.Enventory.hasAny(prevs)
           && n.Enventory == o.Enventory.removeAll(prevs).concat([last]);
       }
-      // Một phần thưởng rơi: loại mới (addNew) hoặc cộng thêm 1 bản (addMore).
+      // Hầm ngục (v5.7): một lượt có thể rơi NHIỀU vật phẩm (mỗi quái hạ roll một lần, ghi gộp cuối lượt). Rules không lặp được từng mục nên chỉ giới hạn:
+      // tối đa 10 mục mới/đổi và 10 mục bị gỡ mỗi lượt, tổng ≤ 60 mục, không trùng mục (vẫn là mức "cơ bản", client có thể gian lận trong giới hạn này).
+      function addBatch(n, o) {
+        let added = n.Enventory.toSet().difference(o.Enventory.toSet());
+        let removed = o.Enventory.toSet().difference(n.Enventory.toSet());
+        return added.size() >= 1 && added.size() <= 10 && removed.size() <= 10
+          && n.Enventory.size() >= o.Enventory.size() && n.Enventory.size() <= o.Enventory.size() + 10
+          && n.Enventory.size() <= 60
+          && n.Enventory.toSet().size() == n.Enventory.size();
+      }
+      // Phần thưởng rơi: một loại mới (addNew), cộng thêm 1 bản (addMore) hoặc gộp nhiều món của hầm ngục (addBatch).
       function dropOk() {
         let n = request.resource.data;
         let o = resource.data;
         return !('Enventory' in changed())
-          || (n.Enventory is list && (addNew(n, o) || addMore(n, o)));
+          || (n.Enventory is list && (addNew(n, o) || addMore(n, o) || addBatch(n, o)));
       }
 
       // [RULES] Level curve: EXP needed to REACH level L = 25*(L-1)*(L+2)  (XP_BASE 100, XP_STEP 50),
       // MAX_LEVEL 100 -> max EXP 252450, per-run caps Gold 20000 / EXP 60000.
       // Only LV and EXP are stored; HP/ATK/DEF come from the character JSON and are not saved.
-      // Crystal: tối đa 5 mỗi lượt (Stage +1; Dungeon_2 mỗi 5 quái +1, tối đa 5). Progress advances one stage entry and rewards are at least 20 seconds apart.
+      // Crystal: tối đa 30 mỗi lượt (Stage +1; Hầm ngục: +1 cho mỗi quái Điên loạn hạ được). Progress advances one stage entry and rewards are at least 20 seconds apart.
       function validRun() {
         let n = request.resource.data;
         let o = resource.data;
         return changed().hasAll(['progress', 'LastReward'])
           && changed().hasOnly(['Golds', 'Crystals', 'EXP', 'LV', 'progress', 'LastReward', 'Enventory'])
           && n.Golds is int && n.Golds >= o.Golds && n.Golds - o.Golds <= 20000
-          && (!('Crystals' in changed()) || (n.Crystals is int && n.Crystals >= o.Crystals && n.Crystals - o.Crystals <= 5))
+          && (!('Crystals' in changed()) || (n.Crystals is int && n.Crystals >= o.Crystals && n.Crystals - o.Crystals <= 30))   // [RULES] CONFIG.GAME.DUNGEON.MAX_CRYSTALS_PER_RUN
           && n.EXP is int && n.EXP >= o.EXP && n.EXP - o.EXP <= 60000 && n.EXP <= 252450
           && n.LV is int && n.LV >= 1 && n.LV <= 100
           && n.EXP >= 25 * (n.LV - 1) * (n.LV + 2)

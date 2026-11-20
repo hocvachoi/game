@@ -1,7 +1,7 @@
 {
-  "name": "Slime Khổng Lồ",
+  "name": "Goblin",
   "attackStyle": "melee",
-  "Type": "Normal",
+  "Type": "normal",
   "Class":"Warrior",
   "stats": {
     "HP": 100,
