@@ -298,6 +298,7 @@ const Raid = {
     const dmg = Math.max(0, Number(def.damage) || R.ULT_DAMAGE), name = def.name || 'Kỹ năng cuối';
     this.ultBusy = true;
     this.showUltBanner(`💥 ${this.boss.name} dùng ${name}! Toàn đội mất ${dmg} HP`);
+    Stage.popup('mob', name, 'ultname');   // tên chiêu hiện ngay trên Boss
     const done = () => { this.ultBusy = false; };
     if (!fight || fight.finished) { done(); return; }
     Stage.fx(false, 0, 0, () => {
@@ -387,6 +388,7 @@ const Raid = {
     if (applied <= 0) return 0;
     this.pending += applied; fight.damageDealt += applied;
     Adventure.note(`Gai góc phản ${applied} sát thương.`);
+    Stage.popup('hero', 'Gai góc', 'thorns');
     this.drawHp();
     if (this.remaining() <= 0) { Stage.defeat(); this.end('boss'); }
     return applied;

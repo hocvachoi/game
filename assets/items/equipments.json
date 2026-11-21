@@ -83,7 +83,7 @@
     },
     "effect": {
       "type": "blessing",
-      "value": 7
+      "value": 3
     },
     "image": "/assets/items/legendary/warlord_ring.png",
     "price": {

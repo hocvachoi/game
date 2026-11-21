@@ -169,6 +169,7 @@ const Adventure = {
     fight.playerHp = Math.max(0, fight.playerHp - t);
     Stage.playerHp(fight.playerHp / fight.maxPlayerHp, fight.playerHp, fight.maxPlayerHp);
     this.note(`${this.monster.name} phản đòn (Gai góc): -${t} HP.`);
+    Stage.popup('mob', 'Gai góc', 'thorns');
     if (fight.playerHp > 0) return false;
     fight.finished = true; this.stopTimer(); Stage.playerDefeat();
     this.quizCtl.end({ playerDefeated: true });
@@ -184,10 +185,18 @@ const Adventure = {
     }
     Stage.hp(0, 0, fight.maxMonsterHp);
     Stage.defeat();
+    // Giãn cách KILL_GAP_MS (2s) giữa hai quái ở Phiêu lưu/Hầm ngục: quái mới xuất hiện sau khoảng này, câu hỏi kế tiếp cũng chờ hết khoảng này (xem killGap).
+    const gap = CONFIG.GAME.KILL_GAP_MS;
+    fight.gapUntil = Date.now() + gap;
     Stage.respawnTimer = setTimeout(() => {
       Stage.respawnTimer = null;
       if (this.active && this.combat === fight && !fight.finished) this.spawnNext(fight);
-    }, 650);
+    }, gap);
+  },
+  // Chờ hết khoảng giãn cách sau khi quái bị hạ (nếu có) rồi mới cho hiện câu hỏi tiếp theo.
+  killGap(fight) {
+    const wait = (fight.gapUntil || 0) - Date.now();
+    return wait > 0 ? new Promise(resolve => setTimeout(resolve, wait)) : Promise.resolve();
   },
   // Gai góc: khi người chơi bị tấn công, gây sát thương cố định lên kẻ địch. Raid: cộng vào sát thương Boss; Ranked: có thể thắng ngay.
   applyThorns(fight) {
@@ -198,6 +207,7 @@ const Adventure = {
     const dealt = Math.min(t, fight.monsterHp);
     fight.damageDealt += dealt; fight.monsterHp -= dealt;
     this.note(`Gai góc phản ${dealt} sát thương.`);
+    Stage.popup('hero', 'Gai góc', 'thorns');
     if (fight.monsterHp > 0) { Stage.hp(fight.monsterHp / fight.maxMonsterHp, fight.monsterHp, fight.maxMonsterHp); return dealt; }
     if (this.level && this.level.kind === 'ranked') Ranked.thornWin(fight);
     else this.killMonster(fight);
@@ -262,16 +272,12 @@ const Adventure = {
       this.applyThorns(fight);
       this.afterTurn(fight);
     });
-    if (correct) {
-      return damage >= fight.monsterHp
-        ? impact.then(() => new Promise(resolve => setTimeout(resolve, 700)))
-        : impact;
-    }
+    if (correct) return impact.then(() => this.killGap(fight));
     if (this.raid && fight.playerHp <= hit.damage) {
       const reviveMs = this.raid.R().REVIVE_SEC * 1000;
       return impact.then(() => new Promise(resolve => setTimeout(resolve, reviveMs)));
     }
-    return impact;
+    return impact.then(() => this.killGap(fight));   // Gai góc có thể hạ quái ngay cả khi trả lời sai
   },
   afterMonsterHit(fight, hit, reason) {
     this.note(hit.blocked && hit.damage === 0 ? `${this.monster.name} tấn công vì ${reason}: Thánh thuẫn chặn hoàn toàn!`

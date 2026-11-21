@@ -846,3 +846,10 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 #stage.is-ult{animation:ult-shake .35s linear 2}
 @keyframes ult-shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-4px,-3px)}80%{transform:translate(4px,3px)}}
 @media (prefers-reduced-motion:reduce){#stage.is-ult{animation:none}.raid-ult{animation-name:raid-ult-still}@keyframes raid-ult-still{0%,85%{opacity:1}100%{opacity:0}}}
+
+
+/* [31] ===== Chữ nổi cho các hiệu ứng còn lại + chiêu cuối Boss; HUD người chơi thu nhỏ trên điện thoại ===== */
+.fx-smite{color:#d79bff}.fx-burn{color:#ff9a30}.fx-thorns{color:#b9e06a}.fx-sturdy{color:#a9c4e6}.fx-berserk{color:#ff5252}.fx-lifesteal{color:#ff7aa2}
+.fx-ultname{color:#ffe27a;font-size:clamp(24px,2.8vw,38px);text-shadow:2px 2px 0 #7d130e,-2px 2px 0 #7d130e,2px -2px 0 #7d130e,-2px -2px 0 #7d130e}
+/* điện thoại: thanh trạng thái người chơi (HP/XP) trong trận nhỏ lại ~30% (giữ góc trên-trái) */
+@media (max-width:800px),(max-height:520px){#screen-game .player-hud{transform:scale(.7);transform-origin:top left}#screen-game .floor-badge{top:68px}}

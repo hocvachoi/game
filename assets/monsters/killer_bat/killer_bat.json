@@ -5,9 +5,9 @@
   "Class":"Warrior",
   "stats": {
     "HP": 200,
-    "ATK": 50,
-    "DEF": 10,
-    "CRIT": 10
+    "ATK": 100,
+    "DEF": 20,
+    "CRIT": 25
   },
   "ANSWER_TIMEOUT_SEC": 10, 
   "sprites": {

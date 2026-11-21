@@ -52,6 +52,7 @@ const Effects = {
     if (crit) base = Math.round(base * 2 * (1 + this.total('ambush') / 100));
     // Hiệu ứng phòng thủ của QUÁI (effect trong JSON): giảm sát thương, Cường tráng (khi bị chí mạng), Thánh thuẫn — chỉ tác động lên đòn gốc.
     base = Math.max(1, Math.round(base * (1 - this.mPct(mon, 'reducedmg') / 100)));
+    const sturdy = crit && this.mPct(mon, 'sturdy') > 0;
     if (crit) base = Math.max(1, Math.round(base * (1 - this.mPct(mon, 'sturdy') / 100)));
     const blocked = this.roll(this.mPct(mon, 'holyshield'));
     if (blocked) base = 0;
@@ -67,7 +68,7 @@ const Effects = {
       const stacks = fight.burnStacks = Math.min(CONFIG.BURN_MAX_STACKS, (fight.burnStacks || 0) + 1);
       extras.push({ key: 'burn', name: `Thiêu đốt ×${stacks}`, amount: Math.round(stacks * burnX) });
     }
-    return { damage: base + extras.reduce((sum, e) => sum + e.amount, 0), base, crit, ambush, blocked, berserk, extras };
+    return { damage: base + extras.reduce((sum, e) => sum + e.amount, 0), base, crit, ambush, blocked, sturdy, berserk, extras };
   },
   // Chuỗi mô tả cho thông báo chiến đấu, vd " (Cuồng chiến +25%, Trừng phạt +120, Thiêu đốt ×3 +30)".
   describe(atk) {
@@ -87,6 +88,7 @@ const Effects = {
     let base = Math.max(1, Math.round(Math.max(1, enemyAtk - playerDef) * (1 + (this.mTotal(mon, 'increasedmg') + berserk) / 100)));
     base = Math.max(0, Math.round(base * (1 - this.pct('reducedmg') / 100)));
     const crit = this.roll(enemyCrit), ambush = crit && this.mTotal(mon, 'ambush') > 0;
+    const sturdy = crit && this.pct('sturdy') > 0;
     if (crit) base = Math.round(base * 2 * (1 + this.mTotal(mon, 'ambush') / 100) * (1 - this.pct('sturdy') / 100));
     const blocked = base > 0 && this.roll(this.pct('holyshield'));
     if (blocked) base = 0;
@@ -99,7 +101,7 @@ const Effects = {
       const stacks = c.fight.mobBurn = Math.min(CONFIG.BURN_MAX_STACKS, (c.fight.mobBurn || 0) + 1);
       extras.push({ key: 'burn', name: `Thiêu đốt ×${stacks}`, amount: Math.round(stacks * burnX) });
     }
-    return { damage: base + extras.reduce((sum, e) => sum + e.amount, 0), base, crit, ambush, blocked, berserk, extras };
+    return { damage: base + extras.reduce((sum, e) => sum + e.amount, 0), base, crit, ambush, blocked, sturdy, berserk, extras };
   },
   // Chữ nổi (Stage.popup) tại nhân vật KÍCH HOẠT hiệu ứng: Chí mạng / Đột kích ở bên tấn công, Thánh thuẫn ở bên bị đánh. who/foe = 'hero' | 'mob'.
   showAttack(res, who, foe) {
@@ -107,34 +109,36 @@ const Effects = {
     if (res.crit) Stage.popup(who, 'Chí mạng', 'crit');
     if (res.ambush) Stage.popup(who, 'Đột kích', 'ambush');
     if (res.blocked) Stage.popup(foe, 'Thánh thuẫn', 'shield');
-    if (res.burn) Stage.popup(foe, `Thiêu đốt ${res.stacks}` + 'Tầng', 'burn');
-    if (res.smite) Stage.popup(foe, 'Trừng phạt', 'smite');
-    if (res.berserk) Stage.popup(who, 'Cuồng chiến +' + res.berserk + '%', 'berserk');
-    if (res.sturdy) Stage.popup(who, 'Cường tráng', 'sturdy');
+    if (res.sturdy) Stage.popup(foe, 'Cường tráng', 'sturdy');
+    if (res.berserk > 0) Stage.popup(who, 'Cuồng chiến', 'berserk');
+    (res.extras || []).forEach(e => {   // hiệu ứng gây thêm sát thương (cộng sau cùng)
+      if (e.key === 'smite') Stage.popup(who, 'Trừng phạt', 'smite');
+      else if (e.key === 'burn') Stage.popup(who, e.name, 'burn');
+    });
   },
-  heal(fight, amount) {
+  heal(fight, amount, label = 'Hồi phục', kind = 'heal') {
     if (fight.playerHp <= 0 || amount <= 0) return 0;
     const before = fight.playerHp;
     fight.playerHp = Math.min(fight.maxPlayerHp, fight.playerHp + Math.round(amount));
     Stage.playerHp(fight.playerHp / fight.maxPlayerHp, fight.playerHp, fight.maxPlayerHp);
     const healed = fight.playerHp - before;
-    if (healed > 0) Stage.popup('hero', 'Hồi phục', 'heal');
+    if (healed > 0) Stage.popup('hero', label, kind);
     return healed;
   },
   // Quái hồi HP (Ban phước / Đoạt huyết trong effect của quái): chỉ ở Phiêu lưu/Hầm ngục (HP quái riêng của người chơi), không áp dụng cho Boss Raid.
-  mHeal(fight, amount) {
+  mHeal(fight, amount, label = 'Hồi phục', kind = 'heal') {
     if (fight.monsterHp <= 0 || amount <= 0) return 0;
     const before = fight.monsterHp;
     fight.monsterHp = Math.min(fight.maxMonsterHp, fight.monsterHp + Math.round(amount));
     Stage.hp(fight.monsterHp / fight.maxMonsterHp, fight.monsterHp, fight.maxMonsterHp);
     const healed = fight.monsterHp - before;
-    if (healed > 0) Stage.popup('mob', 'Hồi phục', 'heal');
+    if (healed > 0) Stage.popup('mob', label, kind);
     return healed;
   },
   mBlessing(fight, mon) { const x = this.mTotal(mon, 'blessing'); return x > 0 ? this.mHeal(fight, Math.max(1, fight.maxMonsterHp * x / 100)) : 0; },
-  mLifesteal(fight, mon, dealt) { const x = this.mTotal(mon, 'steallife'); return x > 0 && dealt > 0 ? this.mHeal(fight, Math.max(1, dealt * x / 100)) : 0; },
+  mLifesteal(fight, mon, dealt) { const x = this.mTotal(mon, 'steallife'); return x > 0 && dealt > 0 ? this.mHeal(fight, Math.max(1, dealt * x / 100), 'Đoạt huyết', 'lifesteal') : 0; },
   mThorns(mon) { return Math.max(0, Math.round(this.mTotal(mon, 'thorns'))); },
   blessing(fight) { const x = this.total('blessing'); return x > 0 ? this.heal(fight, Math.max(1, fight.maxPlayerHp * x / 100)) : 0; },
-  lifesteal(fight, dealt) { const x = this.total('steallife'); return x > 0 && dealt > 0 ? this.heal(fight, Math.max(1, dealt * x / 100)) : 0; },
+  lifesteal(fight, dealt) { const x = this.total('steallife'); return x > 0 && dealt > 0 ? this.heal(fight, Math.max(1, dealt * x / 100), 'Đoạt huyết', 'lifesteal') : 0; },
   thorns() { return Math.max(0, Math.round(this.total('thorns'))); }
 };

@@ -5,10 +5,10 @@
   "Class":"Warrior",
   "effects":{
     "type": "Thorns",
-    "value":70
+    "value":100
   },
   "stats": {
-    "HP": 1500,
+    "HP": 2500,
     "ATK": 200,
     "DEF": 250,
     "CRIT": 5

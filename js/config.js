@@ -132,6 +132,7 @@ CONFIG.GAME = {
     MAX_FLOOR: 100000,   // [RULES] trần tầng ghi trong bảng xếp hạng (Dung1Floor / Dung2Floor)
     MAX_FLOORS_PER_RUN: 300   // [RULES] một lượt chơi tăng kỷ lục tối đa bấy nhiêu tầng
   },
+  KILL_GAP_MS: 2000,   // giãn cách sau khi hạ một quái (Phiêu lưu/Hầm ngục) trước khi quái mới và câu hỏi kế tiếp xuất hiện
   KILL_BONUS: { stage: 0.10 },   // stage: cộng dồn thẳng 10% mỗi quái bị hạ
   MIN_LOSE_FACTOR: 0.10,    // thua: thưởng = % sát thương gây cho quái, tối thiểu 10%
   REWARD: {
