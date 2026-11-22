@@ -164,7 +164,7 @@ const Raid = {
     this.waiting = true; this.lobbyFrom = Date.now();
     $('#hud-nick').textContent = Player.data.nick; Player.renderHud();
     show('screen-game');
-    Stage.init({ background: this.world.stages[0].background, monster: this.bossDef, character: CONFIG.selectedCharacter });
+    Stage.init({ background: this.world.stages[0].background, monster: this.bossDef, character: CONFIG.selectedCharacter, raid: true });
     Stage.reset(); Stage.hp(1, '???', '???');
     $('#raid-bar').hidden = true; $('#raid-top').hidden = true;
     this.drawLobby(false);
@@ -215,7 +215,7 @@ const Raid = {
     $('#hud-nick').textContent = Player.data.nick; Player.renderHud();
     A.active = true; A.guard.bind(); A.guard.reset();
     show('screen-game');
-    Stage.init({ background: A.level.background, monster: bossDef, character: CONFIG.selectedCharacter });
+    Stage.init({ background: A.level.background, monster: bossDef, character: CONFIG.selectedCharacter, raid: true });
     Stage.reset();
     const stats = Player.stats(), maxPlayerHp = Math.max(1, stats.HP);
     A.combat = { playerStats: stats, maxPlayerHp, playerHp: maxPlayerHp, monster: bossDef, maxMonsterHp: this.maxHp, monsterHp: this.remaining(),

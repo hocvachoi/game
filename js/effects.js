@@ -9,6 +9,8 @@
 //   Smite       Trừng phạt   x% cơ hội gây thêm sát thương = 25% HP hiện tại của kẻ địch (tối đa 2000)
 //   Berserk     Cuồng chiến  mỗi 10% HP đã mất tăng x% sát thương gây ra
 //   Burn        Thiêu đốt    mỗi đòn tấn công tích 1 tầng (tối đa 10), mỗi tầng gây thêm x sát thương (tầng reset khi kẻ địch bị hạ)
+// CÔNG THỨC SÁT THƯƠNG ĐÒN GỐC (mọi chế độ): dmg = ATK × 400 / (400 + DEF) × bonus, làm tròn, tối thiểu 1 (trừ khi bị Thánh thuẫn/giảm 100%).
+//   bonus = (1 + Tăng sát thương% + Cuồng chiến%) × (1 − Giảm sát thương%) × [chí mạng: 2 × (1 + Đột kích%) × (1 − Cường tráng%)]; Thánh thuẫn → đòn gốc = 0.
 // THỨ TỰ TÍNH SÁT THƯƠNG: đòn gốc (ATK-DEF, Cuồng chiến, chí mạng + Đột kích) → rồi các hiệu ứng "gây thêm sát thương" (Trừng phạt, Thiêu đốt, Gai góc)
 // được cộng SAU CÙNG: không bị DEF/chí mạng tác động. Ngược lại hiệu ứng GIẢM sát thương (Reduce DMG, Cường tráng, Thánh thuẫn) chỉ tác động lên đòn gốc nhận vào.
 //   Reduce_DMG / Increase_DMG (cũ) giảm sát thương nhận vào / tăng sát thương gây ra x%.   "Lucky" (cũ): chưa có cơ chế.
@@ -37,6 +39,8 @@ const Effects = {
     }, 0);
   },
   mPct(mon, name) { return Math.min(100, Math.max(0, this.mTotal(mon, name))); },
+  // Sát thương gốc trước bonus: ATK × 400 / (400 + DEF)
+  core(atk, def) { return atk * 400 / (400 + Math.max(0, def)); },
   roll(percent) { return Math.random() * 100 < Math.min(100, percent); },
   pct(name) { return Math.min(100, Math.max(0, this.total(name))); },
 
@@ -47,13 +51,10 @@ const Effects = {
     const lostSteps = Math.floor((1 - fight.playerHp / fight.maxPlayerHp) * 10 + 1e-9);   // số bậc 10% HP đã mất
     const berserk = lostSteps * this.total('berserk');
     const boost = this.total('increasedmg') + berserk;
-    let base = Math.max(1, Math.round(Math.max(1, stats.ATK - enemyDef) * (1 + boost / 100)));
-    const crit = this.roll(stats.CRIT), ambush = crit && this.total('ambush') > 0;
-    if (crit) base = Math.round(base * 2 * (1 + this.total('ambush') / 100));
-    // Hiệu ứng phòng thủ của QUÁI (effect trong JSON): giảm sát thương, Cường tráng (khi bị chí mạng), Thánh thuẫn — chỉ tác động lên đòn gốc.
-    base = Math.max(1, Math.round(base * (1 - this.mPct(mon, 'reducedmg') / 100)));
-    const sturdy = crit && this.mPct(mon, 'sturdy') > 0;
-    if (crit) base = Math.max(1, Math.round(base * (1 - this.mPct(mon, 'sturdy') / 100)));
+    const crit = this.roll(stats.CRIT), ambush = crit && this.total('ambush') > 0, sturdy = crit && this.mPct(mon, 'sturdy') > 0;
+    let bonus = (1 + boost / 100) * (1 - this.mPct(mon, 'reducedmg') / 100);   // tăng/giảm sát thương (Giảm sát thương, Cường tráng, Thánh thuẫn của QUÁI)
+    if (crit) bonus *= 2 * (1 + this.total('ambush') / 100) * (1 - this.mPct(mon, 'sturdy') / 100);
+    let base = Math.max(bonus > 0 ? 1 : 0, Math.round(this.core(stats.ATK, enemyDef) * bonus));
     const blocked = this.roll(this.mPct(mon, 'holyshield'));
     if (blocked) base = 0;
     // Đòn gốc kết thúc → hiệu ứng gây thêm sát thương cộng dồn sau cùng (không bị giảm sát thương/chặn)
@@ -85,11 +86,10 @@ const Effects = {
     const c = ctx || {};
     const lost = c.maxMonsterHp ? Math.floor((1 - c.monsterHp / c.maxMonsterHp) * 10 + 1e-9) : 0;
     const berserk = lost * this.mTotal(mon, 'berserk');
-    let base = Math.max(1, Math.round(Math.max(1, enemyAtk - playerDef) * (1 + (this.mTotal(mon, 'increasedmg') + berserk) / 100)));
-    base = Math.max(0, Math.round(base * (1 - this.pct('reducedmg') / 100)));
-    const crit = this.roll(enemyCrit), ambush = crit && this.mTotal(mon, 'ambush') > 0;
-    const sturdy = crit && this.pct('sturdy') > 0;
-    if (crit) base = Math.round(base * 2 * (1 + this.mTotal(mon, 'ambush') / 100) * (1 - this.pct('sturdy') / 100));
+    const crit = this.roll(enemyCrit), ambush = crit && this.mTotal(mon, 'ambush') > 0, sturdy = crit && this.pct('sturdy') > 0;
+    let bonus = (1 + (this.mTotal(mon, 'increasedmg') + berserk) / 100) * (1 - this.pct('reducedmg') / 100);
+    if (crit) bonus *= 2 * (1 + this.mTotal(mon, 'ambush') / 100) * (1 - this.pct('sturdy') / 100);
+    let base = Math.max(bonus > 0 ? 1 : 0, Math.round(this.core(enemyAtk, playerDef) * bonus));
     const blocked = base > 0 && this.roll(this.pct('holyshield'));
     if (blocked) base = 0;
     const extras = [];

@@ -5,8 +5,8 @@
   "Class":"Warrior",
   "stats": {
     "HP": 100,
-    "ATK": 30,
-    "DEF": 5,
+    "ATK": 40,
+    "DEF": 30,
     "CRIT": 5
   },
   "ANSWER_TIMEOUT_SEC": 15,

@@ -9,7 +9,12 @@ const ItemSheet = {
     this.node.remove(); this.node = null;
   },
   onKey(e) { if (e.key === 'Escape') ItemSheet.close(); },
-  money(p) { return `${p.gold.toLocaleString('vi-VN')} Gold${p.gem > 0 ? ` + ${p.gem} Crystal` : ''}`; },
+  money(p) {
+    const parts = [];
+    if (p.gold > 0 || p.gem <= 0) parts.push(`${p.gold.toLocaleString('vi-VN')} Gold`);
+    if (p.gem > 0) parts.push(`${p.gem} Crystal`);
+    return parts.join(' + ');
+  },
   open({ mode, item, price, onConfirm, onDone }) {
     this.close();
     const buy = mode === 'buy', d = Player.data, q = CONFIG.quality(item.quality), have = Player.count(item.id);

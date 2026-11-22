@@ -189,6 +189,7 @@ const Stage = {
     document.getElementById('mob').classList.toggle('ranked-opponent', monster.type === 'Ranked');
     if (!this.mob || this.mob.monster.key !== monster.key) this.createMob(monster);
     this.setMadness(Boolean(opts.madness));
+    document.getElementById('screen-game').classList.toggle('is-raid', Boolean(opts.raid));   // Boss Raid: sprite và chiêu của Boss ×2 (CSS)
     this.observe();
     this.drawHero(); this.drawMob(); this.sync();
   },
@@ -389,6 +390,7 @@ const Stage = {
     projectile.src = skill.src;
     projectile.style.left = `${startX}px`;
     projectile.style.top = `${startY}px`;
+    projectile.classList.toggle('is-boss-skill', who === 'mob' && document.getElementById('screen-game').classList.contains('is-raid'));
     projectile.style.setProperty('--skill-scale', flip ? '-1' : '1');
     projectile.style.setProperty('--skill-x', `${endX - startX}px`);
     projectile.style.setProperty('--skill-y', `${endY - startY}px`);

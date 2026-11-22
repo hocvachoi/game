@@ -8,10 +8,10 @@
     "value":30
   },
   "stats": {
-    "HP": 800,
-    "ATK": 180,
-    "DEF": 50,
-    "CRIT": 25
+    "HP": 1200,
+    "ATK": 400,
+    "DEF": 200,
+    "CRIT": 30
   },
   "ANSWER_TIMEOUT_SEC": 15,
   "sprites": {

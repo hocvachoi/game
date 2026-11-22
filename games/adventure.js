@@ -243,6 +243,8 @@ const Adventure = {
     this.stopTimer();
     const fight = this.combat;
     if (!fight || fight.finished) return true;
+    // Câu hỏi hiện ngay khi quái vừa bị hạ (không chờ). Hiếm khi trả lời trước khi quái mới xuất hiện (chỉ khi dùng công cụ): đòn chờ quái mới ra rồi mới tính.
+    if (fight.monsterHp <= 0 && (fight.gapUntil || 0) > Date.now()) return this.killGap(fight).then(() => this.resolveAnswer(correct, sofar, total));
     let damage = 0, crit = false, hit = null, atk = null;
     if (correct) {
       atk = Effects.attack(fight, this.monsterStat('DEF'), fight.monsterHp, this.monster);
@@ -272,12 +274,12 @@ const Adventure = {
       this.applyThorns(fight);
       this.afterTurn(fight);
     });
-    if (correct) return impact.then(() => this.killGap(fight));
+    if (correct) return impact;
     if (this.raid && fight.playerHp <= hit.damage) {
       const reviveMs = this.raid.R().REVIVE_SEC * 1000;
       return impact.then(() => new Promise(resolve => setTimeout(resolve, reviveMs)));
     }
-    return impact.then(() => this.killGap(fight));   // Gai góc có thể hạ quái ngay cả khi trả lời sai
+    return impact;
   },
   afterMonsterHit(fight, hit, reason) {
     this.note(hit.blocked && hit.damage === 0 ? `${this.monster.name} tấn công vì ${reason}: Thánh thuẫn chặn hoàn toàn!`
@@ -385,6 +387,7 @@ const Adventure = {
         if (wait > 0) { status.textContent = `Đang chờ ${Math.ceil(wait / 1000)}s để lưu kết quả…`; await new Promise(r => setTimeout(r, wait)); status.textContent = 'Đang lưu kết quả…'; }
         const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct, drops: fight ? fight.drops : [], madnessKills: fight ? fight.madnessKills : 0 });
         const dropNames = (r.drops || []).map(id => (Player.item(id) || {}).name).filter(Boolean);
+        if (r.celebrate && typeof Celebrate !== 'undefined') setTimeout(() => Celebrate.level100(r), 500);   // cấp 100 (một lần)
         status.textContent = `+${r.gold} Gold · +${r.exp} EXP (${Math.round(r.factor * 100)}% thưởng)`
           + (r.crystals ? ` · +${r.crystals} Crystal` : '')
           + (r.levelUp ? ` · LÊN CẤP ${Player.data.level}!` : '') + (dropNames.length ? ` · NHẬN ĐƯỢC: ${dropNames.join(', ')}` : '')

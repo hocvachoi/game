@@ -9,12 +9,12 @@
   },
   {
     "type": "burn",
-    "value":75
+    "value":150
   }],
   "stats": {
     "HP": 5000,
     "ATK": 1000,
-    "DEF": 500,
+    "DEF": 800,
     "CRIT": 30
   },
   "ANSWER_TIMEOUT_SEC": 15,

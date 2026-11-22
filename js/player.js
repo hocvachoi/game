@@ -36,7 +36,11 @@ const Player = {
     return rest;
   },
   count(id) { return (this.data && this.data.stock && this.data.stock[id]) || 0; },
-  sellPrice(it) { return { gold: Math.ceil(it.price * CONFIG.SELL_RATIO), gem: Math.ceil(it.gemPrice * CONFIG.SELL_RATIO) }; },
+  // Món thường: SELL_RATIO × giá mua (làm tròn lên). Món CHỈ RƠI (dropOnly): giá cố định bằng Crystal theo phẩm chất (CONFIG.DROP_ONLY_SELL_CRYSTALS).
+  sellPrice(it) {
+    if (it.dropOnly) return { gold: 0, gem: CONFIG.DROP_ONLY_SELL_CRYSTALS[String(it.quality || '').toLowerCase()] || 0 };
+    return { gold: Math.ceil(it.price * CONFIG.SELL_RATIO), gem: Math.ceil(it.gemPrice * CONFIG.SELL_RATIO) };
+  },
   apply(p) {
     if (p.LastReward && typeof p.LastReward.toMillis === 'function') this.lastRewardMs = p.LastReward.toMillis();
     const exp = p.EXP || 0;
@@ -234,6 +238,10 @@ const Player = {
       const exp = Math.min(this.maxExp(), (cur.EXP || 0) + rawExp);
       out.factor = f; out.gold = gold; out.exp = exp - (cur.EXP || 0); out.drop = null; out.crystals = crystals;
       out.levelUp = this.levelOf(exp) > this.levelOf(cur.EXP || 0);
+      // Lần đầu đạt cấp tối đa: tặng thêm Crystal và bật hiệu ứng chúc mừng (chỉ xảy ra một lần vì chỉ vượt mốc này một lần)
+      if (this.levelOf(exp) >= G.MAX_LEVEL && this.levelOf(cur.EXP || 0) < G.MAX_LEVEL) {
+        crystals += G.MAX_LEVEL_BONUS_CRYSTALS; out.crystals = crystals; out.celebrate = true;
+      }
       const owned = cur.Enventory || [], stock = this.parseInv(owned);
       out.drop = null; out.drops = [];
       if (win && dungeon) {   // hầm ngục: vật phẩm đã roll theo từng quái (Adventure.rollDrop), gom ở o.drops và ghi MỘT lần; mỗi loại tối đa CONFIG.STACK_MAX

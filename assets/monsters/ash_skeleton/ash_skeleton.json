@@ -8,9 +8,9 @@
     "value":25
   },
   "stats": {
-    "HP": 1000,
-    "ATK": 700,
-    "DEF": 400,
+    "HP": 2800,
+    "ATK": 800,
+    "DEF": 500,
     "CRIT": 10
   },
   "ANSWER_TIMEOUT_SEC": 15,

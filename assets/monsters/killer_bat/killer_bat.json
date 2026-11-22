@@ -6,7 +6,7 @@
   "stats": {
     "HP": 200,
     "ATK": 100,
-    "DEF": 20,
+    "DEF": 40,
     "CRIT": 25
   },
   "ANSWER_TIMEOUT_SEC": 10, 

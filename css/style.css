@@ -853,3 +853,26 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 .fx-ultname{color:#ffe27a;font-size:clamp(24px,2.8vw,38px);text-shadow:2px 2px 0 #7d130e,-2px 2px 0 #7d130e,2px -2px 0 #7d130e,-2px -2px 0 #7d130e}
 /* điện thoại: thanh trạng thái người chơi (HP/XP) trong trận nhỏ lại ~30% (giữ góc trên-trái) */
 @media (max-width:800px),(max-height:520px){#screen-game .player-hud{transform:scale(.7);transform-origin:top left}#screen-game .floor-badge{top:68px}}
+
+
+/* [32] ===== V5.11 · THẺ CÂU HỎI GỌN, BOSS RAID ×2, CHÚC MỪNG CẤP 100 ===== */
+/* Thẻ câu hỏi (#quiz): margin và padding 5px, nền 35% đặc, vùng câu hỏi hẹp còn 57% bề rộng (chiều cao giữ nguyên) để thẻ che ít quái hơn */
+#screen-game .qwrap{width:57%;padding:0}
+#screen-game #quiz.quiz{width:calc(100% - 10px);margin:auto 5px;padding:5px;background:rgba(16,27,45,.35)}
+/* Boss Raid: sprite Boss và chiêu của Boss gấp đôi (Boss đứng sau thẻ câu hỏi và sau nhân vật). Tâm Boss giữ nguyên vị trí cũ. */
+#screen-game.is-raid .enemy{left:1.6%;width:min(64vw,112vh);max-width:64vw}
+#screen-game.is-raid #skill-projectile.is-boss-skill{width:clamp(144px,24vw,288px)}
+#screen-game.is-raid .enemy .enemy-info{position:fixed;left:22px;top:90px;width:min(320px,30vw);margin:0;z-index:7}   /* sprite ×2 cao hơn khung: tên + HP Boss ghim dưới thanh trạng thái người chơi */
+@media (max-width:800px),(max-height:520px){#screen-game.is-raid .enemy .enemy-info{top:66px;left:12px}}
+/* Chúc mừng cấp 100 (js/celebrate.js) */
+.celebrate{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(8,15,27,.72);cursor:pointer}
+.celebrate-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.celebrate-card{position:relative;max-width:min(520px,92vw);padding:22px 28px;text-align:center;color:var(--ink);background:linear-gradient(var(--c-navy),var(--c-ink));border:5px solid var(--c-gold);border-radius:16px;
+  box-shadow:inset 0 0 0 3px var(--c-bronze),0 0 40px 10px rgba(245,214,140,.5);animation:celebrate-pop .6s cubic-bezier(.2,1.4,.4,1)}
+.celebrate-card h2{margin:6px 0;font-size:clamp(26px,4vw,40px);color:var(--c-gold-lt)}
+.celebrate-card p{margin:4px 0;font-size:clamp(18px,2.2vw,24px)}
+.celebrate-kicker{font-size:clamp(22px,3vw,32px)!important;color:var(--c-gold)}
+.celebrate-gift{color:#8fe08f;font-weight:700}
+.celebrate-hint{font-size:16px!important;opacity:.7}
+@keyframes celebrate-pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.playtime-toast{z-index:95}

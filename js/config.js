@@ -132,7 +132,8 @@ CONFIG.GAME = {
     MAX_FLOOR: 100000,   // [RULES] trần tầng ghi trong bảng xếp hạng (Dung1Floor / Dung2Floor)
     MAX_FLOORS_PER_RUN: 300   // [RULES] một lượt chơi tăng kỷ lục tối đa bấy nhiêu tầng
   },
-  KILL_GAP_MS: 2000,   // giãn cách sau khi hạ một quái (Phiêu lưu/Hầm ngục) trước khi quái mới và câu hỏi kế tiếp xuất hiện
+  KILL_GAP_MS: 1000,   // quái bị hạ mất bấy lâu mới hồi sinh/quái mới xuất hiện (Phiêu lưu/Hầm ngục); câu hỏi kế tiếp hiện NGAY, không chờ
+  MAX_LEVEL_BONUS_CRYSTALS: 50,   // thưởng một lần khi lên cấp tối đa (MAX_LEVEL); [RULES] trần Crystal mỗi lượt khi lên cấp 100 là 80
   KILL_BONUS: { stage: 0.10 },   // stage: cộng dồn thẳng 10% mỗi quái bị hạ
   MIN_LOSE_FACTOR: 0.10,    // thua: thưởng = % sát thương gây cho quái, tối thiểu 10%
   REWARD: {
@@ -240,6 +241,10 @@ CONFIG.normalizeClass = function (name) {
 // Hiệu ứng trang bị (Giai đoạn 3): khóa = type viết thường bỏ ký tự lạ; text(x) = mô tả hiển thị. Cơ chế ở js/effects.js.
 // Kho đồ gộp: tối đa STACK_MAX món cùng loại (lưu "warlord_sword 5"); bán cho NPC = SELL_RATIO × giá mua (làm tròn LÊN, cả Gold và Crystal).
 CONFIG.STACK_MAX = 10;
+// Giá BÁN cho NPC của vật phẩm CHỈ RƠI (không ghi giá, không mua được trong Cửa hàng): theo phẩm chất, tính bằng Crystal (không có Gold).
+CONFIG.DROP_ONLY_SELL_CRYSTALS = { epic: 1, legendary: 2, divine: 5 };
+// Giới hạn thời gian chơi mỗi ngày (giờ Việt Nam), đếm ở trình duyệt (js/playtime.js).
+CONFIG.PLAYTIME = { LIMIT_SEC: 3 * 3600, WARN_SEC: 600, IDLE_SEC: 120 };
 CONFIG.SELL_RATIO = 0.5;
 CONFIG.BURN_MAX_STACKS = 10;   // Thiêu đốt: tối đa 10 tầng
 CONFIG.EFFECTS = {

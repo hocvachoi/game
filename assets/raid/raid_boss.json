@@ -6,9 +6,9 @@
   "Type": "Boss",
   "stats": {
     "HP": 100000,
-    "ATK": 30,
-    "DEF": 5,
-    "CRIT": 5
+    "ATK": 700,
+    "DEF": 500,
+    "CRIT": 15
   },
   "ANSWER_TIMEOUT_SEC": 15,
   "sprites": {

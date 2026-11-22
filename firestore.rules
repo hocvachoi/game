@@ -130,7 +130,7 @@ service cloud.firestore {
         return changed().hasAll(['progress', 'LastReward'])
           && changed().hasOnly(['Golds', 'Crystals', 'EXP', 'LV', 'progress', 'LastReward', 'Enventory'])
           && n.Golds is int && n.Golds >= o.Golds && n.Golds - o.Golds <= 20000
-          && (!('Crystals' in changed()) || (n.Crystals is int && n.Crystals >= o.Crystals && n.Crystals - o.Crystals <= 30))   // [RULES] CONFIG.GAME.DUNGEON.MAX_CRYSTALS_PER_RUN
+          && (!('Crystals' in changed()) || (n.Crystals is int && n.Crystals >= o.Crystals && n.Crystals - o.Crystals <= ((n.LV == 100 && o.LV < 100) ? 80 : 30)))   // [RULES] 30 = GAME.DUNGEON.MAX_CRYSTALS_PER_RUN; lượt đạt cấp 100: +50 (GAME.MAX_LEVEL_BONUS_CRYSTALS)
           && n.EXP is int && n.EXP >= o.EXP && n.EXP - o.EXP <= 60000 && n.EXP <= 252450
           && n.LV is int && n.LV >= 1 && n.LV <= 100
           && n.EXP >= 25 * (n.LV - 1) * (n.LV + 2)

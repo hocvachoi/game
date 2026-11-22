@@ -61,7 +61,7 @@ const Settings = {
       finally { save.disabled = close.disabled = false; }
     };
     const actions = el('div', 'sheet-actions'); actions.append(close, save);
-    card.append(el('b', 'sheet-name', 'Cài đặt'), el('p', 'sheet-sub', 'Đổi mật khẩu'), cur.wrap, nxt.wrap, rep.wrap, msg, actions);
+    card.append(el('b', 'sheet-name', 'Cài đặt'), el('p', 'sheet-have', typeof PlayTime !== 'undefined' ? PlayTime.summary() : ''), el('p', 'sheet-sub', 'Đổi mật khẩu'), cur.wrap, nxt.wrap, rep.wrap, msg, actions);
     back.append(card); document.body.append(back);
     this.node = back; document.addEventListener('keydown', this.onKey);
     cur.input.focus();
