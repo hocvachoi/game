@@ -397,3 +397,15 @@ Cũ: `Reduce DMG` (giảm sát thương nhận), `Increase DMG` (tăng sát thư
 - **Giới hạn 3 giờ/ngày** (`js/playtime.js`, `CONFIG.PLAYTIME`): đếm ở trình duyệt (localStorage theo tài khoản + ngày giờ VN, reset 00:00), chỉ tính khi tab hiện và có thao tác trong 2 phút gần nhất; nhắc ở 10 phút cuối; hết giờ → kết thúc lượt đang chơi (Raid: `Raid.end('time')`; khác: `quizCtl.end({ exited: true })`), khóa `Adventure.start`, `Raid.open`, `Ranked.open`; vẫn dùng được Cài đặt/Cửa hàng/Trang bị. Cài đặt hiển thị thời gian đã chơi. Không tốn đọc/ghi Firestore; đổi trình duyệt hoặc xóa dữ liệu trình duyệt thì tính lại.
 - **Chúc mừng cấp 100** (`js/celebrate.js`): pháo hoa giấy + biểu ngữ, chỉ khi lượt chơi đưa người chơi từ dưới cấp 100 lên cấp 100; tặng `+CONFIG.GAME.MAX_LEVEL_BONUS_CRYSTALS` (50) Crystal (Rules: Crystal mỗi lượt tối đa 80 khi lượt đó đạt cấp 100, ngược lại 30).
 - **Giá bán món CHỈ RƠI** (không ghi giá, không mua được): bán cho NPC bằng Crystal theo phẩm chất `CONFIG.DROP_ONLY_SELL_CRYSTALS = { epic: 1, legendary: 2, divine: 5 }` (không có Gold). Phẩm chất `divine` chưa có món/khung ảnh — thêm `assets/ui/divine_frame.png` và khai báo phẩm chất khi có asset.
+
+**v5.12 — nhiều hiệu ứng, Xuyên giáp, hiệu ứng bộ đồ, Burn mới:**
+- **Nhiều hiệu ứng**: trường `effect` của trang bị, của quái và của mốc bộ đồ có thể là `{ "type", "value" }` HOẶC mảng `[ {...}, {...} ]`; nhiều mục cùng loại được cộng dồn (`Effects.list/total/mTotal`).
+- **Xuyên giáp** (`"type": "Pierce"`, `value` = % DEF của kẻ địch bị bỏ qua, tối đa 100): `DEF hiệu dụng = DEF × (1 − value%)` rồi mới vào `ATK × 400 / (400 + DEF)`. Dùng được cho cả quái.
+- **Burn mới**: mất HẾT tầng khi chủ sở hữu bị tấn công bằng ĐÒN GỐC (người chơi: quái đánh trúng, kể cả bị Thánh thuẫn chặn — `Effects.incoming`; quái: người chơi đánh trúng — `Effects.attack`) hoặc khi kẻ địch bị hạ. Sát thương cộng thêm (Gai góc, Trừng phạt, Thiêu đốt, chiêu cuối Boss) không làm mất tầng. Người chơi và quái cùng có Burn thì bộ đếm riêng (`fight.burnStacks` trên quái, `fight.mobBurn` trên người chơi), không chồng lên nhau.
+- **Hiệu ứng bộ đồ** (`assets/items/sets.json`, hoặc `set.json`; `CONFIG.SETS`): món cùng bộ = cùng trường `"set"` trong `equipments.json`, mặc định lấy phần trước dấu `_` đầu tiên của id (`warlord_sword` → `warlord`). Mỗi khóa số là số món đang mặc; đủ mốc nào nhận hiệu ứng mốc đó (cộng dồn các mốc đã đạt và cộng dồn với hiệu ứng riêng của từng món). Bộ không khai báo trong file thì không có hiệu ứng. Ví dụ:
+```json
+{ "warlord": { "name": "Bộ Chiến Thần",
+  "2": [ { "type": "Pierce", "value": 10 } ],
+  "4": [ { "type": "Blessing", "value": 3 }, { "type": "Pierce", "value": 10 } ] } }
+```
+  Tooltip và thẻ mua/bán hiện tên bộ, số món đang mặc và từng mốc (✓ đã đạt / ○ chưa). (Giá trị trong `sets.json` đi kèm chỉ là ví dụ — hãy chỉnh theo ý bạn.)

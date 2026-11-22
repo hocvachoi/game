@@ -30,6 +30,7 @@ const ItemSheet = {
     const rows = [head, el('p', 'sheet-stats', Inventory.bonusText(item))];
     const effect = Inventory.effectText(item);
     if (effect) rows.push(el('p', 'sheet-effect', `Hiệu ứng: ${effect}`));
+    Inventory.setLines(item).forEach((line, i) => rows.push(el('p', i ? 'sheet-set-line' : 'sheet-set', line)));
     rows.push(el('p', 'sheet-have', `Đang có: ${have}/${CONFIG.STACK_MAX}`));
     const priceRow = el('div', 'sheet-price');
     priceRow.append(el('span', '', buy ? 'Giá mua' : 'Bạn nhận'), el('b', '', this.money(price)));

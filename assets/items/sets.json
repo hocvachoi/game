@@ -1,0 +1,14 @@
+{
+  "warlord": {
+    "name": "Bộ Chiến Thần",
+    "4":  [{ "type": "Pierce", "value": 20 }]
+  },
+  "chaos": {
+    "name": "Bộ Hỗn Mang",
+    "4": [ { "type": "Blessing", "value": 3 } ]
+  },
+  "hell": {
+    "name": "Bộ Luyện Ngục",
+    "4": [ { "type": "steallife", "value": 10 } ]
+  }
+}

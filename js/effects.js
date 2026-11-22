@@ -8,7 +8,11 @@
 //   Sturdy      Cường tráng  giảm x% (tối đa 100) sát thương khi bị chí mạng
 //   Smite       Trừng phạt   x% cơ hội gây thêm sát thương = 25% HP hiện tại của kẻ địch (tối đa 2000)
 //   Berserk     Cuồng chiến  mỗi 10% HP đã mất tăng x% sát thương gây ra
-//   Burn        Thiêu đốt    mỗi đòn tấn công tích 1 tầng (tối đa 10), mỗi tầng gây thêm x sát thương (tầng reset khi kẻ địch bị hạ)
+//   Burn        Thiêu đốt    mỗi đòn tấn công tích 1 tầng (tối đa 10), mỗi tầng gây thêm x sát thương. Mất hết tầng khi chủ sở hữu bị tấn công bằng ĐÒN GỐC (người chơi: quái đánh trúng, kể cả bị Thánh thuẫn chặn;
+//                quái: người chơi trả lời đúng) hoặc khi kẻ địch bị hạ. Sát thương cộng thêm (Gai góc, Trừng phạt, Thiêu đốt, chiêu cuối Boss) KHÔNG làm mất tầng. Hai bên cùng có Burn thì bộ đếm riêng, không chồng lên nhau.
+//   Pierce      Xuyên giáp   bỏ qua x% DEF của kẻ địch (tối đa 100%) trước khi tính ATK × 400 / (400 + DEF)
+// HIỆU ỨNG BỘ ĐỒ: assets/items/sets.json (CONFIG.SETS). Trang bị cùng bộ (trường "set" trong equipments.json, mặc định là phần trước dấu _ đầu tiên của id: warlord_sword → warlord);
+//   đủ 2 / 4 món thì nhận hiệu ứng của mốc đó (cộng dồn các mốc đã đạt, và cộng dồn với hiệu ứng riêng từng món). Trang bị và mốc bộ đều có thể có nhiều hiệu ứng (mảng effect).
 // CÔNG THỨC SÁT THƯƠNG ĐÒN GỐC (mọi chế độ): dmg = ATK × 400 / (400 + DEF) × bonus, làm tròn, tối thiểu 1 (trừ khi bị Thánh thuẫn/giảm 100%).
 //   bonus = (1 + Tăng sát thương% + Cuồng chiến%) × (1 − Giảm sát thương%) × [chí mạng: 2 × (1 + Đột kích%) × (1 − Cường tráng%)]; Thánh thuẫn → đòn gốc = 0.
 // THỨ TỰ TÍNH SÁT THƯƠNG: đòn gốc (ATK-DEF, Cuồng chiến, chí mạng + Đột kích) → rồi các hiệu ứng "gây thêm sát thương" (Trừng phạt, Thiêu đốt, Gai góc)
@@ -21,21 +25,38 @@ const Effects = {
   SMITE_HP_RATIO: 0.25, SMITE_MAX: 2000,
   ALIAS: { recovery: 'blessing' },
   key(type) { const k = String(type || '').toLowerCase().replace(/[^a-z]/g, ''); return this.ALIAS[k] || k; },
-  // Tổng value của một hiệu ứng trên mọi trang bị đang mặc.
+  // Chuẩn hóa trường effect: {type,value} | [{type,value}, ...] | rỗng → mảng.
+  list(effect) { return (Array.isArray(effect) ? effect : effect ? [effect] : []).filter(e => e && e.type); },
+  // Mọi hiệu ứng người chơi đang có: từng trang bị đang mặc + hiệu ứng bộ đồ (CONFIG.SETS, mốc 2/4 món…).
+  equipEffects() {
+    const out = [], counts = {};
+    Object.values((Player.data && Player.data.equip) || {}).forEach(id => {
+      const it = id && Player.item(id);
+      if (!it) return;
+      out.push(...this.list(it.effect));
+      if (it.set) counts[it.set] = (counts[it.set] || 0) + 1;
+    });
+    Object.entries(counts).forEach(([key, n]) => {
+      const set = CONFIG.SETS && CONFIG.SETS[key];
+      if (set) set.tiers.filter(t => n >= t.count).forEach(t => out.push(...t.effects));
+    });
+    return out;
+  },
+  // Tổng value của một hiệu ứng (trang bị + bộ đồ).
   total(name) {
     const want = this.key(name);
-    return Object.values((Player.data && Player.data.equip) || {}).reduce((sum, id) => {
-      const e = id && Player.item(id) && Player.item(id).effect, v = Number(e && e.value);
-      return e && this.key(e.type) === want && Number.isFinite(v) ? sum + v : sum;
+    return this.equipEffects().reduce((sum, e) => {
+      const v = Number(e.value);
+      return this.key(e.type) === want && Number.isFinite(v) ? sum + v : sum;
     }, 0);
   },
   // ----- Hiệu ứng của QUÁI: trường "effect" trong <key>.json, dạng {type, value} hoặc mảng [{type, value}, ...]; dùng chung bảng hiệu ứng với trang bị -----
   mTotal(mon, name) {
     if (!mon || !mon.effect) return 0;
     const want = this.key(name);
-    return (Array.isArray(mon.effect) ? mon.effect : [mon.effect]).reduce((sum, e) => {
-      const v = Number(e && e.value);
-      return e && this.key(e.type) === want && Number.isFinite(v) ? sum + v : sum;
+    return this.list(mon.effect).reduce((sum, e) => {
+      const v = Number(e.value);
+      return this.key(e.type) === want && Number.isFinite(v) ? sum + v : sum;
     }, 0);
   },
   mPct(mon, name) { return Math.min(100, Math.max(0, this.mTotal(mon, name))); },
@@ -54,7 +75,7 @@ const Effects = {
     const crit = this.roll(stats.CRIT), ambush = crit && this.total('ambush') > 0, sturdy = crit && this.mPct(mon, 'sturdy') > 0;
     let bonus = (1 + boost / 100) * (1 - this.mPct(mon, 'reducedmg') / 100);   // tăng/giảm sát thương (Giảm sát thương, Cường tráng, Thánh thuẫn của QUÁI)
     if (crit) bonus *= 2 * (1 + this.total('ambush') / 100) * (1 - this.mPct(mon, 'sturdy') / 100);
-    let base = Math.max(bonus > 0 ? 1 : 0, Math.round(this.core(stats.ATK, enemyDef) * bonus));
+    let base = Math.max(bonus > 0 ? 1 : 0, Math.round(this.core(stats.ATK, enemyDef * (1 - this.pct('pierce') / 100)) * bonus));   // Xuyên giáp: bỏ qua x% DEF
     const blocked = this.roll(this.mPct(mon, 'holyshield'));
     if (blocked) base = 0;
     // Đòn gốc kết thúc → hiệu ứng gây thêm sát thương cộng dồn sau cùng (không bị giảm sát thương/chặn)
@@ -69,6 +90,7 @@ const Effects = {
       const stacks = fight.burnStacks = Math.min(CONFIG.BURN_MAX_STACKS, (fight.burnStacks || 0) + 1);
       extras.push({ key: 'burn', name: `Thiêu đốt ×${stacks}`, amount: Math.round(stacks * burnX) });
     }
+    fight.mobBurn = 0;   // quái vừa bị tấn công bằng đòn gốc → quái mất hết tầng Thiêu đốt của nó
     return { damage: base + extras.reduce((sum, e) => sum + e.amount, 0), base, crit, ambush, blocked, sturdy, berserk, extras };
   },
   // Chuỗi mô tả cho thông báo chiến đấu, vd " (Cuồng chiến +25%, Trừng phạt +120, Thiêu đốt ×3 +30)".
@@ -89,7 +111,7 @@ const Effects = {
     const crit = this.roll(enemyCrit), ambush = crit && this.mTotal(mon, 'ambush') > 0, sturdy = crit && this.pct('sturdy') > 0;
     let bonus = (1 + (this.mTotal(mon, 'increasedmg') + berserk) / 100) * (1 - this.pct('reducedmg') / 100);
     if (crit) bonus *= 2 * (1 + this.mTotal(mon, 'ambush') / 100) * (1 - this.pct('sturdy') / 100);
-    let base = Math.max(bonus > 0 ? 1 : 0, Math.round(this.core(enemyAtk, playerDef) * bonus));
+    let base = Math.max(bonus > 0 ? 1 : 0, Math.round(this.core(enemyAtk, playerDef * (1 - this.mPct(mon, 'pierce') / 100)) * bonus));   // Xuyên giáp của quái
     const blocked = base > 0 && this.roll(this.pct('holyshield'));
     if (blocked) base = 0;
     const extras = [];
@@ -101,6 +123,7 @@ const Effects = {
       const stacks = c.fight.mobBurn = Math.min(CONFIG.BURN_MAX_STACKS, (c.fight.mobBurn || 0) + 1);
       extras.push({ key: 'burn', name: `Thiêu đốt ×${stacks}`, amount: Math.round(stacks * burnX) });
     }
+    if (c.fight) c.fight.burnStacks = 0;   // người chơi vừa bị tấn công bằng đòn gốc → mất hết tầng Thiêu đốt của mình (kể cả khi đòn bị Thánh thuẫn chặn)
     return { damage: base + extras.reduce((sum, e) => sum + e.amount, 0), base, crit, ambush, blocked, sturdy, berserk, extras };
   },
   // Chữ nổi (Stage.popup) tại nhân vật KÍCH HOẠT hiệu ứng: Chí mạng / Đột kích ở bên tấn công, Thánh thuẫn ở bên bị đánh. who/foe = 'hero' | 'mob'.

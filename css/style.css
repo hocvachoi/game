@@ -858,7 +858,7 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 /* [32] ===== V5.11 · THẺ CÂU HỎI GỌN, BOSS RAID ×2, CHÚC MỪNG CẤP 100 ===== */
 /* Thẻ câu hỏi (#quiz): margin và padding 5px, nền 35% đặc, vùng câu hỏi hẹp còn 57% bề rộng (chiều cao giữ nguyên) để thẻ che ít quái hơn */
 #screen-game .qwrap{width:57%;padding:0}
-#screen-game #quiz.quiz{width:calc(100% - 10px);margin:auto 5px;padding:5px;background:rgba(16,27,45,.35)}
+#screen-game #quiz.quiz{width:calc(100% - 10px);margin:auto 5px;padding:5px;background:rgba(16,27,45,.05)}
 /* Boss Raid: sprite Boss và chiêu của Boss gấp đôi (Boss đứng sau thẻ câu hỏi và sau nhân vật). Tâm Boss giữ nguyên vị trí cũ. */
 #screen-game.is-raid .enemy{left:1.6%;width:min(64vw,112vh);max-width:64vw}
 #screen-game.is-raid #skill-projectile.is-boss-skill{width:clamp(144px,24vw,288px)}
@@ -876,3 +876,9 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 .celebrate-hint{font-size:16px!important;opacity:.7}
 @keyframes celebrate-pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
 .playtime-toast{z-index:95}
+
+
+/* [33] Hiệu ứng bộ đồ trong tooltip và thẻ mua/bán */
+.tip-set,.sheet-set{margin:2px 0 0;font-weight:700;color:var(--c-gold-lt)}
+.tip-set-line,.sheet-set-line{margin:0;padding-left:8px;font-size:.92em;color:#cfe0f5}
+.sheet-set,.sheet-set-line{font-size:17px;line-height:1.2}

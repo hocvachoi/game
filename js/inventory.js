@@ -40,6 +40,7 @@ const Tip = {
     const rows = [head, el('p', 'tip-sub', `${Inventory.slotName(it.slot)} · ${Player.classLabel(it)}`), el('p', 'tip-stats', Inventory.bonusText(it))];
     const effect = Inventory.effectText(it);
     if (effect) rows.push(el('p', 'tip-effect', `Hiệu ứng: ${effect}`));
+    Inventory.setLines(it).forEach((line, i) => rows.push(el('p', i ? 'tip-set-line' : 'tip-set', line)));
     if (!Player.usable(it)) rows.push(el('p', 'tip-bad', 'Không dùng được với nghề hiện tại'));
     if (hint) rows.push(el('p', 'tip-hint', hint));
     this.box.replaceChildren(...rows);
@@ -78,12 +79,21 @@ const Inventory = {
       .map(([k, v]) => `${v > 0 ? '+' : ''}${v}${k === 'CRIT' ? '%' : ''} ${k}`);
   },
   bonusText(it) { return it.power ? this.statParts(it).join(' · ') : 'Chỉ trang trí'; },
-  effectText(it) {
-    const e = it.effect;
+  // Một hiệu ứng {type, value} → chuỗi hiển thị.
+  oneEffect(e) {
     if (!e || !e.type) return '';
     const key = Effects.key(e.type), def = CONFIG.EFFECTS[key];
     if (def && Number.isFinite(Number(e.value))) return `${def.name}: ${def.text(e.value)}`;
     return `${CONFIG.EFFECT_NAMES[key] || e.type}${Number.isFinite(Number(e.value)) ? ` ${e.value}%` : ''}`;
+  },
+  // Hiệu ứng riêng của món (một hoặc nhiều).
+  effectText(it) { return Effects.list(it.effect).map(e => this.oneEffect(e)).filter(Boolean).join(' · '); },
+  // Hiệu ứng BỘ ĐỒ của món (tooltip/thẻ): dòng đầu = tên bộ + số món đang mặc, các dòng sau = từng mốc (✓ đã đạt, ○ chưa).
+  setLines(it) {
+    const set = it.set && CONFIG.SETS && CONFIG.SETS[it.set];
+    if (!set) return [];
+    const worn = Object.values((Player.data && Player.data.equip) || {}).filter(id => { const x = id && Player.item(id); return x && x.set === it.set; }).length;
+    return [`${set.name} — đang mặc ${worn} món`, ...set.tiers.map(t => `${worn >= t.count ? '✓' : '○'} ${t.count} món: ${t.effects.map(e => this.oneEffect(e)).join(' · ')}`)];
   },
   // Ảnh icon vật phẩm; thiếu ảnh thì hiện biểu tượng theo ô trang bị.
   icon(it) {

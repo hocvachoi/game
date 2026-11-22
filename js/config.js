@@ -115,7 +115,7 @@ CONFIG.GAME = {
   DUNGEON: {
     ORDER: ['normal', 'uncommon', 'rare', 'epic', 'legendary'],
     TIERS: {
-      1: [{ to: 20, type: 'normal' }, { to: 50, type: 'uncommon' }, { to: Infinity, type: 'rare' }],
+      1: [{ to: 20, type: 'normal' }, { to: 40, type: 'uncommon' }, { to: 60, type: 'rare' }, {to: 80, type:'epic'}, {to: Infinity, type:'legendary'}],
       2: [{ to: 20, type: 'rare' }, { to: 50, type: 'epic' }, { to: Infinity, type: 'legendary' }]
     },
     REENTRY_BACK: 5,
@@ -157,7 +157,7 @@ CONFIG.RANKED = {
   WIN_BASE: 10,            // [RULES] thắng được WIN_BASE + max(0, điểm B − điểm A)
   MAX_DIFF: 100,           // [RULES] trần phần chênh lệch được cộng (chặn báo thắng gian lận với đối thủ cực mạnh)
   RANK_RANGE: 10,          // chọn B ngẫu nhiên trong ±RANK_RANGE hạng quanh A (cả trên lẫn dưới)
-  MIN_BATTLE_SEC: 30,      // [RULES] báo thắng phải cách lúc bắt đầu ≥ ngần này giây
+  MIN_BATTLE_SEC: 20,      // [RULES] báo thắng phải cách lúc bắt đầu ≥ ngần này giây
   CACHE_SEC: 300,          // dùng lại tài liệu lớp đã đọc trong 5 phút khi mở bảng (chỉ ở trình duyệt)
   TOP: 10                  // chỉ top 10 được hiển thị/xếp hạng/thưởng
 };
@@ -227,7 +227,8 @@ CONFIG.QUALITIES = {
   uncommon: { name: 'Tốt', color: '#6fd36f' },
   rare: { name: 'Hiếm', color: '#5aa9ff' },
   epic: { name: 'Sử thi', color: '#c070ff' },
-  legendary: { name: 'Huyền thoại', color: '#ffb02e' }
+  legendary: { name: 'Huyền thoại', color: '#ffb02e' },
+  divine: {name:'Thần thánh', color:'#fc0e0e'}
 };
 CONFIG.quality = function (key) {
   return this.QUALITIES[String(key || 'normal').toLowerCase()] || { name: String(key), color: '#b8c5a6' };
@@ -248,7 +249,8 @@ CONFIG.PLAYTIME = { LIMIT_SEC: 3 * 3600, WARN_SEC: 600, IDLE_SEC: 120 };
 CONFIG.SELL_RATIO = 0.5;
 CONFIG.BURN_MAX_STACKS = 10;   // Thiêu đốt: tối đa 10 tầng
 CONFIG.EFFECTS = {
-  burn: { name: 'Thiêu đốt', text: x => `Mỗi đòn tấn công tích 1 tầng (tối đa 10), mỗi tầng gây thêm ${x} sát thương` },
+  burn: { name: 'Thiêu đốt', text: x => `Mỗi đòn tấn công tích 1 tầng (tối đa 10), mỗi tầng gây thêm ${x} sát thương; mất hết tầng khi bị tấn công` },
+  pierce: { name: 'Xuyên giáp', text: x => `Bỏ qua ${x}% DEF của kẻ địch` },
   blessing: { name: 'Ban phước', text: x => `Hồi ${x}% HP tối đa mỗi lượt` },
   steallife: { name: 'Đoạt huyết', text: x => `Hồi HP bằng ${x}% sát thương đã gây ra` },
   thorns: { name: 'Gai góc', text: x => `Gây ${x} sát thương khi bị tấn công` },
@@ -292,6 +294,8 @@ CONFIG.loadItems = function () {
             dropOnly: gold === 0 && gems === 0,   // không ghi giá (price rỗng/0) = chỉ nhận từ phần thưởng rơi, không bán trong Cửa hàng
             power: Object.values(item.stats).some(value => Number(value) !== 0),
             bonus: item.stats, effect: item.effect,
+            // bộ đồ: trường "set" nếu có, mặc định = phần trước dấu _ đầu tiên của id (warlord_sword → warlord); hiệu ứng bộ khai báo trong assets/items/sets.json
+            set: typeof item.set === 'string' && item.set.trim() ? item.set.trim().toLowerCase() : id.split('_')[0],
             // đường dẫn tương đối (catalog có thể ghi "/assets/..." → bỏ dấu "/" đầu để chạy được trên GitHub Pages)
             image: typeof item.image === 'string' ? item.image.replace(/^\/+/, '') : '',
             quality: String(item.quality || 'normal').toLowerCase(),
@@ -302,6 +306,7 @@ CONFIG.loadItems = function () {
         if (!items.length) throw new Error('Danh mục equipments.json đang trống.');
         this.ITEMS = items;
         this.itemsLoaded = true;
+        return this.loadSets();   // hiệu ứng bộ đồ (không có file thì bỏ qua)
       })
       .catch(error => {
         this.itemsPromise = null;
@@ -311,6 +316,22 @@ CONFIG.loadItems = function () {
   return this.itemsPromise;
 };
 
+// ----- Hiệu ứng BỘ ĐỒ: assets/items/sets.json (hoặc set.json) -----
+// { "warlord": { "name": "Bộ Chiến Thần", "2": [ {"type":"Pierce","value":10} ], "4": [ {...}, {...} ] } }  — khóa số = số món đang mặc; mỗi mốc là một effect {type,value} hoặc mảng.
+CONFIG.SETS = {};
+CONFIG.loadSets = function () {
+  const get = url => fetch(url).then(r => (r.ok ? r.json() : null)).catch(() => null);
+  return get('assets/items/sets.json').then(data => data || get('assets/items/set.json')).then(data => {
+    const sets = {};
+    Object.entries(data && typeof data === 'object' ? data : {}).forEach(([key, def]) => {
+      const tiers = Object.entries(def || {}).filter(([k]) => /^\d+$/.test(k) && Number(k) > 0)
+        .map(([k, v]) => ({ count: Number(k), effects: (Array.isArray(v) ? v : v ? [v] : []).filter(e => e && e.type) }))
+        .filter(t => t.effects.length).sort((a, b) => a.count - b.count);
+      if (tiers.length) sets[key.toLowerCase()] = { name: (def && def.name) || key, tiers };
+    });
+    CONFIG.SETS = sets;
+  });
+};
 // ----- Hầm ngục theo tầng: phẩm chất quái của một tầng (theo hầm ngục 1/2) và tầng bắt đầu khi vào lại -----
 CONFIG.dungeonTier = function (floor, dungeonIndex) {
   const D = this.GAME.DUNGEON, tiers = D.TIERS[dungeonIndex] || D.TIERS[1];
