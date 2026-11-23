@@ -858,7 +858,11 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 /* [32] ===== V5.11 · THẺ CÂU HỎI GỌN, BOSS RAID ×2, CHÚC MỪNG CẤP 100 ===== */
 /* Thẻ câu hỏi (#quiz): margin và padding 5px, nền 35% đặc, vùng câu hỏi hẹp còn 57% bề rộng (chiều cao giữ nguyên) để thẻ che ít quái hơn */
 #screen-game .qwrap{width:57%;padding:0}
+<<<<<<< HEAD
 #screen-game #quiz.quiz{width:calc(100% - 10px);margin:auto 5px;padding:5px;background:rgba(16,27,45,.35)}
+=======
+#screen-game #quiz.quiz{width:calc(100% - 10px);margin:auto 5px;padding:5px;background:rgba(16,27,45,.5)}
+>>>>>>> 8dd6f71c7aca87f7b1b139ad9d8ebba701224518
 /* Boss Raid: sprite Boss và chiêu của Boss gấp đôi (Boss đứng sau thẻ câu hỏi và sau nhân vật). Tâm Boss giữ nguyên vị trí cũ. */
 #screen-game.is-raid .enemy{left:1.6%;width:min(64vw,112vh);max-width:64vw}
 #screen-game.is-raid #skill-projectile.is-boss-skill{width:clamp(144px,24vw,288px)}
@@ -912,7 +916,10 @@ select.hinted,.chip.hinted,.slot.hinted{outline:3px solid #ffd23f;outline-offset
 @media (max-height:480px){.wheel-stage{width:min(200px,60vh)}.wheel-slot-in{left:-26px;width:52px;font-size:10px}.wheel-ico{font-size:15px}.wheel-hub{width:56px;height:56px;font-size:16px}}
 @media (max-width:800px) and (orientation:portrait){#screen-levels .map-actions{grid-template-columns:repeat(8,minmax(0,1fr))}}
 #screen-levels .map-action .map-action-emoji{width:min(100%,64px);max-width:64px;height:auto;margin:0 auto}
+<<<<<<< HEAD
 
 .wheel-hub{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1}
 .wheel-hub-cost{font:700 13px/1.1 "VT323",var(--pixel),sans-serif;color:var(--c-void)}
 @media (max-height:480px){.wheel-hub-cost{font-size:11px}}
+=======
+>>>>>>> 8dd6f71c7aca87f7b1b139ad9d8ebba701224518
