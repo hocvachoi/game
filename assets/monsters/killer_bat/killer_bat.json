@@ -5,7 +5,7 @@
   "Class":"Warrior",
   "stats": {
     "HP": 200,
-    "ATK": 100,
+    "ATK": 80,
     "DEF": 40,
     "CRIT": 25
   },
