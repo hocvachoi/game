@@ -1,0 +1,31 @@
+{
+  "name": "Dơi Sát thủ",
+  "attackStyle": "melee",
+  "Type": "normal",
+  "Class":"Warrior",
+  "stats": {
+    "HP": 200,
+    "ATK": 70,
+    "DEF": 50,
+    "CRIT": 25
+  },
+  "ANSWER_TIMEOUT_SEC": 15, 
+  "sprites": {
+    "idle": {
+     "src": "assets/monsters/killer_bat/killer_bat_idle.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [0, 1, 2, 3, 4, 5]
+    },
+    "attack": {
+      "src": "assets/monsters/killer_bat/killer_bat_animation.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [4, 5, 6, 7, 8, 9, 10, 11]
+    },
+    "skill": {
+    }
+  },
+  "castSkill": {
+  }
+}
