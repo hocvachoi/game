@@ -88,6 +88,7 @@ const Adventure = {
     this.quizCtl = Quiz.run(qs, box, {
       loop: this.isDungeon(),
       begin: (index, head) => this.startTimer(head),
+      tools: ctx => this.buildTools(ctx),
       result: (ok, sofar, total) => this.resolveAnswer(ok, sofar, total),
       finish: res => this.finish(res, box)
     });
@@ -97,7 +98,48 @@ const Adventure = {
     this.stopTimer();
     clearTimeout(Stage.respawnTimer); Stage.respawnTimer = null;
   },
-  abort() { this.active = false; this.teardown(); this.guard.reset(); this.monsterStats = null; this.madness = false; this.syncDungeonUi(); },
+  abort() {
+    this.active = false; this.teardown(); this.guard.reset(); this.monsterStats = null; this.madness = false; this.syncDungeonUi();
+    Player.flushSpend().catch(() => { /* còn nợ Crystal trong trình duyệt: sẽ đồng bộ ở lần lưu/đăng nhập sau */ });
+  },
+  // Thanh công cụ trên câu hỏi (chỉ Phiêu lưu/Hầm ngục): 💡 Gợi ý 1 đáp án và ❤ Hồi HP, mỗi loại 1 lần mỗi câu, COST Crystal mỗi lần; Phiêu lưu giới hạn PER_STAGE lần mỗi loại mỗi lượt.
+  buildTools(ctx) {
+    const fight = this.combat, kind = this.level && this.level.kind;
+    if (!this.active || !fight || fight.finished || (kind !== 'stage' && kind !== 'dungeon')) return null;
+    const T = CONFIG.GAME.TOOLS, dungeon = kind === 'dungeon', state = { hint: false, heal: false };
+    const bar = el('div', 'qtools'), bal = el('span', 'qtools-bal'), hintBtn = el('button', 'btn ghost qtool'), healBtn = el('button', 'btn ghost qtool');
+    hintBtn.type = healBtn.type = 'button';
+    const left = key => dungeon ? '∞' : Math.max(0, T.PER_STAGE - (fight[key] || 0));
+    const refresh = () => {
+      const gems = Player.data.crystals, done = ctx.isDone();
+      bal.textContent = `💎 ${gems}`;
+      hintBtn.textContent = `💡 Gợi ý · ${left('hints')} lượt`;
+      healBtn.textContent = `❤ Hồi ${T.HEAL_PCT}% HP · ${left('heals')} lượt`;
+      hintBtn.title = `Hiện 1 đáp án đúng — ${T.COST} Crystal (mỗi câu 1 lần)`;
+      healBtn.title = `Hồi ${T.HEAL_PCT}% HP tối đa — ${T.COST} Crystal (mỗi câu 1 lần)`;
+      hintBtn.disabled = done || state.hint || gems < T.COST || (!dungeon && (fight.hints || 0) >= T.PER_STAGE);
+      healBtn.disabled = done || state.heal || gems < T.COST || (!dungeon && (fight.heals || 0) >= T.PER_STAGE) || fight.playerHp >= fight.maxPlayerHp || fight.playerHp <= 0;
+    };
+    hintBtn.onclick = () => {
+      if (ctx.isDone() || state.hint || fight.finished) return;
+      if (!ctx.view.hint()) { this.note('Không còn đáp án nào để gợi ý.'); return; }
+      this.spendCrystal(fight, 'hints'); state.hint = true; refresh();
+    };
+    healBtn.onclick = () => {
+      if (ctx.isDone() || state.heal || fight.finished) return;
+      const healed = Effects.heal(fight, Math.max(1, fight.maxPlayerHp * T.HEAL_PCT / 100));
+      if (healed <= 0) return;   // HP đã đầy: không trừ Crystal
+      this.note(`Hồi ${healed} HP (${T.COST} Crystal).`);
+      this.spendCrystal(fight, 'heals'); state.heal = true; refresh();
+    };
+    bar.append(hintBtn, healBtn, bal); refresh();
+    return bar;
+  },
+  spendCrystal(fight, key) {
+    const cost = CONFIG.GAME.TOOLS.COST;
+    Player.addSpend(cost);   // lưu trình duyệt ngay; Firestore trừ khi kết thúc lượt (runSave) hoặc lần đăng nhập sau
+    fight.spent = (fight.spent || 0) + cost; fight[key] = (fight[key] || 0) + 1;
+  },
 
   // Chỉ số HIỆU DỤNG của quái (hầm ngục: đã qua cân bằng theo tầng + Điên loạn, xem prepareFloorMonster); các chế độ khác dùng chỉ số gốc trong JSON.
   monsterStat(name) {
@@ -135,7 +177,7 @@ const Adventure = {
     this.combat = {
       playerStats: stats, maxPlayerHp, playerHp: maxPlayerHp,
       monster: this.monster, maxMonsterHp, monsterHp: maxMonsterHp,
-      monsterKills: 0, damageDealt: 0, finished: false, drops: [], dropCounts: {}, madnessKills: 0
+      monsterKills: 0, damageDealt: 0, finished: false, drops: [], dropCounts: {}, madnessKills: 0, hints: 0, heals: 0, spent: 0
     };
     Stage.playerHp(1, maxPlayerHp, maxPlayerHp);
     Stage.hp(1, maxMonsterHp, maxMonsterHp);
@@ -385,7 +427,7 @@ const Adventure = {
       try {
         const wait = Player.cooldownLeftMs();
         if (wait > 0) { status.textContent = `Đang chờ ${Math.ceil(wait / 1000)}s để lưu kết quả…`; await new Promise(r => setTimeout(r, wait)); status.textContent = 'Đang lưu kết quả…'; }
-        const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct, drops: fight ? fight.drops : [], madnessKills: fight ? fight.madnessKills : 0 });
+        const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct, drops: fight ? fight.drops : [], madnessKills: fight ? fight.madnessKills : 0, spent: fight ? fight.spent : 0 });
         const dropNames = (r.drops || []).map(id => (Player.item(id) || {}).name).filter(Boolean);
         if (r.celebrate && typeof Celebrate !== 'undefined') setTimeout(() => Celebrate.level100(r), 500);   // cấp 100 (một lần)
         status.textContent = `+${r.gold} Gold · +${r.exp} EXP (${Math.round(r.factor * 100)}% thưởng)`

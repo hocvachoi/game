@@ -41,12 +41,51 @@ const Player = {
     if (it.dropOnly) return { gold: 0, gem: CONFIG.DROP_ONLY_SELL_CRYSTALS[String(it.quality || '').toLowerCase()] || 0 };
     return { gold: Math.ceil(it.price * CONFIG.SELL_RATIO), gem: Math.ceil(it.gemPrice * CONFIG.SELL_RATIO) };
   },
+  // ----- Crystal đã dùng cho Gợi ý/Hồi HP: lưu localStorage NGAY mỗi lần dùng, trừ trên Firestore khi kết thúc lượt hoặc đăng nhập lại (không ghi Firestore mỗi lần bấm) -----
+  spendKey() { return `rpg.spend.${this.uid}`; },
+  pendingSpend() { try { return Math.max(0, parseInt(localStorage.getItem(this.spendKey()) || '0', 10) || 0); } catch (e) { return 0; } },
+  setPending(n) { try { if (n > 0) localStorage.setItem(this.spendKey(), String(n)); else localStorage.removeItem(this.spendKey()); } catch (e) { /* bỏ qua */ } },
+  refreshCrystals() { if (this.data) this.data.crystals = Math.max(0, (this.data.rawCrystals || 0) - this.pendingSpend()); },   // Crystal hiển thị = Crystal trên Firestore − phần còn nợ trong trình duyệt
+  addSpend(n = 1) { this.setPending(this.pendingSpend() + n); this.refreshCrystals(); },
+  clearSpend(n) { this.setPending(Math.max(0, this.pendingSpend() - n)); this.refreshCrystals(); },
+  // Đồng bộ phần Crystal còn nợ (đăng nhập lại / rời ải không lưu): một lượt ghi, chỉ khi có nợ.
+  async flushSpend() {
+    const n = this.pendingSpend();
+    if (n <= 0) return;
+    await this.tx(cur => ({ fields: { Crystals: Math.max(0, (cur.Crystals || 0) - n) } }));
+    this.clearSpend(n);
+  },
+  // Vòng quay may mắn: nhận phần thưởng (Gold / Crystal / trang bị) trong MỘT lượt ghi. Trang bị đã đủ STACK_MAX bản → đổi thành tiền theo giá bán của hệ thống.
+  async wheelReward(slot, cost = 0) {
+    let text = '';
+    await this.tx(cur => {
+      if ((cur.Golds || 0) < cost) throw new Error(`Không đủ Gold để quay (cần ${cost.toLocaleString('vi-VN')} Gold).`);
+      const fields = { LastSpin: firebase.firestore.FieldValue.serverTimestamp() };
+      let gold = 0, gem = 0;
+      if (slot.type === 'gold') { gold = slot.amount; text = `${slot.amount.toLocaleString('vi-VN')} Gold`; }
+      else if (slot.type === 'crystal') { gem = slot.amount; text = `${slot.amount} Crystal`; }
+      else if (slot.type === 'item') {
+        const it = this.item(slot.id);
+        if (!it) throw new Error('Phần thưởng không hợp lệ.');
+        const inv = Array.isArray(cur.Enventory) ? cur.Enventory : [], have = this.parseInv(inv)[slot.id] || 0;
+        if (have >= CONFIG.STACK_MAX) {
+          const sp = this.sellPrice(it); gold = sp.gold; gem = sp.gem;
+          text = `${it.name} (đã đủ ${CONFIG.STACK_MAX} bản nên đổi thành ${[gold ? `${gold} Gold` : '', gem ? `${gem} Crystal` : ''].filter(Boolean).join(' + ') || '0'})`;
+        } else { fields.Enventory = have ? this.invSet(inv, slot.id, have + 1) : [...inv, `${slot.id} 1`]; text = it.name; }
+      } else throw new Error('Phần thưởng không hợp lệ.');
+      gold = Math.min(gold, CONFIG.WHEEL.MAX_GOLD); gem = Math.min(gem, CONFIG.WHEEL.MAX_CRYSTAL);
+      if (gold - cost !== 0) fields.Golds = (cur.Golds || 0) + gold - cost;   // trừ phí quay và cộng thưởng trong CÙNG một lượt ghi
+      if (gem) fields.Crystals = (cur.Crystals || 0) + gem;
+      return { fields };
+    });
+    return { text };
+  },
   apply(p) {
     if (p.LastReward && typeof p.LastReward.toMillis === 'function') this.lastRewardMs = p.LastReward.toMillis();
     const exp = p.EXP || 0;
     this.data = {
       ...p, nick: p.Nickname, cls: this.u.cls,
-      level: this.levelOf(exp), xp: exp, gold: p.Golds || 0, crystals: p.Crystals || 0,
+      level: this.levelOf(exp), xp: exp, gold: p.Golds || 0, rawCrystals: p.Crystals || 0, crystals: Math.max(0, (p.Crystals || 0) - this.pendingSpend()),
       equip: p.Equipment || {}, stock: this.parseInv(p.Enventory), inventory: Object.keys(this.parseInv(p.Enventory)), progress: p.progress || {},
       character: p.Character || null,
       // Mốc đổi NGHỀ gần nhất (ms). Vừa ghi bằng serverTimestamp (chưa có giá trị thật) thì lấy giờ máy làm xấp xỉ.
@@ -260,7 +299,8 @@ const Player = {
         ? { best: Math.max(old.best, o.floor), passed: false, tries: old.tries + 1 }       // dungeon: best = TẦNG cao nhất đã vượt (không giảm)
         : { best: Math.max(old.best, pct), passed: old.passed || o.passed, tries: old.tries + 1 };
       const fields = { Golds: (cur.Golds || 0) + gold, EXP: exp, LV: this.levelOf(exp), LastReward: firebase.firestore.FieldValue.serverTimestamp() };
-      if (crystals > 0) fields.Crystals = (cur.Crystals || 0) + crystals;
+      const spent = Math.max(0, Math.floor(Number(o.spent) || 0));   // Crystal đã dùng cho Gợi ý/Hồi HP trong lượt này
+      if (crystals - spent !== 0) fields.Crystals = Math.max(0, (cur.Crystals || 0) + crystals - spent);
       if (dungeon) {
         if (out.drops.length) {
           let list = owned; const st = { ...stock };
@@ -276,6 +316,7 @@ const Player = {
       return result;
     }, needRank ? this.rankRef() : null, { skipRankRead: true });
     Rank.afterRun(out.rank);
+    this.clearSpend(Math.max(0, Math.floor(Number(o.spent) || 0)));
     return out;
   },
 

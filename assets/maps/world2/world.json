@@ -15,7 +15,7 @@
   ],
   "dungeon_monsters": [ ["giant_slime","goblin","killer_bat","devil_bird","bog_Witch","centaur","bandits","undead_knight","statue","rebel_knight","ash_skeleton","mad_jester","dragon_emperor"], ["centaur","bandits","undead_knight","statue","rebel_knight","mad_jester","dragon_emperor"] ],
   "stage_rewards": [
-    { "EXP": 150, "GOLD": 50, "drops": [{ "itemId": "iron_sword", "chance": 0.05 }] },
+    { "EXP": 150, "GOLD": 50, "drops": [{ "itemId": "iron_sword", "chance": 0.3 },{ "itemId": "magic_staff", "chance": 0.3 },{ "itemId": "wooden_bow", "chance": 0.3 }] },
     { "EXP": 300, "GOLD": 100, "drops": [{ "itemId": "iron_armor", "chance": 0.05 }] },
     { "EXP": 500, "GOLD": 150, "drops": [{ "itemId": "magic_staff", "chance": 0.04 }] },
     { "EXP": 800, "GOLD": 200, "drops": [{ "itemId": "leather_armor", "chance": 0.04 }] },
@@ -29,7 +29,7 @@
     { "EXP": 5000, "GOLD": 1000, "drops": [{ "itemId": "royal_emblem", "chance": 0.08 },{ "itemId": "royal_helmet", "chance": 0.08 },{ "itemId": "royal_cloak", "chance": 0.08 }] }
   ],
   "dungeon_rewards": [
-    { "EXP": 50, "GOLD": 40, "drops": [{ "itemId": "love_sword", "chance": 0.03 }, { "itemId": "sun_bow", "chance": 0.03 }, { "itemId": "dark_staff", "chance": 0.03 }] },
+    { "EXP": 50, "GOLD": 40, "drops": [{ "itemId": "love_sword", "chance": 0.02 }, { "itemId": "sun_bow", "chance": 0.02 }, { "itemId": "dark_staff", "chance": 0.02 }] },
     { "EXP": 800, "GOLD": 150, "drops": [{ "itemId": "warlord_spear", "chance": 0.01 }, { "itemId": "chaos_gloves", "chance": 0.01}, { "itemId": "hell_kunai", "chance": 0.01 }] }
   ]
 }

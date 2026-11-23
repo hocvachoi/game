@@ -858,7 +858,7 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 /* [32] ===== V5.11 · THẺ CÂU HỎI GỌN, BOSS RAID ×2, CHÚC MỪNG CẤP 100 ===== */
 /* Thẻ câu hỏi (#quiz): margin và padding 5px, nền 35% đặc, vùng câu hỏi hẹp còn 57% bề rộng (chiều cao giữ nguyên) để thẻ che ít quái hơn */
 #screen-game .qwrap{width:57%;padding:0}
-#screen-game #quiz.quiz{width:calc(100% - 10px);margin:auto 5px;padding:5px;background:rgba(16,27,45,.05)}
+#screen-game #quiz.quiz{width:calc(100% - 10px);margin:auto 5px;padding:5px;background:rgba(16,27,45,.35)}
 /* Boss Raid: sprite Boss và chiêu của Boss gấp đôi (Boss đứng sau thẻ câu hỏi và sau nhân vật). Tâm Boss giữ nguyên vị trí cũ. */
 #screen-game.is-raid .enemy{left:1.6%;width:min(64vw,112vh);max-width:64vw}
 #screen-game.is-raid #skill-projectile.is-boss-skill{width:clamp(144px,24vw,288px)}
@@ -882,3 +882,37 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 .tip-set,.sheet-set{margin:2px 0 0;font-weight:700;color:var(--c-gold-lt)}
 .tip-set-line,.sheet-set-line{margin:0;padding-left:8px;font-size:.92em;color:#cfe0f5}
 .sheet-set,.sheet-set-line{font-size:17px;line-height:1.2}
+
+
+/* [34] ===== Gợi ý / Hồi HP bằng Crystal, Vòng quay may mắn, ô Troll ===== */
+.qtools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 4px}
+.qtools .btn{min-height:30px;padding:2px 10px;font-size:16px;border-width:3px}
+.qtools .btn:disabled{opacity:.5}
+.qtools-bal{margin-left:auto;font-size:18px;color:var(--c-gold-lt)}
+.opt.hint{box-shadow:0 0 0 3px #ffd23f,0 0 14px 4px rgba(255,210,63,.7);animation:hint-pulse 1s ease-in-out 3}
+select.hinted,.chip.hinted,.slot.hinted{outline:3px solid #ffd23f;outline-offset:-1px}
+@keyframes hint-pulse{50%{box-shadow:0 0 0 4px #fff2a8,0 0 22px 8px rgba(255,210,63,.9)}}
+.map-action-emoji{display:grid;place-items:center;width:100%;max-width:64px;aspect-ratio:1;font-size:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--c-steel),var(--c-ink));border:4px solid var(--c-gold);box-shadow:inset 0 0 0 2px var(--c-bronze)}
+.map-troll{position:absolute;left:6px;top:6px;z-index:7;padding:2px 8px;font:700 clamp(13px,1.3vw,17px)/1.2 "VT323",var(--pixel),sans-serif;color:var(--c-void);background:linear-gradient(var(--c-gold-lt),var(--c-gold));border:3px solid var(--c-bronze);border-radius:999px;box-shadow:0 2px 0 var(--c-void);cursor:pointer;opacity:.92}
+.map-troll:hover{transform:rotate(-4deg) scale(1.06)}
+.troll-card{text-align:center}
+.troll-title{font:700 clamp(30px,6vw,46px)/1.1 "VT323",var(--pixel),sans-serif;color:#ff6b5f;text-shadow:3px 3px 0 var(--c-void)}
+.wheel-card{align-items:center;text-align:center}
+.wheel-stage{position:relative;width:min(300px,72vw);aspect-ratio:1;margin:6px auto}
+.wheel{position:absolute;inset:0;border-radius:50%;border:6px solid var(--c-gold);box-shadow:inset 0 0 0 3px var(--c-bronze),0 0 0 3px var(--c-void);transition:transform 4.2s cubic-bezier(.12,.72,.15,1);overflow:hidden}
+.wheel-slot{position:absolute;left:50%;top:0;width:0;height:50%;transform-origin:50% 100%}
+.wheel-slot-in{position:absolute;left:-34px;top:8px;width:68px;display:flex;flex-direction:column;align-items:center;gap:0;font-size:12px;line-height:1.05;color:var(--c-gold-lt)}
+.wheel-ico{font-size:20px}
+.wheel-txt{word-break:break-word}
+.wheel-pointer{position:absolute;left:50%;top:-10px;z-index:3;transform:translateX(-50%);border-left:12px solid transparent;border-right:12px solid transparent;border-top:22px solid #ff4b3a;filter:drop-shadow(0 2px 0 var(--c-void))}
+.wheel-hub{position:absolute;left:50%;top:50%;z-index:2;width:84px;height:84px;transform:translate(-50%,-50%);border-radius:50%;font:700 22px "VT323",var(--pixel),sans-serif;color:var(--c-void);background:radial-gradient(circle at 35% 30%,var(--c-gold-lt),var(--c-gold));border:4px solid var(--c-bronze);box-shadow:0 3px 0 var(--c-void);cursor:pointer}
+.wheel-hub:disabled{opacity:.6;cursor:default}
+.wheel-actions{grid-template-columns:1fr;width:100%}
+@media (prefers-reduced-motion:reduce){.wheel{transition-duration:.4s}}
+@media (max-height:480px){.wheel-stage{width:min(200px,60vh)}.wheel-slot-in{left:-26px;width:52px;font-size:10px}.wheel-ico{font-size:15px}.wheel-hub{width:56px;height:56px;font-size:16px}}
+@media (max-width:800px) and (orientation:portrait){#screen-levels .map-actions{grid-template-columns:repeat(8,minmax(0,1fr))}}
+#screen-levels .map-action .map-action-emoji{width:min(100%,64px);max-width:64px;height:auto;margin:0 auto}
+
+.wheel-hub{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1}
+.wheel-hub-cost{font:700 13px/1.1 "VT323",var(--pixel),sans-serif;color:var(--c-void)}
+@media (max-height:480px){.wheel-hub-cost{font-size:11px}}

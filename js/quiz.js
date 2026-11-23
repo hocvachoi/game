@@ -28,7 +28,7 @@ const Quiz = {
 
   render(q) {
     const node = el('div', 'q'), txt = el('div', 'qtext');
-    let check, mark, solution;
+    let check, mark, solution, hint = () => false;   // hint(): hiện MỘT đáp án đúng (trả true nếu hiện được) — dùng cho nút Gợi ý bằng Crystal
     if (q.type === 'Danh sách') {
       const parts = q.text.split('{D}');
       txt.innerHTML = parts.map((p, k) => p + (k < parts.length - 1 ? '<select></select>' : '')).join('');
@@ -41,6 +41,13 @@ const Quiz = {
       check = () => ({ ready: sels.every(s => s.value), correct: sels.every((s, k) => +s.value === q.ans[k]) });
       mark = () => sels.forEach((s, k) => s.classList.add(+s.value === q.ans[k] ? 'good' : 'bad'));
       solution = () => sels.map((s, k) => q.opts[q.ans[k] - 1] || '?').join(' · ');
+      hint = () => {   // điền sẵn đúng 1 ô chưa đúng rồi khóa ô đó
+        const open = sels.map((s, k) => ({ s, k })).filter(x => !x.s.disabled && +x.s.value !== q.ans[x.k]);
+        if (!open.length) return false;
+        const { s, k } = open[Math.floor(Math.random() * open.length)];
+        s.value = String(q.ans[k]); s.disabled = true; s.classList.add('hinted');
+        return true;
+      };
       node.append(txt);
     } else if (q.type === 'Kéo thả') {
       txt.innerHTML = q.text; node.append(txt);
@@ -56,7 +63,7 @@ const Quiz = {
         const next = [...pool.children].find(b => +b.dataset.p > +chip.dataset.p);
         pool.insertBefore(chip, next || null);
       };
-      const put = (slot, chip) => { const old = slot.firstElementChild; if (old) returnToPool(old); slot.append(chip); if (sel) sel.classList.remove('sel'); sel = null; };
+      const put = (slot, chip) => { if (slot.classList.contains('hinted')) return; const old = slot.firstElementChild; if (old) returnToPool(old); slot.append(chip); if (sel) sel.classList.remove('sel'); sel = null; };
       chips.forEach(b => {
         b.onclick = () => {
           if (b.parentElement !== pool) { returnToPool(b); return; }
@@ -74,6 +81,15 @@ const Quiz = {
       check = () => ({ ready: slots.every(s => s.firstElementChild), correct: slots.every(s => s.firstElementChild && s.firstElementChild.dataset.i === s.dataset.i) });
       mark = () => slots.forEach(s => s.classList.add(s.firstElementChild && s.firstElementChild.dataset.i === s.dataset.i ? 'good' : 'bad'));
       solution = () => pairs.map(p => p.l + ' → ' + p.r).join(' | ');
+      hint = () => {   // đặt đúng 1 đáp án vào ô của nó rồi khóa (đáp án có thể đang nằm ở ô khác → ô đó thành trống)
+        const open = slots.filter(s => !s.classList.contains('hinted') && !(s.firstElementChild && s.firstElementChild.dataset.i === s.dataset.i));
+        if (!open.length) return false;
+        const slot = open[Math.floor(Math.random() * open.length)], chip = chips.find(c => c.dataset.i === slot.dataset.i);
+        if (sel) { sel.classList.remove('sel'); sel = null; }
+        const old = slot.firstElementChild; if (old && old !== chip) returnToPool(old);
+        slot.append(chip); chip.disabled = true; chip.draggable = false; chip.classList.add('hinted'); slot.classList.add('hinted');
+        return true;
+      };
     } else { // Lựa chọn (và mọi loại khác)
       txt.innerHTML = q.text; node.append(txt);
       const multi = q.ans.length > 1, list = el('div');
@@ -87,10 +103,16 @@ const Quiz = {
       check = () => ({ ready: chosen().length > 0, correct: chosen().join() === q.ans.slice().sort((a, b) => a - b).join() });
       mark = () => labels.forEach(l => { const n = +l.firstChild.value, on = l.firstChild.checked, right = q.ans.includes(n); if (right) l.classList.add('good'); else if (on) l.classList.add('bad'); });
       solution = () => q.ans.map(n => q.opts[n - 1]).join(' · ');
+      hint = () => {   // làm nổi bật 1 đáp án đúng (không tự chọn hộ); câu 1 đáp án thì lộ luôn đáp án
+        const open = labels.filter(l => q.ans.includes(+l.firstChild.value) && !l.classList.contains('hint'));
+        if (!open.length) return false;
+        open[Math.floor(Math.random() * open.length)].classList.add('hint');
+        return true;
+      };
       node.append(list);
     }
     if (q.img) { const im = el('img'); im.src = q.img; im.alt = ''; im.loading = 'lazy'; node.prepend(im); }
-    return { node, check, mark, solution, lock: () => node.classList.add('locked') };
+    return { node, check, mark, solution, hint, lock: () => node.classList.add('locked') };
   },
 
   // Chạy một lượt làm bài. cb.result(correct, soFar, total, answered) trả về true (người chơi gục), ms hoặc Promise để khóa nút.
@@ -110,7 +132,9 @@ const Quiz = {
       const head = el('div', 'qhead', cb.loop ? `Câu ${answered + 1}` : `Câu ${i + 1}/${qs.length}`);
       btn.type = 'button'; let done = false;
       fb.setAttribute('role', 'status');
-      box.replaceChildren(head, v.node, fb, btn);
+      // cb.tools({ view, question, isDone }) → phần tử thanh công cụ (Gợi ý / Hồi HP) hiện trên câu hỏi; bị khóa khi đã trả lời
+      const tools = cb.tools ? cb.tools({ view: v, question: q, isDone: () => done }) : null;
+      box.replaceChildren(head, ...(tools ? [tools] : []), v.node, fb, btn);
       if (cb.begin) cb.begin(i, head);
       btn.onclick = () => {
         if (ended) return;
@@ -118,6 +142,7 @@ const Quiz = {
         const r = v.check();
         if (!r.ready) { fb.className = 'fb warn'; fb.textContent = 'Hãy trả lời hết các ô trước nhé.'; return; }
         done = true; answered++; v.lock(); v.mark(); if (r.correct) ok++;
+        if (tools) tools.querySelectorAll('button').forEach(b => { b.disabled = true; });
         fb.className = 'fb ' + (r.correct ? 'good' : 'bad');
         fb.replaceChildren(el('b', '', r.correct ? 'Chính xác!' : 'Chưa đúng.'));
         if (!r.correct) fb.append(el('div', '', 'Đáp án: ' + v.solution()));

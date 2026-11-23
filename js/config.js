@@ -115,7 +115,7 @@ CONFIG.GAME = {
   DUNGEON: {
     ORDER: ['normal', 'uncommon', 'rare', 'epic', 'legendary'],
     TIERS: {
-      1: [{ to: 20, type: 'normal' }, { to: 40, type: 'uncommon' }, { to: 60, type: 'rare' }, {to: 80, type:'epic'}, {to: Infinity, type:'legendary'}],
+      1: [{ to: 20, type: 'normal' }, { to: 50, type: 'uncommon' }, { to: Infinity, type: 'rare' }],
       2: [{ to: 20, type: 'rare' }, { to: 50, type: 'epic' }, { to: Infinity, type: 'legendary' }]
     },
     REENTRY_BACK: 5,
@@ -132,6 +132,9 @@ CONFIG.GAME = {
     MAX_FLOOR: 100000,   // [RULES] trần tầng ghi trong bảng xếp hạng (Dung1Floor / Dung2Floor)
     MAX_FLOORS_PER_RUN: 300   // [RULES] một lượt chơi tăng kỷ lục tối đa bấy nhiêu tầng
   },
+  // Công cụ trong lượt (Phiêu lưu: tối đa PER_STAGE lần MỖI loại mỗi lượt; Hầm ngục: không giới hạn): Gợi ý 1 đáp án / Hồi HEAL_PCT% HP, mỗi lần COST Crystal, mỗi câu hỏi 1 lần mỗi loại.
+  // Crystal đã dùng lưu localStorage ngay (Player.addSpend) và trừ trên Firestore khi kết thúc lượt (runSave) hoặc khi đăng nhập lại (Player.flushSpend).
+  TOOLS: { PER_STAGE: 3, COST: 1, HEAL_PCT: 10 },
   KILL_GAP_MS: 1000,   // quái bị hạ mất bấy lâu mới hồi sinh/quái mới xuất hiện (Phiêu lưu/Hầm ngục); câu hỏi kế tiếp hiện NGAY, không chờ
   MAX_LEVEL_BONUS_CRYSTALS: 50,   // thưởng một lần khi lên cấp tối đa (MAX_LEVEL); [RULES] trần Crystal mỗi lượt khi lên cấp 100 là 80
   KILL_BONUS: { stage: 0.10 },   // stage: cộng dồn thẳng 10% mỗi quái bị hạ
@@ -157,7 +160,7 @@ CONFIG.RANKED = {
   WIN_BASE: 10,            // [RULES] thắng được WIN_BASE + max(0, điểm B − điểm A)
   MAX_DIFF: 100,           // [RULES] trần phần chênh lệch được cộng (chặn báo thắng gian lận với đối thủ cực mạnh)
   RANK_RANGE: 10,          // chọn B ngẫu nhiên trong ±RANK_RANGE hạng quanh A (cả trên lẫn dưới)
-  MIN_BATTLE_SEC: 20,      // [RULES] báo thắng phải cách lúc bắt đầu ≥ ngần này giây
+  MIN_BATTLE_SEC: 30,      // [RULES] báo thắng phải cách lúc bắt đầu ≥ ngần này giây
   CACHE_SEC: 300,          // dùng lại tài liệu lớp đã đọc trong 5 phút khi mở bảng (chỉ ở trình duyệt)
   TOP: 10                  // chỉ top 10 được hiển thị/xếp hạng/thưởng
 };
@@ -227,8 +230,7 @@ CONFIG.QUALITIES = {
   uncommon: { name: 'Tốt', color: '#6fd36f' },
   rare: { name: 'Hiếm', color: '#5aa9ff' },
   epic: { name: 'Sử thi', color: '#c070ff' },
-  legendary: { name: 'Huyền thoại', color: '#ffb02e' },
-  divine: {name:'Thần thánh', color:'#fc0e0e'}
+  legendary: { name: 'Huyền thoại', color: '#ffb02e' }
 };
 CONFIG.quality = function (key) {
   return this.QUALITIES[String(key || 'normal').toLowerCase()] || { name: String(key), color: '#b8c5a6' };
@@ -242,6 +244,9 @@ CONFIG.normalizeClass = function (name) {
 // Hiệu ứng trang bị (Giai đoạn 3): khóa = type viết thường bỏ ký tự lạ; text(x) = mô tả hiển thị. Cơ chế ở js/effects.js.
 // Kho đồ gộp: tối đa STACK_MAX món cùng loại (lưu "warlord_sword 5"); bán cho NPC = SELL_RATIO × giá mua (làm tròn LÊN, cả Gold và Crystal).
 CONFIG.STACK_MAX = 10;
+// Vòng quay may mắn (js/wheel.js, assets/wheel/wheel.json): SPINS_PER_DAY lượt/ngày lưu trong trình duyệt (ngày giờ VN); MAX_* khớp trần của firestore.rules (validWheel).
+// Phí quay: lượt đầu trong ngày COST_BASE Gold, mỗi lượt sau +COST_STEP (đổi trong wheel.json → "cost"); MAX_COST là trần phí [RULES: Gold giảm tối đa 2000 mỗi lượt quay].
+CONFIG.WHEEL = { SPINS_PER_DAY: 5, MAX_GOLD: 5000, MAX_CRYSTAL: 10, MIN_GAP_SEC: 3, COST_BASE: 500, COST_STEP: 100, MAX_COST: 2000 };
 // Giá BÁN cho NPC của vật phẩm CHỈ RƠI (không ghi giá, không mua được trong Cửa hàng): theo phẩm chất, tính bằng Crystal (không có Gold).
 CONFIG.DROP_ONLY_SELL_CRYSTALS = { epic: 1, legendary: 2, divine: 5 };
 // Giới hạn thời gian chơi mỗi ngày (giờ Việt Nam), đếm ở trình duyệt (js/playtime.js).

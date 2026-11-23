@@ -130,7 +130,7 @@ service cloud.firestore {
         return changed().hasAll(['progress', 'LastReward'])
           && changed().hasOnly(['Golds', 'Crystals', 'EXP', 'LV', 'progress', 'LastReward', 'Enventory'])
           && n.Golds is int && n.Golds >= o.Golds && n.Golds - o.Golds <= 20000
-          && (!('Crystals' in changed()) || (n.Crystals is int && n.Crystals >= o.Crystals && n.Crystals - o.Crystals <= ((n.LV == 100 && o.LV < 100) ? 80 : 30)))   // [RULES] 30 = GAME.DUNGEON.MAX_CRYSTALS_PER_RUN; lượt đạt cấp 100: +50 (GAME.MAX_LEVEL_BONUS_CRYSTALS)
+          && (!('Crystals' in changed()) || (n.Crystals is int && n.Crystals >= 0 && n.Crystals - o.Crystals <= ((n.LV == 100 && o.LV < 100) ? 80 : 30)))   // [RULES] 30 = GAME.DUNGEON.MAX_CRYSTALS_PER_RUN; lượt đạt cấp 100: +50 (GAME.MAX_LEVEL_BONUS_CRYSTALS)
           && n.EXP is int && n.EXP >= o.EXP && n.EXP - o.EXP <= 60000 && n.EXP <= 252450
           && n.LV is int && n.LV >= 1 && n.LV <= 100
           && n.EXP >= 25 * (n.LV - 1) * (n.LV + 2)
@@ -239,6 +239,27 @@ service cloud.firestore {
           && (sellKeep(n, o) || sellLast(n, o));
       }
 
+      // Trừ Crystal đã dùng cho Gợi ý/Hồi HP (đăng nhập lại / rời ải không lưu): chỉ GIẢM Crystal, không đụng trường khác.
+      function validSpend() {
+        let n = request.resource.data;
+        let o = resource.data;
+        return changed().hasOnly(['Crystals'])
+          && n.Crystals is int && n.Crystals >= 0 && n.Crystals < o.Crystals;
+      }
+      // Vòng quay may mắn (có phí Gold, trừ cùng lượt ghi): Gold tăng ≤ 5000 hoặc giảm ≤ 2000, Crystal ≤ 10, tối đa 1 trang bị (loại mới hoặc +1 bản) mỗi lượt; hai lượt quay cách nhau ≥ 3 giây (LastSpin = request.time).
+      // [RULES] khớp CONFIG.WHEEL. Luật không biết ô nào trúng (chỉ giới hạn trần) → không tốn thêm đọc/ghi để kiểm tra.
+      function validWheel() {
+        let n = request.resource.data;
+        let o = resource.data;
+        return changed().hasAll(['LastSpin'])
+          && changed().hasOnly(['Golds', 'Crystals', 'Enventory', 'LastSpin'])
+          && n.LastSpin == request.time
+          && (!('LastSpin' in o) || request.time >= o.LastSpin + duration.value(3, 's'))
+          && n.get('Golds', 0) >= 0 && n.get('Golds', 0) - o.get('Golds', 0) <= 5000 && o.get('Golds', 0) - n.get('Golds', 0) <= 2000   // Gold: +thưởng − phí quay (phí tối đa 2000)
+          && n.get('Crystals', 0) >= o.get('Crystals', 0) && n.get('Crystals', 0) - o.get('Crystals', 0) <= 10
+          && (!('Enventory' in changed()) || (n.Enventory is list && (addNew(n, o) || addMore(n, o))));
+      }
+
       allow get: if isStudentIdentity()
         && resource.data.UID == request.auth.uid
         && !('Password' in resource.data);
@@ -294,7 +315,7 @@ service cloud.firestore {
       allow update: if isStudentIdentity()
         && resource.data.UID == request.auth.uid
         && !('Password' in resource.data)
-        && (validRun() || validEquip() || validBuy() || validSell() || validCharacter() || validRoom() || validClaim());
+        && (validRun() || validEquip() || validBuy() || validSell() || validSpend() || validWheel() || validCharacter() || validRoom() || validClaim());
 
       allow delete: if false;
     }

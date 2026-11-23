@@ -1,0 +1,174 @@
+{
+  "spinsPerDay": 5,
+  "cost": {
+    "base": 500,
+    "step": 100
+  },
+  "boards": [
+    {
+      "name": "Vòng quay chiến thần",
+      "slots": [
+        {
+          "type": "gold",
+          "amount": 300,
+          "weight": 30
+        },
+        {
+          "type": "gold",
+          "amount": 700,
+          "weight": 20
+        },
+        {
+          "type": "gold",
+          "amount": 1000,
+          "weight": 10
+        },
+        {
+          "type": "crystal",
+          "amount": 1,
+          "weight": 10
+        },
+        {
+          "type": "crystal",
+          "amount": 3,
+          "weight": 7
+        },
+        {
+          "type": "crystal",
+          "amount": 5,
+          "weight": 3
+        },
+        {
+          "type": "item",
+          "id": "royal_helmet",
+          "weight": 7
+        },
+        {
+          "type": "item",
+          "id": "royal_armor",
+          "weight": 7
+        },
+        {
+          "type": "item",
+          "id": "royal_emblem",
+          "weight": 5
+        },
+        {
+          "type": "item",
+          "id": "warlord_axe",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "name": "Vòng quay hỗn mang",
+      "slots": [
+        {
+          "type": "gold",
+          "amount": 300,
+          "weight": 30
+        },
+        {
+          "type": "gold",
+          "amount": 700,
+          "weight": 20
+        },
+        {
+          "type": "gold",
+          "amount": 1000,
+          "weight": 10
+        },
+        {
+          "type": "crystal",
+          "amount": 1,
+          "weight": 10
+        },
+        {
+          "type": "crystal",
+          "amount": 3,
+          "weight": 7
+        },
+        {
+          "type": "crystal",
+          "amount": 5,
+          "weight": 3
+        },
+        {
+          "type": "item",
+          "id": "royal_hood",
+          "weight": 7
+        },
+        {
+          "type": "item",
+          "id": "royal_cloak",
+          "weight": 7
+        },
+        {
+          "type": "item",
+          "id": "royal_emblem",
+          "weight": 5
+        },
+        {
+          "type": "item",
+          "id": "chaos_book",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "name": "Vòng quay luyện ngục",
+      "slots": [
+               {
+          "type": "gold",
+          "amount": 300,
+          "weight": 30
+        },
+        {
+          "type": "gold",
+          "amount": 700,
+          "weight": 20
+        },
+        {
+          "type": "gold",
+          "amount": 1000,
+          "weight": 10
+        },
+        {
+          "type": "crystal",
+          "amount": 1,
+          "weight": 10
+        },
+        {
+          "type": "crystal",
+          "amount": 3,
+          "weight": 7
+        },
+        {
+          "type": "crystal",
+          "amount": 5,
+          "weight": 3
+        },
+        {
+          "type": "item",
+          "id": "royal_helmet",
+          "weight": 7
+        },
+        {
+          "type": "item",
+          "id": "royal_armor",
+          "weight": 7
+        },
+        {
+          "type": "item",
+          "id": "royal_emblem",
+          "weight": 5
+        },
+        {
+          "type": "item",
+          "id": "hell_kunai",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

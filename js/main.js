@@ -116,6 +116,7 @@ function enter(session) {
 async function enterNow(session) {
   await Promise.all([CONFIG.loadItems(), CONFIG.loadCharacters(), CONFIG.loadWorlds()]);
   Player.load(session.profile, session.identity);
+  Player.flushSpend().catch(() => { /* chưa đồng bộ được Crystal đã dùng: thử lại ở lần lưu sau */ });
   await StageMonster.load();
   if (!Player.data.room && !(await askRoom())) return;
   renderLevels();
@@ -267,6 +268,8 @@ $('#open-equip').onclick = () => { Ui.msg('equip-msg', ''); Inventory.open(); };
 $('#open-rank').onclick = () => Rank.open();
 $('#open-raid').onclick = () => Raid.open();
 $('#open-settings').onclick = () => Settings.open();
+$('#open-wheel').onclick = () => Wheel.open();
+$('#map-troll').onclick = () => Troll.show();
 $('#open-ranked').onclick = () => Ranked.open();
 $('#shop-go-equip').onclick = () => { Ui.msg('equip-msg', ''); Inventory.open(); };
 $('#equip-go-shop').onclick = () => { Shop.msg(''); Shop.open(); };

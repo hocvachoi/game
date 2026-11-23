@@ -13,7 +13,7 @@
 //  Đăng ký lần đầu (+10 điểm)    1 (trong transaction)  1      + 1 lượt đọc hồ sơ do Rules kiểm tra lớp
 //  Bắt đầu 1 trận                1 (transaction)        1      ghi: số trận hôm nay, bản chụp mới của mình, B; + 1 lượt đọc do Rules (lớp)
 //  Báo THẮNG                     1 (transaction)        1      ghi điểm; THUA không ghi gì. Trong lúc đánh: 0 lượt đọc/ghi
-// Trung bình ~3 đọc + 1,6 ghi mỗi trận (60% thắng). Chống gian lận cơ bản: rules ép giới hạn 5 trận/ngày, công thức điểm, B tồn tại, báo thắng ≥ 30s sau
+// Trung bình ~3 đọc + 1,6 ghi mỗi trận (60% thắng). Chống gian lận cơ bản: rules ép giới hạn 5 trận/ngày, công thức điểm, B tồn tại, báo thắng ≥ 10s sau
 // khi bắt đầu và mỗi thắng phải có một trận đã bắt đầu. KHÔNG kiểm tra được thắng thật hay không (trình duyệt tự báo) → trần điểm MAX_DIFF mỗi trận.
 const Ranked = {
   doc: null, at: 0, busy: false, opp: null, startedAt: 0, world: null, questions: null,

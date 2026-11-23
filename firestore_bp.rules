@@ -543,7 +543,7 @@ service cloud.firestore {
           && n.LS == request.time
           && n.B is string && n.B != me() && (n.B in resource.data);
       }
-      // [RULES] điểm thắng = 10 (WIN_BASE) + min(100 (MAX_DIFF), max(0, Pt của B − Pt của mình)); báo thắng cách lúc bắt đầu ≥ 30 giây (MIN_BATTLE_SEC).
+      // [RULES] điểm thắng = 10 (WIN_BASE) + min(100 (MAX_DIFF), max(0, Pt của B − Pt của mình)); báo thắng cách lúc bắt đầu ≥ 10 giây (MIN_BATTLE_SEC).
       function winOk() {
         let o = resource.data[me()];
         let n = request.resource.data[me()];
@@ -554,7 +554,7 @@ service cloud.firestore {
           && o.D == vnDay()
           && n.Pt == o.Pt + gain
           && n.Win == o.Win + 1 && n.Win <= o.Cnt
-          && request.time >= o.LS + duration.value(30, 's');
+          && request.time >= o.LS + duration.value(10, 's');
       }
 
       allow get: if isAdmin() || isStudentOfGrade();
