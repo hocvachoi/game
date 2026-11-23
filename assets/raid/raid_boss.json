@@ -13,19 +13,19 @@
   "ANSWER_TIMEOUT_SEC": 15,
   "sprites": {
     "idle": {
-     "src": "assets/raid/raid_boss/raid_boss_idle.png",
+     "src": "assets/raid/raid_boss_idle.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [0, 1, 2, 3, 4, 5]
     },
     "attack": {
-      "src": "assets/raid/raid_boss/raid_boss_animation.png",
+      "src": "assets/raid/raid_boss_animation.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [3 ,4 , 5, 6, 7, 8, 9, 10, 11]
     },
     "skill": {
-      "src": "assets/raid/raid_boss/raid_boss_skill.png"
+      "src": "assets/raid/raid_boss_skill.png"
     }
   },
   "castSkill": {
