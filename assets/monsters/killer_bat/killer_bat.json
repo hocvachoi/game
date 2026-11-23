@@ -5,11 +5,11 @@
   "Class":"Warrior",
   "stats": {
     "HP": 200,
-    "ATK": 80,
-    "DEF": 40,
+    "ATK": 70,
+    "DEF": 50,
     "CRIT": 25
   },
-  "ANSWER_TIMEOUT_SEC": 10, 
+  "ANSWER_TIMEOUT_SEC": 15, 
   "sprites": {
     "idle": {
      "src": "assets/monsters/killer_bat/killer_bat_idle.png",
