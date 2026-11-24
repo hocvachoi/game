@@ -189,7 +189,7 @@ const Stage = {
     document.getElementById('mob').classList.toggle('ranked-opponent', monster.type === 'Ranked');
     if (!this.mob || this.mob.monster.key !== monster.key) this.createMob(monster);
     this.setMadness(Boolean(opts.madness));
-    document.getElementById('screen-game').classList.toggle('is-raid', Boolean(opts.raid));   // Boss Raid: sprite và chiêu của Boss ×2 (CSS)
+    document.getElementById('screen-game').classList.toggle('is-raid', Boolean(opts.raid));   // Boss Raid: sprite và chiêu của Boss ×1.5 (CSS)
     this.observe();
     this.drawHero(); this.drawMob(); this.sync();
   },

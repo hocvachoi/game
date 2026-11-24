@@ -78,11 +78,17 @@ CONFIG.loadWorlds = function () {
       world.stages = world.stages.slice(0, stageTotal);   // bỏ các ải không có nút trên bản đồ
       world.stageNodes = data.stage_nodes;
       world.dungeonNodes = data.dungeon_nodes;
+      // Tên ải/hầm ngục tùy chỉnh (tùy chọn): world.json "stage_names" / "dungeon_names" — mảng chuỗi theo thứ tự ải; để trống "" hoặc bỏ qua thì dùng "Ải N".
+      const customName = (list, index) => (Array.isArray(list) && typeof list[index] === 'string' ? list[index].trim().slice(0, 40) : '');
       world.stages.forEach((stage, index) => {
         Object.assign(stage, data.stage_nodes[index], { reward: data.stage_rewards[index] });
+        stage.title = customName(data.stage_names, index);
+        if (stage.title) stage.name = stage.title;
       });
       world.dungeons.forEach((dungeon, index) => {
         // monsters: mảng key quái vật có thể xuất hiện trong dungeon (assets/monsters/<key>/<key>.json)
+        dungeon.title = customName(data.dungeon_names, index);
+        if (dungeon.title) dungeon.name = dungeon.title;
         Object.assign(dungeon, data.dungeon_nodes[index], {
           reward: data.dungeon_rewards[index],
           monsters: data.dungeon_monsters ? data.dungeon_monsters[index] : []
@@ -135,6 +141,7 @@ CONFIG.GAME = {
   // Công cụ trong lượt (Phiêu lưu: tối đa PER_STAGE lần MỖI loại mỗi lượt; Hầm ngục: không giới hạn): Gợi ý 1 đáp án / Hồi HEAL_PCT% HP, mỗi lần COST Crystal, mỗi câu hỏi 1 lần mỗi loại.
   // Crystal đã dùng lưu localStorage ngay (Player.addSpend) và trừ trên Firestore khi kết thúc lượt (runSave) hoặc khi đăng nhập lại (Player.flushSpend).
   TOOLS: { PER_STAGE: 3, COST: 1, HEAL_PCT: 10 },
+  WRONG_WAIT_MS: 5000,   // trả lời SAI: chờ bấy lâu (đáp án đúng được tô nổi bật) mới được sang câu mới; mọi chế độ
   KILL_GAP_MS: 1000,   // quái bị hạ mất bấy lâu mới hồi sinh/quái mới xuất hiện (Phiêu lưu/Hầm ngục); câu hỏi kế tiếp hiện NGAY, không chờ
   MAX_LEVEL_BONUS_CRYSTALS: 50,   // thưởng một lần khi lên cấp tối đa (MAX_LEVEL); [RULES] trần Crystal mỗi lượt khi lên cấp 100 là 80
   KILL_BONUS: { stage: 0.10 },   // stage: cộng dồn thẳng 10% mỗi quái bị hạ
@@ -172,9 +179,10 @@ CONFIG.RANKED = {
 CONFIG.RAID = {
   // LỊCH MỞ RAID — SỬA TẠI ĐÂY (và hàm scheduledGrades() trong firestore.rules). Khóa = thứ trong tuần theo cách gọi Việt Nam:
   // 2 = Thứ Hai … 7 = Thứ Bảy, 8 = Chủ Nhật. Giá trị = danh sách khối được đánh Boss hôm đó. Ngày không có khóa = không mở Raid.
+  // (Lịch này chỉ là MẶC ĐỊNH dùng khi chưa có tài liệu config/raidSchedule; admin đặt lịch tuần + ngày riêng qua trang admin, xem thẻ "Lịch Boss Raid".)
   SCHEDULE: { 2: ['7'], 3: ['7'], 4: ['6', '8'], 5: ['7'], 6: ['6', '8'], 7: ['7'], 8: ['9'] },
   OPEN_MIN: 19 * 60, CLOSE_MIN: 21 * 60,   // [RULES] cửa kích hoạt Boss 1: 19:00–21:00 VN = 12:00–14:00 UTC (phút 720–840)
-  START_PLAYERS: 5,                        // [RULES] đủ ngần này người bấm vào thì Boss 1 xuất hiện
+  START_PLAYERS: 1,                        // [RULES startPlayers()] đủ ngần này người bấm vào thì Boss 1 xuất hiện. TẠM THỜI = 1 (người đầu tiên vào là Boss bắt đầu ngay, không còn phòng chờ). Muốn khôi phục: đặt 5 ở đây VÀ trong startPlayers() của firestore.rules
   MAX_PLAYERS: 70,                         // [RULES] tối đa người chơi mỗi Boss
   BOSS_MIN: 15,                            // [RULES] thời gian tối đa mỗi Boss (phút); quá giờ mà chưa hạ = thất bại
   BOSS2_DELAY_MIN: 5,                      // [RULES] Boss 2 xuất hiện sau khi Boss 1 kết thúc bấy nhiêu phút
@@ -195,7 +203,7 @@ CONFIG.RAID = {
   ULT_DAMAGE: 500,
   REVIVE_SEC: 10,                          // hồi sinh sau khi bị hạ gục (Plan 5.2)
   TOP: 10,                                 // chỉ top 10 sát thương được xếp hạng/thưởng
-  BOSS_HP: { '6': 100000, '7': 100000, '8': 100000, '9': 100000 },   // [RULES] HP tối đa Boss mỗi khối — SỬA TẠI ĐÂY (và bossMax() trong rules)
+  BOSS_HP: { '6': 100000, '7': 100000, '8': 100000, '9': 100000 },   // DỰ PHÒNG: chỉ dùng khi assets/raid/raid_boss.json không có stats.HP hợp lệ (HP thật lấy từ raid_boss.json; rules chấp nhận 1.000–5.000.000)
   BOSS_FILE: 'assets/raid/raid_boss.json'  // ATK/DEF/CRIT + sprite của Boss (thay ảnh trong assets/raid/)
 };
 

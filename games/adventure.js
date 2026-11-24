@@ -85,16 +85,24 @@ const Adventure = {
     Stage.init({ background: this.level.background || this.world.stages[0].background, monster: this.monster, character: CONFIG.selectedCharacter, madness: this.madness });
     Stage.reset();
     this.beginCombat();
-    this.quizCtl = Quiz.run(qs, box, {
-      loop: this.isDungeon(),
-      begin: (index, head) => this.startTimer(head),
-      tools: ctx => this.buildTools(ctx),
-      result: (ok, sofar, total) => this.resolveAnswer(ok, sofar, total),
-      finish: res => this.finish(res, box)
-    });
+    Story.pendingEnd = null;
+    const startQuiz = () => {
+      if (!this.active) return;
+      this.quizCtl = Quiz.run(qs, box, {
+        loop: this.isDungeon(),
+        begin: (index, head) => this.startTimer(head),
+        tools: ctx => this.buildTools(ctx),
+        result: (ok, sofar, total) => this.resolveAnswer(ok, sofar, total),
+        finish: res => this.finish(res, box)
+      });
+    };
+    // Cốt truyện: ải (không phải Hầm ngục) phát hội thoại start_stage trước câu hỏi đầu tiên; đồng hồ chỉ chạy sau khi xong/bỏ qua.
+    if (this.isDungeon()) startQuiz();
+    else { box.replaceChildren(); Story.play(this.world, this.level, 'start_stage', startQuiz); }
   },
   // Dừng đồng hồ/hẹn giờ của lượt trước (khi chơi lại hoặc rời ải).
   teardown() {
+    Story.close();
     this.stopTimer();
     clearTimeout(Stage.respawnTimer); Stage.respawnTimer = null;
   },
@@ -354,6 +362,25 @@ const Adventure = {
       draw();
     }, 1000);
   },
+  // Kết quả thưởng lượt chơi: biểu tượng Gold / Crystal / trang bị + số lượng (chữ to, xem CSS .reward-*).
+  rewardView(r) {
+    const view = el('div', 'reward-view'), row = el('div', 'reward-list');
+    const ico = src => { const i = new Image(); i.alt = ''; i.src = src; i.className = 'reward-ico'; return i; };
+    const chip = (icon, text, cls) => { const c = el('span', 'reward-chip' + (cls ? ' ' + cls : '')); if (icon) c.append(icon); c.append(el('b', '', text)); return c; };
+    row.append(chip(ico('assets/ui/gold.png'), `+${Number(r.gold || 0).toLocaleString('vi-VN')} Gold`));
+    row.append(chip(null, `+${Number(r.exp || 0).toLocaleString('vi-VN')} EXP`, 'is-exp'));
+    if (r.crystals) row.append(chip(ico('assets/ui/crystal.png'), `+${r.crystals} Crystal`));
+    for (const id of r.drops || []) {
+      const it = Player.item(id);
+      if (!it) continue;
+      const c = el('span', 'reward-chip is-item'); c.append(Inventory.icon(it), el('b', '', it.name)); row.append(c);
+    }
+    view.append(row);
+    view.append(el('span', 'reward-note', `(${Math.round((r.factor || 0) * 100)}% thưởng)`));
+    if (r.levelUp) view.append(el('span', 'reward-levelup', `LÊN CẤP ${Player.data.level}!`));
+    if (r.rankSkipped) view.append(el('span', 'reward-note', 'Chưa cập nhật bảng xếp hạng — hãy kiểm tra đồng hồ thiết bị.'));
+    return view;
+  },
   stopTimer() { clearInterval(this.timer); this.timer = null; },
   timeoutStrike(label) {   // trả về true nếu người chơi bị hạ gục
     const fight = this.combat;
@@ -395,9 +422,10 @@ const Adventure = {
     const ratio = res.total ? res.correct / res.total : 0;
     const passed = !dungeon && !defeated && kills > 0 && ratio >= this.PASS_RATIO;
     const damagePct = fight ? Math.min(1, fight.damageDealt / fight.maxMonsterHp) : 0;
-    const div = el('div', 'result'), status = el('p', 'save-status', 'Đang lưu kết quả…');
+    const div = el('div', 'result'), status = el('div', 'save-status', 'Đang lưu kết quả…');
     const again = el('button', 'btn', 'Chơi lại'), back = el('button', 'btn ghost', 'Về bản đồ');
     again.onclick = () => this.run(); back.onclick = () => renderLevels();
+    Story.pendingEnd = passed && this.level.kind === 'stage' ? { world: this.world, stage: this.level } : null;   // vượt ải → về bản đồ sẽ phát end_stage
     const name = this.monster.name, pctText = Math.round(ratio * 100) + '%';
     let title, detail;
     if (dungeon) {
@@ -428,12 +456,8 @@ const Adventure = {
         const wait = Player.cooldownLeftMs();
         if (wait > 0) { status.textContent = `Đang chờ ${Math.ceil(wait / 1000)}s để lưu kết quả…`; await new Promise(r => setTimeout(r, wait)); status.textContent = 'Đang lưu kết quả…'; }
         const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct, drops: fight ? fight.drops : [], madnessKills: fight ? fight.madnessKills : 0, spent: fight ? fight.spent : 0 });
-        const dropNames = (r.drops || []).map(id => (Player.item(id) || {}).name).filter(Boolean);
         if (r.celebrate && typeof Celebrate !== 'undefined') setTimeout(() => Celebrate.level100(r), 500);   // cấp 100 (một lần)
-        status.textContent = `+${r.gold} Gold · +${r.exp} EXP (${Math.round(r.factor * 100)}% thưởng)`
-          + (r.crystals ? ` · +${r.crystals} Crystal` : '')
-          + (r.levelUp ? ` · LÊN CẤP ${Player.data.level}!` : '') + (dropNames.length ? ` · NHẬN ĐƯỢC: ${dropNames.join(', ')}` : '')
-          + (r.rankSkipped ? ' · (chưa cập nhật bảng xếp hạng — hãy kiểm tra đồng hồ thiết bị)' : '');
+        status.replaceChildren(this.rewardView(r));
         Player.renderHud();
         again.disabled = back.disabled = false;
       } catch (e) {

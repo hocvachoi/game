@@ -95,7 +95,7 @@ const WorldMap = {
 
     const head = this.element('div', 'stage-bar-head');
     head.append(
-      this.element('h2', '', stage.kind === 'dungeon' ? `HẦM NGỤC ${stage.index}` : `ẢI ${String(stage.index).padStart(2, '0')}`),
+      this.element('h2', '', (stage.kind === 'dungeon' ? `${stage.index}` : `${String(stage.index).padStart(2, '0')}`) + (stage.title ? `·${stage.title}` : '')),
       this.element('span', `stage-status stage-status--${state}`, this.stateLabel(state)));
     const body = this.element('div', 'stage-bar-body');
     body.append(...lines);

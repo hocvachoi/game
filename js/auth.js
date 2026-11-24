@@ -96,13 +96,14 @@ const Auth = {
     }
   },
 
-  async register(className, username, password, nickname, room) {
+  async register(className, username, password, nickname, room, character) {
     if (!FirebaseService.configured) throw new Error(FirebaseService.errorMessage);
     const normalizedClass = this.normalizeClass(className);
     const normalizedUsername = this.normalizeUsername(username);
     if (!/^[6-9]$/.test(normalizedClass)) throw new Error("Vui lòng chọn khối lớp hợp lệ.");
     if (!this.usernameIsValid(normalizedUsername)) throw new Error("Tên đăng nhập cần có 3–20 ký tự gồm chữ không dấu, số hoặc dấu gạch dưới.");
     if (!this.roomIsValid(normalizedClass, room)) throw new Error(`Lớp cần có dạng ${normalizedClass}/số lớp, ví dụ ${normalizedClass}/5.`);
+    const pickedCharacter = CONFIG.CHARACTERS[character] ? character : CONFIG.DEFAULT_CHARACTER;   // nhân vật chọn lần đầu khi tạo tài khoản
 
     let credential;
     this.registering = true;
@@ -118,6 +119,7 @@ const Auth = {
           Class: normalizedClass,
           Nickname: nickname.trim(),
           Room: this.normalizeRoom(room),
+          Character: pickedCharacter,
           Golds: 0,
           Crystals: 0,
           LV: 1,

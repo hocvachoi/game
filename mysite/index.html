@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin · Mật khẩu học sinh &amp; chốt thưởng xếp hạng</title>
+<!--
+  TRANG ADMIN ĐỘC LẬP (không thuộc dự án game, KHÔNG đưa vào repo/GitHub Pages của học sinh).
+  Mục đích: đặt lại mật khẩu cho tài khoản học sinh (email nội bộ <tên>.<khối>@students.rpg-game.example — không có hộp thư thật
+  nên không dùng được "gửi email đặt lại mật khẩu").
+  Cách hoạt động: quản trị đăng nhập bằng tài khoản Google CÓ QUYỀN trên dự án Firebase (Owner/Editor/Firebase Auth Admin).
+  Trang xin quyền OAuth "cloud-platform" rồi gọi Identity Toolkit Admin API (accounts:lookup / accounts:update) bằng token của chính
+  quản trị. File KHÔNG chứa khóa bí mật nào; quyền do Google Cloud IAM quyết định, người không có quyền sẽ bị Google từ chối.
+  Yêu cầu một lần: bật Google ở Authentication > Sign-in method và thêm domain chạy file này (vd. localhost) vào Authorized domains.
+  Chạy: mở bằng địa chỉ https (GitHub Pages của repo riêng) hoặc máy chủ cục bộ; KHÔNG mở trực tiếp file (file://) vì đăng nhập Google không chạy.
+  CHỐT THƯỞNG XẾP HẠNG: cùng tài khoản Google đó cũng đăng nhập Firebase (Firestore). Email này phải được liệt kê trong hàm isAdmin() của firestore.rules.
+-->
+<style>
+ body{font:16px/1.5 system-ui,sans-serif;background:#16202c;color:#f1ede0;margin:0;padding:24px}
+ main{max-width:760px;margin:0 auto;display:grid;gap:14px}
+ h1{font-size:22px;margin:0}
+ .card{background:#1f2d3d;border:1px solid #3b5068;border-radius:10px;padding:16px;display:grid;gap:10px}
+ label{display:grid;gap:4px;font-weight:600}
+ input,select,button{font:inherit;padding:9px 11px;border-radius:7px;border:1px solid #4a6580;background:#101923;color:inherit}
+ button{background:#e0a820;color:#2a1d05;font-weight:700;cursor:pointer;border:0}
+ button.alt{background:#2c3e52;color:#f1ede0;border:1px solid #4a6580}
+ button:disabled{opacity:.5;cursor:not-allowed}
+ .row{display:flex;gap:8px}.row>*{flex:1}
+ h2{font-size:18px;margin:0}
+ table{width:100%;border-collapse:collapse;font-size:14px}
+ td,th{border-bottom:1px solid #3b5068;padding:4px 6px;text-align:left;vertical-align:top}
+ .done{color:#8fe388}.new{color:#ffd37a}
+ .small{font-size:13px;color:#b9c6d4}
+ #log{white-space:pre-wrap;min-height:24px}.ok{color:#8fe388}.err{color:#ff9a9a}.warn{color:#ffd37a;font-size:14px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Khôi phục mật khẩu học sinh</h1>
+
+  <section class="card" id="login-card">
+    <div id="who">Chưa đăng nhập quản trị.</div>
+    <div class="row">
+      <button id="btn-login" type="button">Đăng nhập Google (quản trị)</button>
+      <button id="btn-logout" type="button" class="alt" hidden>Đăng xuất</button>
+    </div>
+  </section>
+
+  <section class="card" id="grant-card" hidden>
+    <div>Phiên đăng nhập đã được khôi phục. Để đổi mật khẩu học sinh cần cấp lại quyền Google (hết hạn sau ~1 giờ hoặc sau khi tải lại trang). Chốt thưởng không cần bước này.</div>
+    <button id="btn-grant" type="button">Cấp quyền đổi mật khẩu</button>
+  </section>
+
+  <section class="card" id="reset-card" hidden>
+    <div class="row">
+      <label>Khối
+        <select id="grade"><option>6</option><option>7</option><option>8</option><option>9</option></select>
+      </label>
+      <label>Tên đăng nhập
+        <input id="username" autocomplete="off" placeholder="vd: hiep_nguyen" maxlength="20">
+      </label>
+    </div>
+    <label>Mật khẩu mới (ít nhất 6 ký tự)
+      <input id="password" type="text" autocomplete="off" maxlength="64">
+    </label>
+    <div class="row">
+      <button id="btn-gen" type="button" class="alt">Tạo mật khẩu ngẫu nhiên</button>
+      <button id="btn-reset" type="button">Đặt lại mật khẩu</button>
+    </div>
+    <div class="warn">Chỉ đổi mật khẩu đăng nhập; hồ sơ game (Gold, trang bị, tiến trình…) giữ nguyên. Hãy gửi mật khẩu mới cho học sinh qua kênh riêng và dặn đổi lại.</div>
+  </section>
+
+  <section class="card" id="reward-card" hidden>
+    <h2>Chốt thưởng xếp hạng tuần (top 10)</h2>
+    <div class="row">
+      <label>Tuần
+        <select id="rw-week"></select>
+      </label>
+      <label>Khối
+        <select id="rw-grade"><option value="all">Tất cả</option><option>6</option><option>7</option><option>8</option><option>9</option></select>
+      </label>
+    </div>
+    <div class="small">Thưởng cho <b>top 10</b> mỗi bảng Lớp (Ải, Hầm ngục 1, Hầm ngục 2), chia 4 bậc: Hạng 1, Hạng 2, Hạng 3, Hạng 4–10. Mỗi ô nhập <b>Gold</b> (mặc định 100, tối đa 5000) và <b>Crystal</b> (mặc định 3/2/1/1, tối đa 50). Đồng điểm thì cùng hạng. Chỉ tính điểm &gt; 0.</div>
+    <div id="rw-grid"></div>
+    <div class="row">
+      <button id="rw-preview" type="button" class="alt">Xem trước</button>
+      <button id="rw-commit" type="button" disabled>Chốt thưởng</button>
+    </div>
+    <div id="rw-out"></div>
+    <div class="warn">Phiếu đã tạo không sửa/xóa được từ trang này (chống chốt trùng). Học sinh thấy thông báo khi đăng nhập game và bấm Nhận để cộng Gold. Cần chốt trước khi tuần đó bị ghi đè lần thứ hai (điểm tuần trước được giữ khi học sinh chơi sang tuần mới, nhưng chỉ giữ MỘT tuần).</div>
+  </section>
+
+  <section class="card" id="sched-card" hidden>
+    <h2>Lịch Boss Raid</h2>
+    <div class="small">Đặt khối nào được đánh Boss Raid: <b>lịch tuần</b> (lặp lại mỗi tuần) và <b>ngày riêng</b> (ghi đè lịch tuần của đúng ngày đó; bỏ chọn hết khối = hôm đó nghỉ). Bấm <b>Lưu lịch</b> để áp dụng cho game. Chưa lưu lần nào thì game dùng lịch mặc định trong mã.</div>
+    <div id="sc-weekly"></div>
+    <h2 style="font-size:16px;margin-top:6px">Ngày riêng</h2>
+    <div class="row">
+      <label>Ngày (giờ VN)
+        <input id="sc-date" type="date">
+      </label>
+      <label>Khối được mở
+        <span id="sc-date-grades" style="display:flex;gap:10px;padding:8px 0"></span>
+      </label>
+      <button id="sc-add" type="button" class="alt" style="align-self:end">Thêm / sửa ngày</button>
+    </div>
+    <div id="sc-dates"></div>
+    <div class="row">
+      <button id="sc-load" type="button" class="alt">Tải lịch hiện tại</button>
+      <button id="sc-save" type="button">Lưu lịch</button>
+    </div>
+    <div class="warn">Giờ mở cửa (19:00–21:00 VN), thời lượng Boss… vẫn theo cấu hình game. Hiện Boss 1 bắt đầu ngay khi có 1 người vào (đã bỏ điều kiện 5 người). Khi lưu, các ngày riêng đã qua được tự xóa. Chi phí: tải lịch = 1 lượt đọc; lưu lịch = 1 lượt ghi; mỗi lượt học sinh bấm vào Raid = 1 lượt đọc (nhớ 5 phút); Rules chỉ đọc lịch khi TẠO Boss (≈ 1–2 lượt mỗi Boss).</div>
+  </section>
+
+  <section class="card" id="raid-card" hidden>
+    <h2>Chốt thưởng Boss Raid (top 10 sát thương)</h2>
+    <div class="row">
+      <label>Ngày (giờ VN)
+        <input id="rd-date" type="date">
+      </label>
+      <label>Khối
+        <select id="rd-grade"><option>6</option><option>7</option><option>8</option><option>9</option></select>
+      </label>
+      <label>Boss
+        <select id="rd-slot"><option value="1">Boss 1</option><option value="2">Boss 2</option></select>
+      </label>
+    </div>
+    <div class="small">Phần thưởng cho top 10 sát thương, chia 4 bậc. Mỗi bậc gồm Gold (≤ 5000), Crystal (≤ 50) và tùy chọn ID trang bị (vd <code>iron_sword</code>; để trống nếu không tặng). Đây là phần thưởng MẶC ĐỊNH — chỉnh tùy ý. <b>Boss chưa bị hạ (thất bại) chỉ nhận 50% Gold và Crystal (làm tròn xuống), không có trang bị</b> — trang tính sẵn khi xem trước. Cùng điểm thì cùng hạng; người đồng hạng ở ranh giới top 10 cũng nhận thưởng như bậc 4–10.</div>
+    <div id="rd-grid"></div>
+    <div class="row">
+      <button id="rd-preview" type="button" class="alt">Xem trước</button>
+      <button id="rd-commit" type="button" disabled>Chốt thưởng Raid</button>
+    </div>
+    <div id="rd-out"></div>
+    <div class="warn">Chốt sau 21:02 (khi trận đã đóng). Phiếu đã tạo không sửa/xóa được từ trang này. Hạng xếp kiểu thi đấu (cùng điểm cùng hạng, người sau bị nhảy hạng); trang đọc tối đa 30 người đầu để tính đồng hạng.</div>
+  </section>
+
+  <section class="card" id="ranked-card" hidden>
+    <h2>Chốt thưởng Ranked theo tuần (top 10 mỗi lớp)</h2>
+    <div class="row">
+      <label>Tuần (để đặt tên và mã phiếu)
+        <select id="rk-week"></select>
+      </label>
+      <label>Khối
+        <select id="rk-grade"><option value="all">Tất cả</option><option>6</option><option>7</option><option>8</option><option>9</option></select>
+      </label>
+    </div>
+    <div class="small">Điểm Ranked <b>cộng dồn, không reset</b>: trang lấy xếp hạng <b>hiện tại</b> của từng lớp (mỗi lớp 1 tài liệu) nên hãy chốt vào cuối tuần, trước khi bắt đầu tuần mới. Chỉ người có điểm &gt; 10 (đã thắng ít nhất một trận) mới được thưởng. Mặc định 100 Gold mỗi bậc, bạn chỉnh tùy ý. Cùng điểm thì cùng hạng.</div>
+    <div id="rk-grid"></div>
+    <div class="row">
+      <button id="rk-preview" type="button" class="alt">Xem trước</button>
+      <button id="rk-commit" type="button" disabled>Chốt thưởng Ranked</button>
+    </div>
+    <div id="rk-out"></div>
+    <div class="warn">Phiếu mã <code>rk_&lt;tuần&gt;_&lt;lớp&gt;</code> chỉ tạo được một lần cho mỗi người mỗi tuần (chốt lại sẽ bỏ qua phiếu đã có). Mỗi lần xem trước đọc mỗi lớp 1 tài liệu (khoảng 35 lượt đọc cho cả trường).</div>
+  </section>
+
+  <div id="log" role="status"></div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const CONFIG = {
+  apiKey: "AIzaSyAjQl3xaPsaRaeDvkFBc_bIOX8zq5aOG3k",
+  authDomain: "rpgacademy-fb964.firebaseapp.com",
+  projectId: "rpgacademy-fb964",
+  emailDomain: "students.rpg-game.example"   // khớp Auth.emailDomain của game
+};
+firebase.initializeApp(CONFIG);
+const $ = s => document.querySelector(s);
+let accessToken = null;   // token OAuth cloud-platform: CHỈ ở bộ nhớ (không lưu localStorage/sessionStorage)
+const log = (msg, cls) => { const l = $('#log'); l.textContent = msg; l.className = cls || ''; };
+
+// Phiên Firebase tự được LƯU trong trình duyệt (LOCAL) nên F5 không phải đăng nhập lại. Riêng "token quyền Google Cloud" (dùng để đổi mật khẩu
+// học sinh) chỉ giữ trong bộ nhớ trang và hết hạn sau ~1 giờ vì lý do an toàn → sau F5 bấm "Cấp quyền đổi mật khẩu" (1 cú bấm, không nhập lại).
+// Chốt thưởng (Firestore) chỉ cần phiên Firebase nên dùng được ngay sau F5.
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+function showAdminUI(user) {
+  const on = Boolean(user);
+  $('#who').textContent = on ? 'Quản trị: ' + user.email : 'Chưa đăng nhập quản trị.';
+  $('#btn-login').hidden = on; $('#btn-logout').hidden = !on;
+  $('#reward-card').hidden = !on; $('#raid-card').hidden = !on; $('#sched-card').hidden = !on; $('#ranked-card').hidden = !on;
+  showTokenUI();
+}
+function showTokenUI() {   // thẻ đổi mật khẩu chỉ hiện khi có token; nếu đã đăng nhập nhưng thiếu token thì hiện nút cấp quyền
+  const on = Boolean(firebase.auth().currentUser);
+  $('#reset-card').hidden = !(on && accessToken);
+  $('#grant-card').hidden = !(on && !accessToken);
+}
+async function signInGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/cloud-platform');
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const res = await firebase.auth().signInWithPopup(provider);
+  accessToken = res.credential && res.credential.accessToken || null;
+  return res.user;
+}
+$('#btn-login').onclick = async () => {
+  try {
+    const user = await signInGoogle();
+    showAdminUI(user);
+    log('Đã đăng nhập. Phiên được lưu: F5 không phải đăng nhập lại. Quyền thật sự do Google Cloud IAM và firestore.rules kiểm tra khi bạn thực hiện thao tác.', 'ok');
+  } catch (e) { log('Đăng nhập thất bại: ' + e.message, 'err'); }
+};
+$('#btn-grant').onclick = async () => {
+  try {
+    const cur = firebase.auth().currentUser;
+    const user = await signInGoogle();
+    if (cur && user.email !== cur.email) log('Bạn đã chọn tài khoản khác: ' + user.email, 'warn');
+    showAdminUI(user);
+    log('Đã cấp quyền đổi mật khẩu (có hiệu lực khoảng 1 giờ).', 'ok');
+  } catch (e) { log('Cấp quyền thất bại: ' + e.message, 'err'); }
+};
+$('#btn-logout').onclick = async () => {
+  await firebase.auth().signOut(); accessToken = null;
+  showAdminUI(null);
+  $('#password').value = ''; $('#rw-out').replaceChildren(); $('#rd-out').replaceChildren(); plan = null; rdPlan = null; $('#rw-commit').disabled = true; $('#rd-commit').disabled = true;
+};
+// Khôi phục giao diện khi tải lại trang (F5): nếu phiên Firebase còn thì hiện lại các thẻ.
+firebase.auth().onAuthStateChanged(user => {
+  showAdminUI(user);
+  if (user) log('Đã khôi phục phiên đăng nhập: ' + user.email + (accessToken ? '' : '. Muốn đổi mật khẩu học sinh hãy bấm "Cấp quyền đổi mật khẩu".'), 'ok');
+});
+$('#btn-gen').onclick = () => {
+  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', a = new Uint32Array(10);
+  crypto.getRandomValues(a);
+  $('#password').value = Array.from(a, n => chars[n % chars.length]).join('');
+};
+
+async function api(path, body) {
+  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${CONFIG.projectId}/${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + accessToken, 'X-Goog-User-Project': CONFIG.projectId },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { accessToken = null; showTokenUI(); throw new Error('Quyền Google đã hết hạn — bấm "Cấp quyền đổi mật khẩu" rồi thử lại.'); }
+  if (!res.ok) throw new Error((data.error && data.error.message) || ('HTTP ' + res.status));
+  return data;
+}
+
+$('#btn-reset').onclick = async () => {
+  const grade = $('#grade').value, name = $('#username').value.trim().toLowerCase(), pass = $('#password').value;
+  if (!accessToken) return log('Hãy đăng nhập quản trị trước.', 'err');
+  if (!/^[a-z0-9_]{3,20}$/.test(name)) return log('Tên đăng nhập chỉ gồm a-z, 0-9, _ (3–20 ký tự).', 'err');
+  if (pass.length < 6) return log('Mật khẩu mới tối thiểu 6 ký tự.', 'err');
+  const email = `${name}.${grade}@${CONFIG.emailDomain}`;
+  if (!confirm(`Đặt lại mật khẩu cho ${email}?`)) return;
+  $('#btn-reset').disabled = true; log('Đang xử lý…');
+  try {
+    const found = await api('accounts:lookup', { email: [email] });
+    if (!found.users || !found.users.length) throw new Error('Không tìm thấy tài khoản ' + email);
+    await api('accounts:update', { localId: found.users[0].localId, password: pass });
+    log(`Đã đặt lại mật khẩu cho ${email}.\nMật khẩu mới: ${pass}`, 'ok');
+  } catch (e) {
+    log('Không thực hiện được: ' + e.message + '\nGợi ý: tài khoản Google cần quyền Firebase Auth Admin/Editor/Owner trên dự án; kiểm tra Identity Toolkit API đã bật.', 'err');
+  } finally { $('#btn-reset').disabled = false; }
+};
+
+// ================= CHỐT THƯỞNG XẾP HẠNG TUẦN =================
+// Đọc leaderboards/<khối>/entries (điểm tuần hiện tại hoặc Prev* = tuần trước), tìm người đứng đầu từng bảng
+// (mỗi LỚP × 3 tab) rồi tạo phiếu rewards/<UID>/vouchers/<tuần>_<phạm vi>_<tab>. Quyền do firestore.rules (isAdmin) quyết định.
+const db = firebase.firestore();
+const WEEK_MS = 604800000, MON_MS = 345600000;           // khớp Rank.weekStart() của game: thứ Hai 07:00 giờ VN
+const TABS = [
+  { id: 'stage', label: 'Ải đã vượt', cur: 'WeekClears', prev: 'PrevWeekClears' },
+  { id: 'dungeon1', label: 'Hầm ngục 1', cur: 'Dung1Week', prev: 'PrevDung1' },
+  { id: 'dungeon2', label: 'Hầm ngục 2', cur: 'Dung2Week', prev: 'PrevDung2' }
+];
+const weekStart = ms => Math.floor((ms - MON_MS) / WEEK_MS) * WEEK_MS + MON_MS;
+const vn = ms => { const d = new Date(ms + 7 * 3600 * 1000); return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
+let plan = null;   // kết quả xem trước, dùng cho nút Chốt
+
+(function fillWeeks() {
+  const now = weekStart(Date.now()), sel = $('#rw-week');
+  for (let i = 0; i < 4; i++) {
+    const ws = now - i * WEEK_MS, o = document.createElement('option');
+    o.value = String(ws);
+    o.textContent = `07:00 ${vn(ws)} → 07:00 ${vn(ws + WEEK_MS)}` + (i === 0 ? ' (đang diễn ra)' : i === 1 ? ' (tuần trước)' : '');
+    sel.append(o);
+  }
+  sel.selectedIndex = 1;   // mặc định: tuần trước
+})();
+
+const TIERS = [{ id: 'top1', label: 'Hạng 1' }, { id: 'top2', label: 'Hạng 2' }, { id: 'top3', label: 'Hạng 3' }, { id: 'top4_10', label: 'Hạng 4–10' }];
+const SCOPES = [{ id: 'room', label: 'Lớp' }];   // chỉ còn thưởng theo bảng LỚP (đã bỏ thưởng theo KHỐI)
+const tierOf = rank => rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : 'top4_10';
+const amount = (scope, tab, tier) => Math.max(0, Math.min(5000, parseInt($(`#g-${scope}-${tab}-${tier}`).value, 10) || 0));
+const crystals = (scope, tab, tier) => Math.max(0, Math.min(50, parseInt($(`#c-${scope}-${tab}-${tier}`).value, 10) || 0));
+const hasReward = w => w.gold > 0 || w.crystals > 0;
+const rewardLabel = w => [w.gold ? `${w.gold} Gold` : '', w.crystals ? `${w.crystals} Crystal` : ''].filter(Boolean).join(' + ') || 'thưởng 0';
+const el = (tag, text, cls) => { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; };   // textContent: nickname do học sinh nhập, không chèn HTML
+
+(function buildGrid() {   // bảng nhập thưởng: mỗi dòng = Lớp × tab, mỗi cột = một bậc hạng; mỗi ô = Gold + Crystal
+  const table = el('table'), head = el('tr');
+  head.append(el('th', 'Bảng'));
+  TIERS.forEach(t => head.append(el('th', `${t.label} (Gold · Crystal)`)));
+  table.append(head);
+  const WEEK_CRYSTAL = { top1: 3, top2: 2, top3: 1, top4_10: 1 };   // Crystal MẶC ĐỊNH (chỉnh tùy ý); mọi bậc top 10 đều có Crystal
+  SCOPES.forEach(sc => TABS.forEach(tab => {
+    const tr = el('tr'); tr.append(el('td', `${sc.label} · ${tab.label}`));
+    TIERS.forEach(t => {
+      const td = el('td');
+      [['g', '100', '5000', '64px', 'Gold'], ['c', String(WEEK_CRYSTAL[t.id]), '50', '48px', 'Crystal']].forEach(([k, def, max, w, title]) => {
+        const input = document.createElement('input');
+        input.type = 'number'; input.min = '0'; input.max = max; input.value = def; input.id = `${k}-${sc.id}-${tab.id}-${t.id}`;
+        input.style.width = w; input.title = title; input.setAttribute('aria-label', `${sc.label} ${tab.label} ${t.label} ${title}`);
+        td.append(input, document.createTextNode(' '));
+      });
+      tr.append(td);
+    });
+    table.append(tr);
+  }));
+  $('#rw-grid').append(table);
+})();
+
+// Hạng kiểu "thi đấu": cùng điểm thì cùng hạng (1,1,3...). Chỉ lấy điểm > 0 và hạng <= 10.
+function topTen(list, tabId) {
+  const rows = list.filter(r => r.s[tabId] > 0);
+  return rows.map(r => ({ ...r, score: r.s[tabId], rank: 1 + rows.filter(o => o.s[tabId] > r.s[tabId]).length }))
+    .filter(r => r.rank <= 10).sort((x, y) => x.rank - y.rank || x.nick.localeCompare(y.nick));
+}
+
+async function buildPlan(ws, grades) {
+  const groups = [];
+  for (const g of grades) {
+    const snap = await db.collection('leaderboards').doc(g).collection('entries').get();
+    const rows = [];
+    snap.forEach(doc => {
+      const e = doc.data(); let s = null;
+      if (e.WeekStart === ws) s = { stage: e.WeekClears || 0, dungeon1: e.Dung1Week || 0, dungeon2: e.Dung2Week || 0 };
+      else if (e.PrevWeekStart === ws) s = { stage: e.PrevWeekClears || 0, dungeon1: e.PrevDung1 || 0, dungeon2: e.PrevDung2 || 0 };
+      if (s) rows.push({ uid: doc.id, nick: e.Nickname || '?', room: e.Room || null, s });
+    });
+    const rooms = [...new Set(rows.map(r => r.room).filter(Boolean))].sort((a, b) => Number(a.split('/')[1]) - Number(b.split('/')[1]));
+    for (const tab of TABS) {
+      for (const room of rooms) {
+        const winners = topTen(rows.filter(r => r.room === room), tab.id);
+        if (winners.length) groups.push({ scope: 'room', tab, board: `Lớp ${room}`, winners });
+      }
+    }
+  }
+  const all = [];
+  for (const grp of groups) {
+    grp.id = `${ws}_${grp.scope}_${grp.tab.id}`;
+    grp.winners.forEach(w => { w.gold = amount(grp.scope, grp.tab.id, tierOf(w.rank)); w.crystals = crystals(grp.scope, grp.tab.id, tierOf(w.rank)); all.push([grp, w]); });
+  }
+  // đã chốt trước đó chưa? đọc phiếu theo từng nhóm 25 để nhanh hơn
+  for (let i = 0; i < all.length; i += 25) {
+    await Promise.all(all.slice(i, i + 25).map(async ([grp, w]) => {
+      w.exists = (await db.collection('rewards').doc(w.uid).collection('vouchers').doc(grp.id).get()).exists;
+    }));
+  }
+  return groups;
+}
+
+$('#rw-preview').onclick = async () => {
+  const ws = parseInt($('#rw-week').value, 10), gsel = $('#rw-grade').value, grades = gsel === 'all' ? ['6', '7', '8', '9'] : [gsel];
+  plan = null; $('#rw-commit').disabled = true; $('#rw-out').replaceChildren();
+  $('#rw-preview').disabled = true; log('Đang đọc bảng xếp hạng…');
+  try {
+    const groups = await buildPlan(ws, grades);
+    const table = el('table'), head = el('tr');
+    ['Bảng', 'Tab', 'Số người', 'Tổng thưởng mới', 'Danh sách'].forEach(h => head.append(el('th', h)));
+    table.append(head);
+    let fresh = 0, totalGold = 0, totalCrystals = 0;
+    groups.forEach(grp => {
+      const todo = grp.winners.filter(w => !w.exists && hasReward(w));
+      const gold = todo.reduce((sum, w) => sum + w.gold, 0), gems = todo.reduce((sum, w) => sum + w.crystals, 0);
+      fresh += todo.length; totalGold += gold; totalCrystals += gems;
+      const tr = el('tr'), details = el('details'), list = el('div', '', 'small');
+      details.append(el('summary', todo.length ? `${todo.length} phiếu mới` : 'Đã chốt hết', todo.length ? 'new' : 'done'));
+      list.textContent = grp.winners.map(w => `#${w.rank} ${w.nick}${w.room ? ` (${w.room})` : ''} — ${w.score} điểm — ${rewardLabel(w)}${w.exists ? ' ✓đã chốt' : ''}`).join('\n');
+      list.style.whiteSpace = 'pre-wrap';
+      details.append(list);
+      tr.append(el('td', grp.board), el('td', grp.tab.label), el('td', String(grp.winners.length)), el('td', `${gold.toLocaleString('vi-VN')} Gold + ${gems} Crystal`));
+      const td = el('td'); td.append(details); tr.append(td);
+      table.append(tr);
+    });
+    $('#rw-out').append(table);
+    plan = { ws, groups, fresh };
+    $('#rw-commit').disabled = fresh === 0;
+    log(groups.length ? `Có ${groups.length} bảng; ${fresh} phiếu mới cần tạo, tổng ${totalGold.toLocaleString('vi-VN')} Gold + ${totalCrystals.toLocaleString('vi-VN')} Crystal.` : 'Không có dữ liệu điểm cho tuần này (có thể tuần đó chưa ai ghi điểm, hoặc đã bị ghi đè quá 1 tuần).', groups.length ? 'ok' : 'warn');
+  } catch (e) {
+    log('Không đọc được bảng xếp hạng: ' + e.message + '\nGợi ý: email đăng nhập phải nằm trong hàm isAdmin() của firestore.rules và rules đã Publish.', 'err');
+  } finally { $('#rw-preview').disabled = false; }
+};
+
+$('#rw-commit').onclick = async () => {
+  if (!plan || !plan.fresh) return;
+  if (!confirm(`Tạo ${plan.fresh} phiếu thưởng cho tuần ${vn(plan.ws)}? Việc này không hoàn tác được từ trang này.`)) return;
+  $('#rw-commit').disabled = true; $('#rw-preview').disabled = true; log('Đang tạo phiếu…');
+  try {
+    const writes = [];
+    plan.groups.forEach(grp => grp.winners.filter(w => !w.exists && hasReward(w)).forEach(w => {
+      writes.push([db.collection('rewards').doc(w.uid).collection('vouchers').doc(grp.id), {
+        Title: `Hạng ${w.rank} ${grp.board} – ${grp.tab.label} (tuần ${vn(plan.ws)})`,
+        ...(w.gold ? { Gold: w.gold } : {}), ...(w.crystals ? { Crystals: w.crystals } : {}),
+        WeekStart: plan.ws, Board: `${grp.scope}_${grp.tab.id}`, Claimed: false,
+        CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }]);
+    }));
+    for (let i = 0; i < writes.length; i += 400) {
+      const batch = db.batch();
+      writes.slice(i, i + 400).forEach(([ref, data]) => batch.set(ref, data));
+      await batch.commit();
+    }
+    log(`Đã tạo ${writes.length} phiếu thưởng. Học sinh sẽ thấy thông báo khi đăng nhập game.`, 'ok');
+    plan = null; $('#rw-out').replaceChildren();
+  } catch (e) {
+    log('Không tạo được phiếu: ' + e.message + '\nNếu báo thiếu quyền: phiếu đã tồn tại hoặc rules chưa Publish.', 'err');
+    $('#rw-commit').disabled = false;
+  } finally { $('#rw-preview').disabled = false; }
+};
+
+// ================= LỊCH BOSS RAID =================
+// Ghi/đọc tài liệu config/raidSchedule = { Weekly: {"2": ["7"], …, "8": ["9"]}, Dates: {"yyyymmdd": ["6","7"]}, UpdatedAt }.
+// Khóa Weekly: 2 = Thứ Hai … 7 = Thứ Bảy, 8 = Chủ nhật. Quyền ghi do firestore.rules (isAdmin) quyết định.
+const SC_DAYS = [[2, 'Thứ Hai'], [3, 'Thứ Ba'], [4, 'Thứ Tư'], [5, 'Thứ Năm'], [6, 'Thứ Sáu'], [7, 'Thứ Bảy'], [8, 'Chủ nhật']], SC_GRADES = ['6', '7', '8', '9'];
+const SC_DEFAULT = { 2: ['7'], 3: ['7'], 4: ['6', '8'], 5: ['7'], 6: ['6', '8'], 7: ['7'], 8: ['9'] };   // lịch mặc định cũ của game
+let sched = { Weekly: JSON.parse(JSON.stringify(SC_DEFAULT)), Dates: {} };
+const vnToday = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
+const gradeBoxes = (checked, onChange) => {
+  const wrap = el('span'); wrap.style.cssText = 'display:flex;gap:10px';
+  SC_GRADES.forEach(g => {
+    const lb = document.createElement('label'); lb.style.cssText = 'display:flex;gap:4px;align-items:center;font-weight:400';
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = g; cb.checked = checked.includes(g);
+    if (onChange) cb.onchange = () => onChange([...wrap.querySelectorAll('input:checked')].map(x => x.value));
+    lb.append(cb, document.createTextNode('Khối ' + g)); wrap.append(lb);
+  });
+  return wrap;
+};
+function renderSched() {
+  const table = el('table');
+  SC_DAYS.forEach(([k, name]) => {
+    const tr = el('tr'), td1 = el('td', name), td2 = el('td');
+    td2.append(gradeBoxes(sched.Weekly[k] || [], list => { sched.Weekly[k] = list; }));
+    tr.append(td1, td2); table.append(tr);
+  });
+  $('#sc-weekly').replaceChildren(table);
+  const keys = Object.keys(sched.Dates).sort(), box = el('table');
+  keys.forEach(k => {
+    const tr = el('tr'), del = el('button', 'Xóa'); del.type = 'button'; del.className = 'alt';
+    del.onclick = () => { delete sched.Dates[k]; renderSched(); };
+    const d = el('td'); d.append(del);
+    tr.append(el('td', `${k.slice(6)}/${k.slice(4, 6)}/${k.slice(0, 4)}`), el('td', sched.Dates[k].length ? 'Khối ' + sched.Dates[k].join(', ') : 'NGHỈ (không mở Raid)'), d);
+    box.append(tr);
+  });
+  $('#sc-dates').replaceChildren(keys.length ? box : el('div', 'Chưa có ngày riêng nào.', 'small'));
+}
+(function initSched() {
+  $('#sc-date').value = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+  $('#sc-date-grades').replaceChildren(gradeBoxes([], null));
+  renderSched();
+})();
+$('#sc-add').onclick = () => {
+  const day = $('#sc-date').value.replace(/-/g, '');
+  if (!/^\d{8}$/.test(day)) { log('Hãy chọn ngày.', 'err'); return; }
+  if (day < vnToday()) { log('Ngày đã qua, không cần đặt lịch.', 'err'); return; }
+  if (Object.keys(sched.Dates).length >= 200 && !sched.Dates[day]) { log('Tối đa 200 ngày riêng.', 'err'); return; }
+  sched.Dates[day] = [...$('#sc-date-grades').querySelectorAll('input:checked')].map(x => x.value);
+  renderSched(); log('Đã thêm vào danh sách (chưa lưu). Bấm "Lưu lịch" để áp dụng.', 'ok');
+};
+$('#sc-load').onclick = async () => {
+  $('#sc-load').disabled = true; log('Đang đọc lịch…');
+  try {
+    const snap = await db.collection('config').doc('raidSchedule').get();
+    if (!snap.exists) { log('Chưa có lịch trên máy chủ — đang hiện lịch mặc định. Bấm "Lưu lịch" để áp dụng.', 'ok'); return; }
+    const d = snap.data(); sched = { Weekly: d.Weekly || {}, Dates: d.Dates || {} };
+    renderSched(); log('Đã tải lịch hiện tại.', 'ok');
+  } catch (e) { log('Không đọc được lịch: ' + e.message + '\nGợi ý: email đăng nhập phải nằm trong isAdmin() của firestore.rules và rules đã Publish.', 'err'); }
+  finally { $('#sc-load').disabled = false; }
+};
+$('#sc-save').onclick = async () => {
+  if (!confirm('Lưu lịch Boss Raid? Game sẽ dùng lịch này ngay (học sinh có thể mất tối đa 5 phút để thấy thay đổi).')) return;
+  const today = vnToday(), Weekly = {}, Dates = {}, dropped = [];
+  SC_DAYS.forEach(([k]) => { Weekly[String(k)] = (sched.Weekly[k] || []).filter(g => SC_GRADES.includes(g)); });
+  Object.keys(sched.Dates).forEach(k => { if (k < today) dropped.push(k); else Dates[k] = sched.Dates[k].filter(g => SC_GRADES.includes(g)); });
+  $('#sc-save').disabled = true; log('Đang lưu lịch…');
+  try {
+    await db.collection('config').doc('raidSchedule').set({ Weekly, Dates, UpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    sched = { Weekly, Dates }; renderSched();
+    log('Đã lưu lịch Boss Raid (1 lượt ghi).' + (dropped.length ? ` Đã xóa ${dropped.length} ngày riêng đã qua.` : ''), 'ok');
+  } catch (e) { log('Không lưu được lịch: ' + e.message + '\nGợi ý: email đăng nhập phải nằm trong isAdmin() của firestore.rules và rules đã Publish (có phần match /config).', 'err'); }
+  finally { $('#sc-save').disabled = false; }
+};
+
+// ================= CHỐT THƯỞNG BOSS RAID =================
+// Đọc raids/<khối>_<yyyymmdd> (HP Boss) và raids/<id>/players (top 10 theo Damage), tạo phiếu rewards/<UID>/vouchers/raid_<id>
+// gồm Gold / Crystals / ItemId theo bậc hạng. Quyền do firestore.rules (isAdmin) quyết định.
+const RD_DEFAULTS = {   // thưởng mặc định (chỉnh trong bảng trên trang)
+  top1: { gold: 300, crystals: 3, item: '' }, top2: { gold: 200, crystals: 2, item: '' },
+  top3: { gold: 150, crystals: 1, item: '' }, top4_10: { gold: 100, crystals: 0, item: '' }
+};
+let rdPlan = null;
+(function buildRaidGrid() {
+  const table = el('table'), head = el('tr');
+  ['Bậc', 'Gold', 'Crystal', 'ID trang bị (tùy chọn)'].forEach(h => head.append(el('th', h)));
+  table.append(head);
+  TIERS.forEach(t => {
+    const tr = el('tr'); tr.append(el('td', t.label));
+    [['gold', 'number', '80px'], ['crystals', 'number', '70px'], ['item', 'text', '170px']].forEach(([k, type, w]) => {
+      const input = document.createElement('input');
+      input.type = type; input.id = `rd-${t.id}-${k}`; input.style.width = w;
+      input.value = String(RD_DEFAULTS[t.id][k]);
+      if (type === 'number') { input.min = '0'; input.max = k === 'gold' ? '5000' : '50'; } else { input.placeholder = 'vd iron_sword'; input.maxLength = 41; input.autocomplete = 'off'; }
+      const td = el('td'); td.append(input); tr.append(td);
+    });
+    table.append(tr);
+  });
+  $('#rd-grid').append(table);
+  const d = new Date(Date.now() + 7 * 3600 * 1000);
+  $('#rd-date').value = d.toISOString().slice(0, 10);   // hôm nay theo giờ VN
+})();
+const rdReward = tier => ({
+  gold: Math.max(0, Math.min(5000, parseInt($(`#rd-${tier}-gold`).value, 10) || 0)),
+  crystals: Math.max(0, Math.min(50, parseInt($(`#rd-${tier}-crystals`).value, 10) || 0)),
+  item: $(`#rd-${tier}-item`).value.trim().toLowerCase()
+});
+const scaleReward = (r, ok) => ok ? r : { gold: Math.floor(r.gold * 0.5), crystals: Math.floor(r.crystals * 0.5), item: '' };   // thất bại: 50% Gold/Crystal, bỏ trang bị
+const rdText = r => [r.gold ? `${r.gold} Gold` : '', r.crystals ? `${r.crystals} Crystal` : '', r.item].filter(Boolean).join(' + ') || '(không có)';
+
+$('#rd-preview').onclick = async () => {
+  const grade = $('#rd-grade').value, slot = $('#rd-slot').value, day = $('#rd-date').value.replace(/-/g, '');
+  rdPlan = null; $('#rd-commit').disabled = true; $('#rd-out').replaceChildren();
+  if (!/^\d{8}$/.test(day)) return log('Hãy chọn ngày.', 'err');
+  for (const t of TIERS) {
+    const r = rdReward(t.id);
+    if (r.item && !/^[a-z][a-z0-9_]{2,40}$/.test(r.item)) return log(`ID trang bị "${r.item}" không hợp lệ (chữ thường không dấu, số, gạch dưới).`, 'err');
+  }
+  const raidId = `${grade}_${day}_${slot}`;   // khớp id Boss trong game: <khối>_<yyyymmdd>_<1|2>
+  $('#rd-preview').disabled = true; log('Đang đọc trận Raid…');
+  try {
+    const boss = await db.collection('raids').doc(raidId).get();
+    if (!boss.exists) throw new Error(`Không có trận Raid ${raidId} (hôm đó chưa ai vào).`);
+    const b = boss.data();
+    const ok = (b.Damage || 0) >= (b.MaxHP || 1);   // Boss bị hạ = đủ thưởng; thất bại = 50% và không có trang bị
+    const snap = await db.collection('raids').doc(raidId).collection('players').orderBy('Damage', 'desc').limit(30).get();   // đọc dư để tính cả người đồng hạng ở ranh giới hạng 10
+    const rows = snap.docs.map(d => ({ uid: d.id, nick: d.data().Nickname || '?', damage: d.data().Damage || 0 })).filter(r => r.damage > 0);
+    rows.forEach(r => { r.rank = 1 + rows.filter(o => o.damage > r.damage).length; r.reward = scaleReward(rdReward(tierOf(r.rank)), ok); });
+    // đồng hạng ở ranh giới: ai có hạng ≤ 10 (kể cả hơn 10 người do cùng điểm) đều nhận thưởng như bậc 4–10
+    for (let i = rows.length - 1; i >= 0; i--) if (rows[i].rank > 10) rows.splice(i, 1);
+    const voucherId = `raid_${raidId}`;
+    await Promise.all(rows.map(async r => { r.exists = (await db.collection('rewards').doc(r.uid).collection('vouchers').doc(voucherId).get()).exists; }));
+    const table = el('table'), head = el('tr');
+    ['Hạng', 'Nickname', 'Sát thương', 'Thưởng', 'Trạng thái'].forEach(h => head.append(el('th', h)));
+    table.append(head);
+    rows.forEach(r => {
+      const tr = el('tr');
+      tr.append(el('td', String(r.rank)), el('td', r.nick), el('td', r.damage.toLocaleString('vi-VN')), el('td', rdText(r.reward)),
+        el('td', r.exists ? 'Đã chốt' : 'Mới', r.exists ? 'done' : 'new'));
+      table.append(tr);
+    });
+    $('#rd-out').append(table);
+    const todo = rows.filter(r => !r.exists && (r.reward.gold || r.reward.crystals || r.reward.item));
+    rdPlan = { raidId, day: parseInt(day, 10), voucherId, todo, ok, slot };
+    $('#rd-commit').disabled = todo.length === 0;
+    log(`Boss ${slot} khối ${grade} ngày ${day} — ${ok ? 'ĐÃ BỊ HẠ (đủ thưởng)' : 'THẤT BẠI (50%, không trang bị)'}: đã chịu ${(b.Damage || 0).toLocaleString('vi-VN')}/${(b.MaxHP || 0).toLocaleString('vi-VN')} sát thương${(b.Damage || 0) >= (b.MaxHP || 1) ? ' (ĐÃ HẠ)' : ' (chưa hạ)'}. ${todo.length} phiếu mới cần tạo.`, rows.length ? 'ok' : 'warn');
+  } catch (e) {
+    log('Không đọc được trận Raid: ' + e.message + '\nGợi ý: email đăng nhập phải nằm trong hàm isAdmin() của firestore.rules và rules đã Publish.', 'err');
+  } finally { $('#rd-preview').disabled = false; }
+};
+
+$('#rd-commit').onclick = async () => {
+  if (!rdPlan || !rdPlan.todo.length) return;
+  if (!confirm(`Tạo ${rdPlan.todo.length} phiếu thưởng Boss Raid ${rdPlan.raidId}? Việc này không hoàn tác được từ trang này.`)) return;
+  $('#rd-commit').disabled = true; $('#rd-preview').disabled = true; log('Đang tạo phiếu…');
+  try {
+    const batch = db.batch();
+    rdPlan.todo.forEach(r => {
+      const data = {
+        Title: `Hạng ${r.rank} Boss ${rdPlan.slot} khối ${rdPlan.raidId.split('_')[0]} (${rdPlan.raidId.split('_')[1].slice(6)}/${rdPlan.raidId.split('_')[1].slice(4, 6)})${rdPlan.ok ? '' : ' - thất bại 50%'}`,
+        WeekStart: rdPlan.day, Board: 'raid', Claimed: false, CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (r.reward.gold) data.Gold = r.reward.gold;
+      if (r.reward.crystals) data.Crystals = r.reward.crystals;
+      if (r.reward.item) data.ItemId = r.reward.item;
+      batch.set(db.collection('rewards').doc(r.uid).collection('vouchers').doc(rdPlan.voucherId), data);
+    });
+    await batch.commit();
+    log(`Đã tạo ${rdPlan.todo.length} phiếu thưởng Boss Raid.`, 'ok');
+    rdPlan = null; $('#rd-out').replaceChildren();
+  } catch (e) {
+    log('Không tạo được phiếu: ' + e.message + '\nNếu báo thiếu quyền: phiếu đã tồn tại, ID trang bị không hợp lệ hoặc rules chưa Publish.', 'err');
+    $('#rd-commit').disabled = false;
+  } finally { $('#rd-preview').disabled = false; }
+};
+
+// ================= CHỐT THƯỞNG RANKED THEO TUẦN =================
+// Đọc collection ranked (mỗi lớp 1 tài liệu { <UID>: { N, Pt, ... } }), lấy top 10 mỗi lớp (điểm > 10), tạo phiếu rewards/<UID>/vouchers/rk_<tuần>_<khối>_<lớp>.
+const RK_MIN_PT = 10;   // phải có điểm > 10 (khớp CONFIG.RANKED.START_POINTS trong game) mới được thưởng
+let rkPlan = null;
+(function buildRankedGrid() {
+  const table = el('table'), head = el('tr');
+  ['Bậc', 'Gold', 'Crystal'].forEach(h => head.append(el('th', h)));
+  table.append(head);
+  TIERS.forEach(t => {
+    const tr = el('tr'); tr.append(el('td', t.label));
+    [['gold', '100', '5000'], ['crystals', '0', '50']].forEach(([k, def, max]) => {
+      const input = document.createElement('input');
+      input.type = 'number'; input.min = '0'; input.max = max; input.value = def; input.id = `rk-${t.id}-${k}`; input.style.width = '90px';
+      const td = el('td'); td.append(input); tr.append(td);
+    });
+    table.append(tr);
+  });
+  $('#rk-grid').append(table);
+  $('#rw-week').querySelectorAll('option').forEach(o => $('#rk-week').append(o.cloneNode(true)));
+  $('#rk-week').selectedIndex = 0;   // mặc định: tuần đang diễn ra (chốt cuối tuần)
+})();
+const rkReward = tier => ({
+  gold: Math.max(0, Math.min(5000, parseInt($(`#rk-${tier}-gold`).value, 10) || 0)),
+  crystals: Math.max(0, Math.min(50, parseInt($(`#rk-${tier}-crystals`).value, 10) || 0))
+});
+$('#rk-preview').onclick = async () => {
+  const gsel = $('#rk-grade').value, ws = parseInt($('#rk-week').value, 10);
+  rkPlan = null; $('#rk-commit').disabled = true; $('#rk-out').replaceChildren();
+  $('#rk-preview').disabled = true; log('Đang đọc xếp hạng Ranked…');
+  try {
+    const snap = await db.collection('ranked').get();
+    const classes = [];
+    snap.forEach(doc => {
+      const [g, r] = doc.id.split('_');
+      if (gsel !== 'all' && g !== gsel) return;
+      const rows = Object.entries(doc.data()).filter(([, e]) => e && typeof e.Pt === 'number' && e.Pt > RK_MIN_PT).map(([uid, e]) => ({ uid, nick: e.N || '?', pt: e.Pt }));
+      rows.forEach(x => { x.rank = 1 + rows.filter(o => o.pt > x.pt).length; });
+      const winners = rows.filter(x => x.rank <= 10).sort((a, b) => a.rank - b.rank || a.nick.localeCompare(b.nick));
+      if (winners.length) classes.push({ id: doc.id, label: `${g}/${r}`, g: Number(g), r: Number(r), winners });
+    });
+    classes.sort((a, b) => a.g - b.g || a.r - b.r);
+    const all = [];
+    classes.forEach(c => c.winners.forEach(w => { w.reward = rkReward(tierOf(w.rank)); w.vid = `rk_${ws}_${c.id}`; all.push(w); }));
+    for (let i = 0; i < all.length; i += 25) {
+      await Promise.all(all.slice(i, i + 25).map(async w => { w.exists = (await db.collection('rewards').doc(w.uid).collection('vouchers').doc(w.vid).get()).exists; }));
+    }
+    const table = el('table'), head = el('tr');
+    ['Lớp', 'Số người', 'Thưởng mới', 'Danh sách'].forEach(h => head.append(el('th', h)));
+    table.append(head);
+    let fresh = 0, gold = 0, gems = 0;
+    classes.forEach(c => {
+      const todo = c.winners.filter(w => !w.exists && (w.reward.gold || w.reward.crystals));
+      const g = todo.reduce((a, w) => a + w.reward.gold, 0), cr = todo.reduce((a, w) => a + w.reward.crystals, 0);
+      fresh += todo.length; gold += g; gems += cr;
+      const tr = el('tr'), details = el('details'), list = el('div', '', 'small');
+      details.append(el('summary', todo.length ? `${todo.length} phiếu mới` : 'Đã chốt hết', todo.length ? 'new' : 'done'));
+      list.textContent = c.winners.map(w => `#${w.rank} ${w.nick} — ${w.pt} điểm — ${w.reward.gold} Gold${w.reward.crystals ? ` + ${w.reward.crystals} Crystal` : ''}${w.exists ? ' ✓đã chốt' : ''}`).join('\n');
+      list.style.whiteSpace = 'pre-wrap'; details.append(list);
+      tr.append(el('td', c.label), el('td', String(c.winners.length)), el('td', `${g.toLocaleString('vi-VN')} Gold + ${cr} Crystal`));
+      const td = el('td'); td.append(details); tr.append(td); table.append(tr);
+    });
+    $('#rk-out').append(table);
+    rkPlan = { ws, classes, fresh };
+    $('#rk-commit').disabled = fresh === 0;
+    log(classes.length ? `Có ${classes.length} lớp có người được thưởng; ${fresh} phiếu mới, tổng ${gold.toLocaleString('vi-VN')} Gold + ${gems.toLocaleString('vi-VN')} Crystal.` : 'Chưa lớp nào có người đủ điều kiện (điểm > 10).', classes.length ? 'ok' : 'warn');
+  } catch (e) {
+    log('Không đọc được Ranked: ' + e.message + '\nGợi ý: email đăng nhập phải nằm trong hàm isAdmin() của firestore.rules và rules đã Publish.', 'err');
+  } finally { $('#rk-preview').disabled = false; }
+};
+$('#rk-commit').onclick = async () => {
+  if (!rkPlan || !rkPlan.fresh) return;
+  if (!confirm(`Tạo ${rkPlan.fresh} phiếu thưởng Ranked tuần ${vn(rkPlan.ws)}? Việc này không hoàn tác được từ trang này.`)) return;
+  $('#rk-commit').disabled = true; $('#rk-preview').disabled = true; log('Đang tạo phiếu…');
+  try {
+    const writes = [];
+    rkPlan.classes.forEach(c => c.winners.filter(w => !w.exists && (w.reward.gold || w.reward.crystals)).forEach(w => {
+      const [g, r] = c.id.split('_');
+      const data = { Title: `Hạng ${w.rank} Ranked lớp ${g}/${r} (tuần ${vn(rkPlan.ws)})`, WeekStart: rkPlan.ws, Board: 'ranked', Claimed: false, CreatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+      if (w.reward.gold) data.Gold = w.reward.gold;
+      if (w.reward.crystals) data.Crystals = w.reward.crystals;
+      writes.push([db.collection('rewards').doc(w.uid).collection('vouchers').doc(w.vid), data]);
+    }));
+    for (let i = 0; i < writes.length; i += 400) {
+      const batch = db.batch();
+      writes.slice(i, i + 400).forEach(([ref, data]) => batch.set(ref, data));
+      await batch.commit();
+    }
+    log(`Đã tạo ${writes.length} phiếu thưởng Ranked.`, 'ok');
+    rkPlan = null; $('#rk-out').replaceChildren();
+  } catch (e) {
+    log('Không tạo được phiếu: ' + e.message + '\nNếu báo thiếu quyền: phiếu đã tồn tại hoặc rules chưa Publish.', 'err');
+    $('#rk-commit').disabled = false;
+  } finally { $('#rk-preview').disabled = false; }
+};
+</script>
+</body>
+</html>

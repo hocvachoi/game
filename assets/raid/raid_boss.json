@@ -1,5 +1,5 @@
 {
-  "_help": "Boss Raid. Thay ảnh bằng cách ghi đè Raid_Boss_Idle.png / Raid_Boss_Animation.png (cùng kích thước khung 256x202, đổi frames nếu số khung khác). HP tối đa của Boss KHÔNG đặt ở đây mà ở CONFIG.RAID.BOSS_HP (js/config.js) và bảng bossMax() trong firestore.rules. ATK/DEF/CRIT và ANSWER_TIMEOUT_SEC dùng khi Boss đánh người chơi (trả lời sai hoặc quá giờ).",
+  "_help": "Boss Raid. Thay ảnh bằng cách ghi đè Raid_Boss_Idle.png / Raid_Boss_Animation.png (cùng kích thước khung 256x202, đổi frames nếu số khung khác). HP tối đa của Boss lấy từ stats.HP ở dưới (hoặc \"HP_BY_GRADE\": {\"6\": 40000, \"7\": 50000, …} nếu muốn mỗi khối một mức; rules chỉ chấp nhận 1.000–5.000.000). Boss đã tạo trong ngày giữ HP cũ: muốn áp dụng ngay khi thử, xóa tài liệu raids/<khối>_<yyyymmdd>_<1|2> trên Firebase. ATK/DEF/CRIT và ANSWER_TIMEOUT_SEC dùng khi Boss đánh người chơi (trả lời sai hoặc quá giờ).",
   "name": "Boss Vua hề tham lam",
   "Class": "Mage",
   "attackStyle": "ranged",
@@ -10,7 +10,7 @@
     "DEF": 500,
     "CRIT": 15
   },
-  "ANSWER_TIMEOUT_SEC": 15,
+  "ANSWER_TIMEOUT_SEC": 45,
   "sprites": {
     "idle": {
      "src": "assets/raid/raid_boss_idle.png",

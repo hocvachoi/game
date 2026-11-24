@@ -29,6 +29,23 @@ function populateClassOptions() {
   });
 }
 
+// Đăng ký: lưới chọn nhân vật (lần đầu khi tạo tài khoản). Mỗi ô = ảnh idle (khung đầu, đứng yên) + tên; mặc định nhân vật đầu tiên.
+let signupCharacter = CONFIG.DEFAULT_CHARACTER;
+function buildSignupCharacters() {
+  const grid = $('#signup-char-grid');
+  grid.replaceChildren();
+  Object.values(CONFIG.CHARACTERS).forEach(c => {
+    const dir = c.key.toLowerCase(), b = el('button', 'char-opt' + (c.key === signupCharacter ? ' is-on' : ''));
+    b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(c.key === signupCharacter));
+    b.append(Story.portrait({ src: `assets/characters/${dir}/${dir}_idle.png`, frameW: 256, frameH: 202, frames: [0], still: true }), el('span', '', c.name));
+    b.onclick = () => {
+      signupCharacter = c.key;
+      grid.querySelectorAll('.char-opt').forEach(o => { const on = o === b; o.classList.toggle('is-on', on); o.setAttribute('aria-checked', String(on)); });
+    };
+    grid.append(b);
+  });
+}
+
 // Nền tổng của website: ảnh Selection_Stage_Map.jpg (làm mờ bằng CSS #app-bg). Mặc định World đầu tiên khi chưa đăng nhập.
 function setAppBackground(src) { $('#app-bg').style.backgroundImage = `url("${src}")`; }
 setAppBackground(CONFIG.WORLDS[0].mapImage);
@@ -52,6 +69,8 @@ function renderLevels() {
   }
   setMsg('');
   show('screen-levels');
+  const ending = Story.pendingEnd; Story.pendingEnd = null;   // vừa vượt ải: phát hội thoại end_stage trên bản đồ
+  if (ending) Story.play(ending.world, ending.stage, 'end_stage', () => {});
 }
 
 function renderMapPlayerInfo() {
@@ -162,6 +181,7 @@ async function checkRewards() {
 }
 
 populateClassOptions();
+buildSignupCharacters();
 
 document.querySelectorAll('[data-screen]').forEach(link => {
   link.addEventListener('click', event => {
@@ -234,7 +254,7 @@ $('#signup').onsubmit = async event => {
   setFormLoading(form, true);
   form.querySelector('.button-label').textContent = 'Đang tạo tài khoản…';
   try {
-    await Auth.register($('#signup-cls').value, username, password, nickname, room);
+    await Auth.register($('#signup-cls').value, username, password, nickname, room, signupCharacter);
     form.reset();
     setAuthStatus('#signup-status', '');
     show('screen-login');

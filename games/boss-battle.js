@@ -1,5 +1,5 @@
 // V4: Boss Raid — cả khối cùng đánh Boss (HP chung) theo LỊCH (CONFIG.RAID.SCHEDULE: mỗi ngày chỉ một số khối được mở).
-// Luồng mỗi ngày của một khối: Boss 1 xuất hiện khi có START_PLAYERS (5) người bấm vào trước giờ đóng cửa (21:00 VN); mỗi Boss tối đa MAX_PLAYERS (70)
+// Luồng mỗi ngày của một khối: Boss 1 xuất hiện khi có START_PLAYERS người (hiện TẠM = 1) bấm vào trước giờ đóng cửa (21:00 VN); mỗi Boss tối đa MAX_PLAYERS (70)
 // người và BOSS_MIN (15) phút (hết giờ mà chưa hạ = THẤT BẠI); Boss 2 xuất hiện 5 phút sau khi Boss 1 kết thúc, bắt đầu khi có người đầu tiên bấm vào.
 // Boss đã mở thì chạy nốt kể cả quá 21:00. Thưởng (admin chốt): hạ Boss = đủ thưởng; thất bại = 50% và không có trang bị.
 // Cách tiết kiệm đọc/ghi (Firestore):
@@ -29,15 +29,34 @@ const Raid = {
   dayKey(ms = Date.now()) { const d = new Date(ms); return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate(); },   // khớp dayInt() trong rules
   // Thứ trong tuần theo cách gọi Việt Nam: 2 = Thứ Hai … 7 = Thứ Bảy, 8 = Chủ Nhật (khóa của CONFIG.RAID.SCHEDULE).
   vnWeekday(ms = Date.now()) { const d = new Date(ms + 7 * 3600 * 1000).getUTCDay(); return d === 0 ? 8 : d + 1; },
-  todayGrades(ms = Date.now()) { return (this.R().SCHEDULE[this.vnWeekday(ms)] || []).map(String); },
+  // LỊCH RAID: tài liệu config/raidSchedule { Weekly: {"2": ["7"], …}, Dates: {"20261125": ["6","7"], …} } do admin tạo (Dates ghi đè Weekly; mảng rỗng = đóng).
+  // Chưa có tài liệu (hoặc không đọc được) thì dùng CONFIG.RAID.SCHEDULE mặc định. Đọc 1 lượt mỗi lần bấm vào Raid, nhớ 5 phút trong bộ nhớ.
+  schedule: null, schedAt: 0,
+  async loadSchedule(force) {
+    if (!force && this.schedAt && Date.now() - this.schedAt < 5 * 60000) return;
+    try {
+      const snap = await FirebaseService.db.collection('config').doc('raidSchedule').get();
+      this.schedule = snap.exists ? snap.data() : null;
+    } catch (e) { console.warn('Không đọc được lịch Raid, dùng lịch mặc định:', e); }
+    this.schedAt = Date.now();
+  },
+  weeklyMap() { return this.schedule ? (this.schedule.Weekly || {}) : this.R().SCHEDULE; },
+  todayGrades(ms = Date.now()) {
+    const S = this.schedule, key = String(this.dayKey(ms));
+    if (S && S.Dates && Object.prototype.hasOwnProperty.call(S.Dates, key)) return (S.Dates[key] || []).map(String);
+    return (this.weeklyMap()[this.vnWeekday(ms)] || []).map(String);
+  },
   scheduleText() {
-    const names = { 2: 'Thứ Hai', 3: 'Thứ Ba', 4: 'Thứ Tư', 5: 'Thứ Năm', 6: 'Thứ Sáu', 7: 'Thứ Bảy', 8: 'Chủ nhật' };
-    return Object.keys(this.R().SCHEDULE).map(Number).sort((a, b) => a - b).filter(d => (this.R().SCHEDULE[d] || []).length)
-      .map(d => `${names[d]}: khối ${this.R().SCHEDULE[d].join(', ')}`).join(' · ');
+    const names = { 2: 'Thứ Hai', 3: 'Thứ Ba', 4: 'Thứ Tư', 5: 'Thứ Năm', 6: 'Thứ Sáu', 7: 'Thứ Bảy', 8: 'Chủ nhật' }, W = this.weeklyMap();
+    const weekly = Object.keys(W).map(Number).sort((a, b) => a - b).filter(d => (W[d] || []).length).map(d => `${names[d]}: khối ${W[d].join(', ')}`).join(' · ');
+    const today = this.dayKey(), dates = this.schedule && this.schedule.Dates || {};
+    const extra = Object.keys(dates).filter(k => Number(k) >= today).sort().slice(0, 4)
+      .map(k => `${k.slice(6)}/${k.slice(4, 6)}: ${(dates[k] || []).length ? 'khối ' + dates[k].join(', ') : 'nghỉ'}`).join(' · ');
+    return weekly + (extra ? ` · Ngày riêng: ${extra}` : '');
   },
   openText() {
     const R = this.R(), hh = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
-    return `Boss Raid mở từ ${hh(R.OPEN_MIN)} đến ${hh(R.CLOSE_MIN)} (giờ Việt Nam) khi có ${R.START_PLAYERS} người bấm vào.`;
+    return `Boss Raid mở từ ${hh(R.OPEN_MIN)} đến ${hh(R.CLOSE_MIN)} (giờ Việt Nam)` + (R.START_PLAYERS > 1 ? ` khi có ${R.START_PLAYERS} người bấm vào.` : '.');
   },
   tsMs(ts) { return ts && ts.toMillis ? ts.toMillis() : 0; },
   secondsLeft() { return (this.startMs + this.R().BOSS_MIN * 60000 - Date.now()) / 1000; },   // thời gian còn lại của Boss đang đánh
@@ -50,6 +69,7 @@ const Raid = {
   async open() {
     if (this.running || this.waiting || this.opening) return;
     if (!FirebaseService.configured) { setMsg(FirebaseService.errorMessage, true); return; }
+    await this.loadSchedule();
     const grade = String(Player.u.cls), today = this.todayGrades();
     if (!today.includes(grade)) {   // lịch: hôm nay không phải ngày của khối này
       setMsg(today.length ? `Hôm nay Boss Raid dành cho khối ${today.join(', ')}. Lịch: ${this.scheduleText()}.` : `Hôm nay không có Boss Raid. Lịch: ${this.scheduleText()}.`, true);
@@ -59,8 +79,8 @@ const Raid = {
     if (!world) { setMsg('Chưa tải được bản đồ của khối. Hãy thử lại.', true); return; }
     this.opening = true; setMsg('Đang vào Boss Raid…');
     try {
-      const [bossDef, questions] = await Promise.all([this.loadBoss(), this.loadQuestions(world)]);
-      if (!questions.length) throw new Error('Chưa có câu hỏi nào trong các ải của khối này.');
+      const [bossDef, questions] = await Promise.all([this.loadBoss(), this.loadRaidQuestions(world)]);
+      if (!questions.length) throw new Error('Chưa có câu hỏi nào trong Dungeon_1.xlsx / Dungeon_2.xlsx của khối này.');
       const slot = await this.route(grade);
       if (!slot) return;   // đã hiện thông báo lý do
       this.world = world; this.bossDef = bossDef; this.questions = questions;
@@ -96,6 +116,11 @@ const Raid = {
     if (!s2.exists && this.vnMinutes(now) >= R.LATEST_START_MIN) { setMsg('Boss 2 hôm nay đã quá giờ bắt đầu.', true); return 0; }
     return 2;
   },
+  // HP tối đa của Boss: ưu tiên raid_boss.json → HP_BY_GRADE[khối] (nếu có) rồi stats.HP; không hợp lệ thì dùng CONFIG.RAID.BOSS_HP. Rules chỉ chấp nhận 1.000–5.000.000.
+  bossHp(grade) {
+    const d = this.bossDef || {}, by = d.HP_BY_GRADE || {}, pick = [by[grade], d.stats && d.stats.HP].map(Number).find(n => Number.isFinite(n) && n > 0);
+    return pick ? Math.min(5000000, Math.max(1000, Math.round(pick))) : this.R().BOSS_HP[grade];
+  },
   async loadBoss() {
     if (this.cache.boss) return this.cache.boss;
     const r = await fetch(this.R().BOSS_FILE);
@@ -105,7 +130,18 @@ const Raid = {
     const boss = { ...data, key: 'raid_boss', stats: { CRIT: 0, ...data.stats } };
     return (this.cache.boss = Monster.create(boss));
   },
-  // Câu hỏi = TOÀN BỘ file Excel của mọi ải trong thế giới của khối (1 lần tải mỗi phiên).
+  // Câu hỏi BOSS RAID = Dungeon_1.xlsx + Dungeon_2.xlsx của thế giới (khối) đó (1 lần tải mỗi phiên). Dùng đường dẫn `world.dungeons[].file`.
+  async loadRaidQuestions(world) {
+    const key = 'raid:' + world.id;
+    if (this.cache[key]) return this.cache[key];
+    const lists = await Promise.all(world.dungeons.filter(d => d.file).map(async d => {
+      const r = await fetch(d.file);
+      if (!r.ok) throw new Error(`Không đọc được ${d.file} (${r.status}).`);
+      return Quiz.parse(await r.arrayBuffer());
+    }));
+    return (this.cache[key] = lists.flat());
+  },
+  // Câu hỏi = TOÀN BỘ file Excel của mọi ải trong thế giới của khối (1 lần tải mỗi phiên). Chỉ còn dùng cho Ranked (Boss Raid dùng loadRaidQuestions).
   async loadQuestions(world) {
     if (this.cache[world.id]) return this.cache[world.id];
     const stages = world.stages.filter(s => WorldMap.hasQuestions(s));
@@ -130,10 +166,11 @@ const Raid = {
       const [bs, ps] = await Promise.all([t.get(this.bossRef), t.get(this.playerRef)]);
       if (bs.exists && ps.exists) return { b: bs.data(), mine: ps.data(), startedNow: false };   // vào lại: không ghi gì
       if (!bs.exists) {
-        const base = { MaxHP: R.BOSS_HP[grade], Damage: 0, Players: 1, Slot: slot, CreatedAt: FV.serverTimestamp() };
-        if (slot === 2) base.StartAt = FV.serverTimestamp();
+        const base = { MaxHP: this.bossHp(grade), Damage: 0, Players: 1, Slot: slot, CreatedAt: FV.serverTimestamp() };
+        const startNow = slot === 2 || R.START_PLAYERS <= 1;   // Boss 2, hoặc Boss 1 khi chỉ cần 1 người: bắt đầu ngay lúc tạo
+        if (startNow) base.StartAt = FV.serverTimestamp();
         t.set(this.bossRef, base); t.set(this.playerRef, mineNew());
-        return { b: { MaxHP: base.MaxHP, Damage: 0, Players: 1 }, startedNow: slot === 2 };
+        return { b: { MaxHP: base.MaxHP, Damage: 0, Players: 1 }, startedNow: startNow };
       }
       const b = bs.data(), start = this.tsMs(b.StartAt);
       if (b.DefeatedAt || (start && Date.now() >= start + R.BOSS_MIN * 60000)) throw new Error('Boss này đã kết thúc.');
@@ -145,7 +182,7 @@ const Raid = {
       return { b: { ...b, Players: upd.Players }, startedNow };
     });
     const b = info.b;
-    this.maxHp = Number(b.MaxHP) || R.BOSS_HP[grade];
+    this.maxHp = Number(b.MaxHP) || this.bossHp(grade);
     this.bossDamage = Number(b.Damage) || 0;
     this.players = Number(b.Players) || 1;
     this.startMs = this.tsMs(b.StartAt) || (info.startedNow ? Date.now() : 0);
@@ -273,11 +310,13 @@ const Raid = {
     });
   },
   spawnFloat(nick, damage) {
-    const stage = document.getElementById('stage'); if (!stage) return;
-    const f = el('div', 'fx-float', `${nick} −${this.fmt(damage)}`);
-    f.style.left = `${52 + Math.random() * 30}%`; f.style.top = `${22 + Math.random() * 22}%`;
+    // Gắn vào khối .enemy (đi theo Boss), z-index THẤP HƠN sprite Boss ⇒ chữ nằm phía sau Boss, nổi lên phía trên/sau lưng Boss, không đè giữa thân Boss.
+    const host = document.querySelector('#screen-game .enemy') || document.getElementById('stage'); if (!host) return;
+    const f = el('div', 'fx-float'); f.append(el('b', '', `−${this.fmt(damage)}`), el('small', '', nick));
+    f.style.left = `${50 + Math.random() * 42}%`; f.style.top = `${-22 + Math.random() * 30}%`;   // phía trên/sau lưng Boss, tránh chồng lên thân
     f.addEventListener('animationend', () => f.remove());
-    stage.append(f);
+    setTimeout(() => f.remove(), 2000);
+    host.append(f);
   },
   clearFx() { this.fxTimers.forEach(clearTimeout); this.fxTimers = []; this.hold = 0; document.querySelectorAll('.fx-float').forEach(n => n.remove()); },
   // ----- KỸ NĂNG CUỐI: mỗi lần Boss mất thêm ULT_EVERY_PCT% HP tối đa → gây ULT_DAMAGE lên TẤT CẢ người chơi (xem CONFIG.RAID.ULT_*) -----

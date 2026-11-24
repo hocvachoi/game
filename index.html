@@ -63,6 +63,11 @@
     <label for="signup-nickname">Nickname trong game
       <input id="signup-nickname" required minlength="2" maxlength="16" autocomplete="nickname">
     </label>
+    <fieldset class="char-pick">
+      <legend>Chọn nhân vật của bạn</legend>
+      <div id="signup-char-grid" class="char-grid" role="radiogroup" aria-label="Chọn nhân vật"></div>
+      <span class="field-hint">Chọn lần đầu khi tạo tài khoản; sau này vẫn đổi được trong màn Trang bị (đổi sang nghề khác sẽ tháo trang bị và có thời gian chờ).</span>
+    </fieldset>
     <button class="btn auth-submit" type="submit"><span class="button-label">Tạo tài khoản</span><span class="button-loading" aria-hidden="true"></span></button>
     <p id="signup-status" class="auth-status" role="status" aria-live="polite"></p>
     <p class="auth-switch">Đã có tài khoản? <a href="#login" data-screen="login">Quay lại đăng nhập</a></p>
@@ -137,7 +142,7 @@
         <button id="open-rank" class="map-action" type="button" title="Xếp hạng" aria-label="Xếp hạng"><img src="assets/ui/ranking.png" alt=""><span>Xếp hạng</span></button>
         <button id="open-raid" class="map-action" type="button" title="Boss Raid" aria-label="Boss Raid"><img src="assets/ui/boss_raid.png" alt=""><span>Boss Raid</span></button>
         <button id="open-ranked" class="map-action" type="button" title="Ranked" aria-label="Ranked"><img src="assets/ui/ranked.png" alt=""><span>Ranked</span></button>
-        <button id="open-wheel" class="map-action" type="button" title="Vòng quay may mắn" aria-label="Vòng quay may mắn"><span class="map-action-emoji" aria-hidden="true">🎡</span><span>Quay số</span></button>
+        <button id="open-wheel" class="map-action" type="button" title="Vòng quay may mắn" aria-label="Vòng quay may mắn"><img src="assets/ui/wheel.png" alt=""><span>Quay số</span></button>
         <button id="open-settings" class="map-action" type="button" title="Cài đặt" aria-label="Cài đặt"><img src="assets/ui/btn_setting.png" alt=""><span>Cài đặt</span></button>
         <button id="logout" class="map-action" type="button" title="Đăng xuất" aria-label="Đăng xuất"><img src="assets/ui/btn_logout.png" alt=""><span>Đăng xuất</span></button>
       </nav>
@@ -317,6 +322,7 @@
 <script src="js/leaderboard.js"></script>
 <script src="js/monsters/monster.js"></script>
 <script src="js/stage-monster.js"></script>
+<script src="js/story.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/effects.js"></script>
 <script src="games/adventure.js"></script>

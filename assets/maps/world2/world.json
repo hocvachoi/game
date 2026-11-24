@@ -1,6 +1,8 @@
 {
   "id": "world2",
   "name": "LỤC ĐỊA BÌNH MINH",
+  "stage_names": ["Thị trấn Rừng Xanh", "Hang tử thần", "Đèo lộng gió", "Đầm lầy không đáy", "Thành trì bỏ hoang", "Thảo nguyên an lành", "Thị trấn oan hồn", "Kinh đô", "Cung điện Hoàng gia", "Thung lũng Địa ngục", "Hang rồng", ""],
+  "dungeon_names": ["Nhà tù vô tận", "Hải đảo cô đơn"],
   "stage_nodes": [
     { "x": 34.3, "y": 29.4 }, { "x": 48.4, "y": 27.1 },
     { "x": 63.3, "y": 27.6 }, { "x": 74.7, "y": 32.0 },

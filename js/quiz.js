@@ -24,11 +24,12 @@ const Quiz = {
     });
     return out;
   },
+  wrongWaitMs() { const v = Number(window.CONFIG && CONFIG.GAME && CONFIG.GAME.WRONG_WAIT_MS); return Number.isFinite(v) && v >= 0 ? v : 5000; },   // thời gian chờ xem đáp án khi trả lời sai
   pick(list, n) { return shuffle(list.slice()).slice(0, Math.min(n, list.length)); },
 
   render(q) {
     const node = el('div', 'q'), txt = el('div', 'qtext');
-    let check, mark, solution, hint = () => false;   // hint(): hiện MỘT đáp án đúng (trả true nếu hiện được) — dùng cho nút Gợi ý bằng Crystal
+    let check, mark, solution, hint = () => false, reveal = () => {};   // hint(): hiện MỘT đáp án đúng (trả true nếu hiện được) — dùng cho nút Gợi ý bằng Crystal
     if (q.type === 'Danh sách') {
       const parts = q.text.split('{D}');
       txt.innerHTML = parts.map((p, k) => p + (k < parts.length - 1 ? '<select></select>' : '')).join('');
@@ -41,6 +42,10 @@ const Quiz = {
       check = () => ({ ready: sels.every(s => s.value), correct: sels.every((s, k) => +s.value === q.ans[k]) });
       mark = () => sels.forEach((s, k) => s.classList.add(+s.value === q.ans[k] ? 'good' : 'bad'));
       solution = () => sels.map((s, k) => q.opts[q.ans[k] - 1] || '?').join(' · ');
+      reveal = () => sels.forEach((s, k) => {   // ô chọn sai/bỏ trống: hiện thêm đáp án đúng ngay cạnh, tô nổi bật
+        if (+s.value === q.ans[k]) { s.classList.add('reveal'); return; }
+        s.after(el('span', 'ans-reveal', '→ ' + (q.opts[q.ans[k] - 1] || '?')));
+      });
       hint = () => {   // điền sẵn đúng 1 ô chưa đúng rồi khóa ô đó
         const open = sels.map((s, k) => ({ s, k })).filter(x => !x.s.disabled && +x.s.value !== q.ans[x.k]);
         if (!open.length) return false;
@@ -81,6 +86,11 @@ const Quiz = {
       check = () => ({ ready: slots.every(s => s.firstElementChild), correct: slots.every(s => s.firstElementChild && s.firstElementChild.dataset.i === s.dataset.i) });
       mark = () => slots.forEach(s => s.classList.add(s.firstElementChild && s.firstElementChild.dataset.i === s.dataset.i ? 'good' : 'bad'));
       solution = () => pairs.map(p => p.l + ' → ' + p.r).join(' | ');
+      reveal = () => rows.forEach((r, i) => {   // dòng ghép sai/bỏ trống: hiện đáp án đúng dưới ô, tô nổi bật
+        const c = r.s.firstElementChild;
+        if (c && c.dataset.i === r.s.dataset.i) { r.s.classList.add('reveal'); return; }
+        r.row.append(el('div', 'ans-reveal', '→ ' + pairs[i].r));
+      });
       hint = () => {   // đặt đúng 1 đáp án vào ô của nó rồi khóa (đáp án có thể đang nằm ở ô khác → ô đó thành trống)
         const open = slots.filter(s => !s.classList.contains('hinted') && !(s.firstElementChild && s.firstElementChild.dataset.i === s.dataset.i));
         if (!open.length) return false;
@@ -103,6 +113,7 @@ const Quiz = {
       check = () => ({ ready: chosen().length > 0, correct: chosen().join() === q.ans.slice().sort((a, b) => a - b).join() });
       mark = () => labels.forEach(l => { const n = +l.firstChild.value, on = l.firstChild.checked, right = q.ans.includes(n); if (right) l.classList.add('good'); else if (on) l.classList.add('bad'); });
       solution = () => q.ans.map(n => q.opts[n - 1]).join(' · ');
+      reveal = () => labels.forEach(l => { if (q.ans.includes(+l.firstChild.value)) l.classList.add('reveal'); });   // tô nổi bật lại MỌI đáp án đúng (kể cả câu chỉ có 1 đáp án)
       hint = () => {   // làm nổi bật 1 đáp án đúng (không tự chọn hộ); câu 1 đáp án thì lộ luôn đáp án
         const open = labels.filter(l => q.ans.includes(+l.firstChild.value) && !l.classList.contains('hint'));
         if (!open.length) return false;
@@ -112,7 +123,7 @@ const Quiz = {
       node.append(list);
     }
     if (q.img) { const im = el('img'); im.src = q.img; im.alt = ''; im.loading = 'lazy'; node.prepend(im); }
-    return { node, check, mark, solution, hint, lock: () => node.classList.add('locked') };
+    return { node, check, mark, solution, hint, reveal, lock: () => node.classList.add('locked') };
   },
 
   // Chạy một lượt làm bài. cb.result(correct, soFar, total, answered) trả về true (người chơi gục), ms hoặc Promise để khóa nút.
@@ -134,7 +145,8 @@ const Quiz = {
       fb.setAttribute('role', 'status');
       // cb.tools({ view, question, isDone }) → phần tử thanh công cụ (Gợi ý / Hồi HP) hiện trên câu hỏi; bị khóa khi đã trả lời
       const tools = cb.tools ? cb.tools({ view: v, question: q, isDone: () => done }) : null;
-      box.replaceChildren(head, ...(tools ? [tools] : []), v.node, fb, btn);
+      if (tools) head.append(tools);   // công cụ (Gợi ý / Hồi HP) nằm cùng hàng với đồng hồ trong qhead
+      box.replaceChildren(head, v.node, fb, btn);
       if (cb.begin) cb.begin(i, head);
       btn.onclick = () => {
         if (ended) return;
@@ -148,20 +160,28 @@ const Quiz = {
         if (!r.correct) fb.append(el('div', '', 'Đáp án: ' + v.solution()));
         if (q.exp) fb.append(el('div', '', q.exp));
         btn.textContent = cb.loop || i + 1 < qs.length ? 'Câu tiếp' : 'Xem kết quả';
+        if (!r.correct) v.reveal();   // trả lời sai: tô nổi bật lại đáp án đúng để học sinh dễ đối chiếu
         const action = cb.result(r.correct, ok, qs.length, answered);
         if (action === true) return ctl.end({ playerDefeated: true });
-        if (Number.isFinite(action) && action > 0) {
+        // Nút "Câu tiếp" mở khi: (1) hiệu ứng/đòn của lượt này xong VÀ (2) nếu trả lời sai thì đã đủ WRONG_WAIT_MS (mặc định 5 giây) để xem đáp án.
+        const waits = [];
+        if (Number.isFinite(action) && action > 0) waits.push(new Promise(res => setTimeout(res, action)));
+        else if (action && typeof action.then === 'function') waits.push(action.then(() => {}, error => { console.error('Quiz result action failed:', error); }));
+        if (!r.correct) {
+          const label = btn.textContent, total = Quiz.wrongWaitMs(), t0 = Date.now();
+          waits.push(new Promise(res => {
+            const tick = () => {
+              const left = total - (Date.now() - t0);
+              if (left <= 0 || !btn.isConnected) { btn.textContent = label; res(); return; }
+              btn.textContent = `${label} (${Math.ceil(left / 1000)}s)`;
+              setTimeout(tick, Math.min(250, left));
+            };
+            tick();
+          }));
+        }
+        if (waits.length) {
           btn.disabled = true;
-          setTimeout(() => { if (btn.isConnected) btn.disabled = false; }, action);
-        } else if (action && typeof action.then === 'function') {
-          btn.disabled = true;
-          action.then(
-            () => { if (btn.isConnected) btn.disabled = false; },
-            error => {
-              console.error('Quiz result action failed:', error);
-              if (btn.isConnected) btn.disabled = false;
-            }
-          );
+          Promise.all(waits).then(() => { if (btn.isConnected) btn.disabled = false; });
         }
       };
     };

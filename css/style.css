@@ -106,7 +106,7 @@ h1{font:700 23px/1.4 "VT323",sans-serif;color:var(--gold);margin:0 0 16px;text-s
    select/.slot/.pool/.chip = dạng "Danh sách" và "Kéo thả"; .fb = lời phản hồi; .result = màn kết quả. */
 .qwrap{overflow:auto;padding:18px;background-color:rgba(25,34,32,.76);background-image:linear-gradient(rgba(184,206,173,.075) 1px,transparent 1px),linear-gradient(90deg,rgba(184,206,173,.075) 1px,transparent 1px);background-size:16px 16px}
 .quiz{background:rgba(16,27,45,.52);padding:22px;width:100%;max-width:1640px;margin:0 auto}
-.qhead{position:relative;color:var(--gold);font-weight:700;margin-bottom:10px}
+.qhead{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;color:var(--gold);font-weight:700;margin-bottom:10px}
 .qtext{font-size:16px;line-height:1.6;max-width:100ch;color:#fff}
 .q img{max-width:100%;max-height:240px}
 .opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;margin:9px 0;border:2px solid rgba(225,237,219,.58);background:rgba(9,14,15,.74);box-shadow:inset 0 0 0 2px rgba(255,255,255,.035);cursor:pointer;transition:background .12s,border-color .12s}
@@ -248,7 +248,7 @@ select.bad,.slot.bad{border-color:var(--bad);background-color:rgba(147,42,42,.55
 
 /* [8b] ĐỒNG HỒ TRẢ LỜI & GHI CHÚ CHIẾN ĐẤU — .qtimer (⏱ giây, đỏ khi .is-low), .combat-note (dòng "Bạn gây ... sát thương"), .save-status. */
 /* V3: đồng hồ trả lời + ghi chú chiến đấu */
-.qtimer{float:right;font-weight:700;color:#fff7dc}
+.qtimer{float:none;margin-left:auto;font-weight:700;color:#fff7dc}
 .qtimer.is-low{color:var(--bad)}
 .combat-note{font-size:.9em;opacity:.9}
 
@@ -496,9 +496,12 @@ select.bad,.slot.bad{border-color:var(--bad);background-color:rgba(147,42,42,.55
 .raid-top{position:absolute;z-index:7;top:44px;right:2vw;width:min(360px,70vw);max-height:60%;overflow:auto;padding:8px;background:rgba(14,10,8,.95);border:3px solid #c9a24a;border-radius:8px;color:#fff7dc}
 .raid-top-list{display:grid;gap:4px;margin:8px 0;text-align:left}
 #raid-counter{color:#ffb4a0}#raid-counter.is-low{color:#ff6a4a;font-weight:700}
-.fx-float{position:absolute;z-index:4;pointer-events:none;white-space:nowrap;color:#ff7a5a;font:22px/1 var(--pixel);text-shadow:2px 2px 0 #1b0d08;animation:fx-float 1.6s ease-out forwards}
-@keyframes fx-float{0%{opacity:0;transform:translateY(8px)}15%{opacity:1}100%{opacity:0;transform:translateY(-40px)}}
-@media (prefers-reduced-motion:reduce){.fx-float{animation-duration:.01s}}
+.fx-float{position:absolute;z-index:1;pointer-events:none;white-space:nowrap;text-align:center;line-height:1;color:#ff7a5a;font:700 clamp(30px,3.8vw,56px)/1 "VT323",var(--pixel),sans-serif;letter-spacing:.5px;
+  text-shadow:2px 2px 0 var(--c-void),-2px 2px 0 var(--c-void),2px -2px 0 var(--c-void),-2px -2px 0 var(--c-void);animation:fx-float 1.5s ease-out forwards}
+.fx-float b{display:block;font-weight:700}
+.fx-float small{display:block;margin-top:2px;color:#ffd9a8;font:700 clamp(15px,1.7vw,22px)/1 "VT323",var(--pixel),sans-serif}
+@keyframes fx-float{0%{opacity:0;transform:translate(-50%,18px) scale(.5)}12%{opacity:1;transform:translate(-50%,-4px) scale(1.4)}26%{transform:translate(-50%,4px) scale(1)}70%{opacity:1;transform:translate(-50%,-28px) scale(1)}100%{opacity:0;transform:translate(-50%,-60px) scale(1)}}
+@media (prefers-reduced-motion:reduce){.fx-float{animation-name:fx-float-still}@keyframes fx-float-still{0%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,0)}}}
 
 /* V4+: đếm ngược đổi nghề cạnh ô chọn nhân vật */
 .class-cd{display:block;margin-top:2px;color:#ffb4a0;font-size:18px}
@@ -860,8 +863,8 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 #screen-game .qwrap{width:57%;padding:0}
 #screen-game #quiz.quiz{width:calc(100% - 10px);margin:auto 5px;padding:5px;background:rgba(16,27,45,.35)}
 /* Boss Raid: sprite Boss và chiêu của Boss gấp đôi (Boss đứng sau thẻ câu hỏi và sau nhân vật). Tâm Boss giữ nguyên vị trí cũ. */
-#screen-game.is-raid .enemy{left:1.6%;width:min(64vw,112vh);max-width:64vw}
-#screen-game.is-raid #skill-projectile.is-boss-skill{width:clamp(144px,24vw,288px)}
+#screen-game.is-raid .enemy{left:1.6%;width:min(48vw,84vh);max-width:48vw}   /* Boss ×1.5 (bình thường min(32vw,56vh)) */
+#screen-game.is-raid #skill-projectile.is-boss-skill{width:clamp(108px,18vw,216px)}
 #screen-game.is-raid .enemy .enemy-info{position:fixed;left:22px;top:90px;width:min(320px,30vw);margin:0;z-index:7}   /* sprite ×2 cao hơn khung: tên + HP Boss ghim dưới thanh trạng thái người chơi */
 @media (max-width:800px),(max-height:520px){#screen-game.is-raid .enemy .enemy-info{top:66px;left:12px}}
 /* Chúc mừng cấp 100 (js/celebrate.js) */
@@ -885,10 +888,10 @@ h1,.auth-kicker,.ribbon,.ui-ribbon h1{color:var(--c-gold-lt)}
 
 
 /* [34] ===== Gợi ý / Hồi HP bằng Crystal, Vòng quay may mắn, ô Troll ===== */
-.qtools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 4px}
+.qtools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0}
 .qtools .btn{min-height:30px;padding:2px 10px;font-size:16px;border-width:3px}
 .qtools .btn:disabled{opacity:.5}
-.qtools-bal{margin-left:auto;font-size:18px;color:var(--c-gold-lt)}
+.qtools-bal{margin-left:4px;font-size:18px;color:var(--c-gold-lt)}
 .opt.hint{box-shadow:0 0 0 3px #ffd23f,0 0 14px 4px rgba(255,210,63,.7);animation:hint-pulse 1s ease-in-out 3}
 select.hinted,.chip.hinted,.slot.hinted{outline:3px solid #ffd23f;outline-offset:-1px}
 @keyframes hint-pulse{50%{box-shadow:0 0 0 4px #fff2a8,0 0 22px 8px rgba(255,210,63,.9)}}
@@ -898,22 +901,87 @@ select.hinted,.chip.hinted,.slot.hinted{outline:3px solid #ffd23f;outline-offset
 .troll-card{text-align:center}
 .troll-title{font:700 clamp(30px,6vw,46px)/1.1 "VT323",var(--pixel),sans-serif;color:#ff6b5f;text-shadow:3px 3px 0 var(--c-void)}
 .wheel-card{align-items:center;text-align:center}
-.wheel-stage{position:relative;width:min(300px,72vw);aspect-ratio:1;margin:6px auto}
-.wheel{position:absolute;inset:0;border-radius:50%;border:6px solid var(--c-gold);box-shadow:inset 0 0 0 3px var(--c-bronze),0 0 0 3px var(--c-void);transition:transform 4.2s cubic-bezier(.12,.72,.15,1);overflow:hidden}
-.wheel-slot{position:absolute;left:50%;top:0;width:0;height:50%;transform-origin:50% 100%}
-.wheel-slot-in{position:absolute;left:-34px;top:8px;width:68px;display:flex;flex-direction:column;align-items:center;gap:0;font-size:12px;line-height:1.05;color:var(--c-gold-lt)}
-.wheel-ico{font-size:20px}
-.wheel-txt{word-break:break-word}
-.wheel-pointer{position:absolute;left:50%;top:-10px;z-index:3;transform:translateX(-50%);border-left:12px solid transparent;border-right:12px solid transparent;border-top:22px solid #ff4b3a;filter:drop-shadow(0 2px 0 var(--c-void))}
-.wheel-hub{position:absolute;left:50%;top:50%;z-index:2;width:84px;height:84px;transform:translate(-50%,-50%);border-radius:50%;font:700 22px "VT323",var(--pixel),sans-serif;color:var(--c-void);background:radial-gradient(circle at 35% 30%,var(--c-gold-lt),var(--c-gold));border:4px solid var(--c-bronze);box-shadow:0 3px 0 var(--c-void);cursor:pointer}
-.wheel-hub:disabled{opacity:.6;cursor:default}
 .wheel-actions{grid-template-columns:1fr;width:100%}
-@media (prefers-reduced-motion:reduce){.wheel{transition-duration:.4s}}
-@media (max-height:480px){.wheel-stage{width:min(200px,60vh)}.wheel-slot-in{left:-26px;width:52px;font-size:10px}.wheel-ico{font-size:15px}.wheel-hub{width:56px;height:56px;font-size:16px}}
 @media (max-width:800px) and (orientation:portrait){#screen-levels .map-actions{grid-template-columns:repeat(8,minmax(0,1fr))}}
 #screen-levels .map-action .map-action-emoji{width:min(100%,64px);max-width:64px;height:auto;margin:0 auto}
 
-.wheel-hub{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1}
 .wheel-hub-cost{font:700 13px/1.1 "VT323",var(--pixel),sans-serif;color:var(--c-void)}
-@media (max-height:480px){.wheel-hub-cost{font-size:11px}}
 
+
+/* [v5.14] Trả lời sai: tô nổi bật lại đáp án đúng (.reveal) và hiện đáp án đúng cạnh ô sai (.ans-reveal) */
+.opt.reveal{border-color:#ffd23f;background:rgba(53,155,62,.5);box-shadow:0 0 0 3px #ffd23f,0 0 14px 4px rgba(255,210,63,.7);animation:hint-pulse 1s ease-in-out 3}
+.opt.reveal span::after{content:" ✔";color:#ffd23f}
+select.reveal,.slot.reveal{outline:3px solid #ffd23f;outline-offset:-1px}
+.ans-reveal{display:inline-block;margin:4px 0 4px 8px;padding:3px 8px;color:#101B2D;background:#ffd23f;border:2px solid #fff3b0;border-radius:6px;font-weight:700;box-shadow:0 0 10px 2px rgba(255,210,63,.6);animation:hint-pulse 1s ease-in-out 3}
+
+/* [v5.14] Vòng quay dạng MỞ HÒM (js/wheel.js): .roll = khung nhìn, .roll-track = dải ô cuộn ngang, .roll-tile = một ô (khung phẩm chất + icon + tên) */
+.wheel-card{width:min(94vw,680px)}
+.roll{--tile:104px;position:relative;width:100%;height:calc(var(--tile) + 46px);margin:8px auto;overflow:hidden;background:linear-gradient(#0b1424,#18345A 50%,#0b1424);border:3px solid var(--c-gold);border-radius:10px;box-shadow:inset 0 0 0 2px var(--c-bronze),inset 0 0 24px 6px rgba(0,0,0,.65)}
+.roll::before,.roll::after{content:"";position:absolute;top:0;bottom:0;width:14%;z-index:2;pointer-events:none}
+.roll::before{left:0;background:linear-gradient(90deg,rgba(8,15,27,.95),transparent)}
+.roll::after{right:0;background:linear-gradient(270deg,rgba(8,15,27,.95),transparent)}
+.roll-track{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;gap:6px;padding:0 6px;will-change:transform}
+.roll-tile{flex:0 0 var(--tile);width:var(--tile);height:calc(var(--tile) + 12px);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;padding:4px 0;border-radius:8px;transition:box-shadow .2s,background .2s}
+.roll-tile .item-icon{flex:0 0 auto;box-sizing:border-box;width:calc(var(--tile) - 28px);height:calc(var(--tile) - 28px);min-width:0;max-width:none;overflow:hidden}
+.roll-tile .item-icon img{width:100%;height:100%;object-fit:contain}
+.roll-coin img{width:70%;height:70%;object-fit:contain;image-rendering:pixelated}
+.roll-txt{flex:0 0 auto;height:2.1em;max-width:100%;padding:0 2px;font:700 14px/1.05 "VT323",var(--pixel),sans-serif;color:var(--c-gold-lt);text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.roll-tile.is-win{background:rgba(245,214,140,.22);box-shadow:0 0 0 3px #ffd23f,0 0 18px 6px rgba(255,210,63,.8)}
+.roll-line{position:absolute;left:50%;top:0;bottom:0;z-index:3;width:3px;margin-left:-1.5px;background:linear-gradient(transparent,#ffd23f 20%,#ffd23f 80%,transparent);opacity:.85;pointer-events:none}
+.roll-arrow{position:absolute;left:50%;z-index:4;margin-left:-11px;border-left:11px solid transparent;border-right:11px solid transparent;pointer-events:none;filter:drop-shadow(0 2px 0 var(--c-void))}
+.roll-arrow-top{top:-1px;border-top:16px solid #ffd23f}
+.roll-arrow-bot{bottom:-1px;border-bottom:16px solid #ffd23f}
+.wheel-spin{display:flex;flex-direction:column;align-items:center;gap:0;line-height:1;min-width:180px;font:700 22px "VT323",var(--pixel),sans-serif}
+.wheel-hub-cost{font:700 14px/1.1 "VT323",var(--pixel),sans-serif}
+@media (max-height:480px){.roll{--tile:74px;height:calc(var(--tile) + 34px)}.roll-txt{font-size:12px}.wheel-card{width:min(92vw,560px)}.wheel-spin{min-width:140px;font-size:18px}}
+
+/* [v5.15] CỐT TRUYỆN (js/story.js): .story = lớp phủ toàn màn hình (làm tối + mờ cảnh phía sau 50%); .story-wrap = vùng hội thoại rộng 90% màn hình;
+   .story-box = thẻ thoại; .story-portrait = ảnh nhân vật (không khung, phóng ~200%: kích thước = --w × --zoom) */
+.story{--zoom:2;position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,15,27,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.story-wrap{position:relative;width:90vw;margin-bottom:12px}
+.story-box{position:relative;display:flex;flex-direction:column;gap:6px;padding:16px 22px 12px;min-height:112px;color:#F7EDD3;background:linear-gradient(rgba(36,60,91,.96),rgba(16,27,45,.97));border:3px solid var(--c-gold);border-radius:10px;box-shadow:inset 0 0 0 3px var(--c-bronze),0 0 0 3px var(--c-void),6px 7px 0 rgba(8,15,27,.6)}
+.story-name{position:absolute;top:-30px;min-width:130px;max-width:46%;padding:3px 14px;font:700 20px/1.2 "VT323",var(--pixel),sans-serif;text-align:center;color:var(--c-void);background:linear-gradient(var(--c-gold-lt),var(--c-gold));border:3px solid var(--c-bronze);border-bottom:0;border-radius:8px 8px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.story-name.is-left,.story-name.is-right{left:50%;transform:translateX(-50%)}
+.story-text{flex:1;margin:4px 0 0;font:22px/1.35 "VT323",var(--pixel),sans-serif;white-space:pre-wrap;min-height:3.9em}
+.story-actions{display:flex;justify-content:flex-end;gap:10px}
+.story-actions .btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;width:132px;height:40px;min-width:0;padding:0 8px;margin:0;font-size:19px;line-height:1}
+.story-portrait{position:absolute;bottom:calc(100% - 30px);width:auto;height:auto;pointer-events:none;transition:filter .15s}
+.story-portrait.is-left{left:2%}
+.story-portrait.is-right{right:2%}
+.story-portrait.is-dim{filter:brightness(.45) saturate(.6)}
+.story-portrait:empty{display:none}
+.story-face{display:block;image-rendering:pixelated;filter:drop-shadow(0 4px 0 rgba(8,15,27,.6))}
+.story-portrait .story-face{width:calc(var(--w,120) * var(--zoom) * 1px);height:auto}   /* giữ nguyên tỉ lệ, phóng --zoom lần ảnh gốc */
+@media (max-height:480px){.story{--zoom:1.1}.story-wrap{margin-bottom:6px}.story-box{min-height:78px;padding:10px 14px 8px}.story-text{font-size:17px;min-height:3.4em}.story-name{top:-24px;font-size:16px;min-width:100px}.story-actions .btn{width:104px;height:32px;font-size:16px}}
+@media (max-width:520px) and (orientation:portrait){.story{--zoom:1.2}}
+
+/* [v5.15] Chọn nhân vật khi ĐĂNG KÝ: .char-grid lưới 3 cột, .char-opt = ô (ảnh idle đứng yên + tên), .is-on = đang chọn */
+.char-pick{margin:6px 0 0;padding:8px;border:2px solid var(--c-bronze);border-radius:8px;min-width:0}
+.char-pick legend{padding:0 6px;color:var(--c-gold-lt)}
+.char-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0}
+.char-opt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 4px;font:inherit;font-size:15px;line-height:1.1;color:var(--ink);background:rgba(8,15,27,.7);border:3px solid var(--c-bronze);border-radius:8px;cursor:pointer}
+.char-opt .story-face{width:72px;height:72px;object-fit:contain}
+.char-opt.is-on{border-color:var(--c-gold-lt);background:rgba(216,182,93,.22);box-shadow:0 0 0 2px var(--c-gold)}
+
+/* [v5.15] KẾT QUẢ LƯỢT CHƠI: chữ to hơn (16–28px) + biểu tượng Gold/Crystal/trang bị nhận được */
+.result p,.save-status{font-size:clamp(16px,2.2vw,28px);line-height:1.3}
+.save-status{min-height:0}
+.reward-view{display:flex;flex-direction:column;align-items:center;gap:8px}
+.reward-list{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 14px}
+.reward-chip{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 6px;background:rgba(8,15,27,.6);border:2px solid var(--c-bronze);border-radius:8px;color:var(--c-gold-lt)}
+.reward-chip b{font-weight:700}
+.reward-chip.is-exp{padding-left:12px}
+.reward-ico{width:clamp(28px,3.4vw,44px);height:clamp(28px,3.4vw,44px);object-fit:contain;image-rendering:pixelated}
+.reward-chip .item-icon{flex:0 0 auto;width:clamp(40px,5vw,60px);height:clamp(40px,5vw,60px)}
+.reward-note{color:#fff7dc}
+.reward-levelup{color:var(--ok);font-weight:700}
+
+/* [v5.15] Danh sách phần quà của vòng quay: ô mini cùng kích thước */
+.wheel-list-btn{align-self:center;min-width:180px}
+.wheel-prizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;justify-items:center;width:100%;padding:6px;background:rgba(8,15,27,.55);border:2px solid var(--c-bronze);border-radius:8px}
+.wheel-prizes .roll-tile{--tile:84px}
+@media (max-height:480px){.wheel-prizes{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}.wheel-prizes .roll-tile{--tile:66px}}
+
+.wheel-card>*{flex-shrink:0}
+/* [v5.15] Tấm che câu hỏi (quiz-shield) trùng khít thẻ câu hỏi hiện tại: margin 5px, rộng 100% - 10px, cao 90% (xem #screen-game #quiz.quiz) */
+.quiz-shield{top:5%;right:5px;width:calc(100% - 10px);height:90%}

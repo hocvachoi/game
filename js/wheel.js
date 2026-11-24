@@ -1,10 +1,9 @@
-// VÒNG QUAY MAY MẮN (nút 🎡 trên màn bản đồ) + Ô TROLL "+666 Crystal".
+// VÒNG QUAY MAY MẮN dạng MỞ HÒM kiểu CS (nút "Quay số" dùng assets/ui/wheel.png trên màn bản đồ): dải ô cuộn ngang, dừng dưới mũi tên + Ô TROLL "+666 Crystal".
 // Cấu hình ở assets/wheel/wheel.json: { "spinsPerDay": 5, "boards": [ { "name": "...", "slots": [ { "type": "gold|crystal|item", "amount"|"id", "weight": 10 }, ... ] }, ... ] }.
 // Mỗi ngày (giờ Việt Nam) dùng một bảng luân phiên: bảng số (ngày % số bảng). Tối đa SPINS_PER_DAY lượt/ngày, đếm bằng localStorage (không tốn đọc/ghi Firestore để kiểm tra);
 // mỗi lượt quay ghi đúng MỘT lần (Player.wheelReward: trừ phí Gold và cộng thưởng cùng lúc). Phí: lượt đầu trong ngày 500 Gold, mỗi lượt sau +100 ("cost" trong wheel.json). Phần thưởng bị kẹp theo CONFIG.WHEEL (khớp trần trong firestore.rules).
 const Wheel = {
-  cfg: null, node: null, angle: 0, spinning: false,
-  COLORS: ['#18345A', '#243C5B'],
+  cfg: null, node: null, spinning: false, onResize: null,
   async load() {
     if (this.cfg) return this.cfg;
     const response = await fetch('assets/wheel/wheel.json');
@@ -45,7 +44,20 @@ const Wheel = {
     if (slot.type === 'crystal') return `${slot.amount} Crystal`;
     return Player.item(slot.id).name;
   },
-  icon(slot) { return slot.type === 'gold' ? '🪙' : slot.type === 'crystal' ? '💎' : '🎁'; },
+  // Một ô trong dải mở hòm: khung phẩm chất + icon (gold.png / crystal.png / icon trang bị) + tên.
+  tile(slot) {
+    const it = slot.type === 'item' ? Player.item(slot.id) : null;
+    const t = el('div', 'roll-tile');
+    if (it) t.append(Inventory.icon(it));
+    else {
+      const box = el('span', 'item-icon roll-coin q-' + (slot.type === 'gold' ? 'normal' : 'rare')), img = new Image();
+      img.alt = ''; img.decoding = 'async'; img.src = slot.type === 'gold' ? 'assets/ui/gold.png' : 'assets/ui/crystal.png';
+      img.onerror = () => box.replaceChildren(el('span', 'item-icon-fallback', slot.type === 'gold' ? '🪙' : '💎'));
+      box.append(img); t.append(box);
+    }
+    t.append(el('span', 'roll-txt', this.label(slot)));
+    return t;
+  },
   pick(slots) {   // chọn ô theo trọng số
     const total = slots.reduce((sum, s) => sum + s.weight, 0);
     let r = Math.random() * total;
@@ -55,6 +67,7 @@ const Wheel = {
   close() {
     if (this.spinning || !this.node) return;
     document.removeEventListener('keydown', this.onKey);
+    window.removeEventListener('resize', this.onResize);
     this.node.remove(); this.node = null;
   },
   onKey(e) { if (e.key === 'Escape') Wheel.close(); },
@@ -63,26 +76,34 @@ const Wheel = {
     let board;
     try { await this.load(); board = this.board(); }
     catch (error) { Ui.msg('map-error', error.message, true); return; }
-    const slots = board.slots, per = 360 / slots.length;
+    const slots = board.slots, TRACK = 46, WIN = 38, REST = 3;   // TRACK ô trong dải; ô trúng ở vị trí WIN; ô đang đứng yên ở vị trí REST
     const back = el('div', 'sheet-backdrop'), card = el('div', 'sheet-card wheel-card');
-    card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-label', 'Vòng quay may mắn');
+    card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-label', 'Mở hòm may mắn');
     back.onclick = e => { if (e.target === back) this.close(); };
-    const wheel = el('div', 'wheel'), stage = el('div', 'wheel-stage');
-    wheel.style.background = `conic-gradient(${slots.map((s, i) => `${this.COLORS[i % 2]} ${i * per}deg ${(i + 1) * per}deg`).join(',')})`;
-    slots.forEach((s, i) => {
-      const lab = el('div', 'wheel-slot');
-      lab.style.transform = `rotate(${i * per + per / 2}deg)`;
-      const inner = el('div', 'wheel-slot-in'); inner.append(el('span', 'wheel-ico', this.icon(s)), el('span', 'wheel-txt', this.label(s)));
-      lab.append(inner); wheel.append(lab);
-    });
-    const hub = el('button', 'wheel-hub'); hub.type = 'button';
+    const view = el('div', 'roll'), track = el('div', 'roll-track');
+    view.append(el('i', 'roll-arrow roll-arrow-top'), el('i', 'roll-arrow roll-arrow-bot'), el('i', 'roll-line'), track);
+    const hub = el('button', 'btn wheel-spin'); hub.type = 'button';
     const hubCost = el('small', 'wheel-hub-cost');
-    stage.append(el('div', 'wheel-pointer'), wheel, hub);
+    // Dựng dải: các ô ngẫu nhiên theo trọng số (nhìn như mở hòm); ô WIN là phần thưởng đã định trước (nếu có).
+    const build = (winSlot, restSlot) => {
+      const list = Array.from({ length: TRACK }, () => slots[this.pick(slots)]);
+      if (winSlot) list[WIN] = winSlot;
+      if (restSlot) list[REST] = restSlot;
+      track.replaceChildren(...list.map(sl => this.tile(sl)));
+      return track.children;
+    };
+    // Vị trí dịch (px) để TÂM ô i nằm dưới mũi tên; offset lệch trong ô (±40% bề rộng ô)
+    const shiftFor = (i, frac = 0) => {
+      const tile = track.children[i], mid = tile.offsetLeft + tile.offsetWidth * (0.5 + frac);
+      return view.clientWidth / 2 - mid;
+    };
+    const place = (i, frac) => { track.style.transition = 'none'; track.style.transform = `translateX(${shiftFor(i, frac)}px)`; void track.offsetWidth; };
+    let lastSlot = null;
     const info = el('p', 'sheet-sub'), msg = el('p', 'sheet-msg'); msg.setAttribute('role', 'status');
     const close = el('button', 'btn ghost', 'Đóng'); close.type = 'button'; close.onclick = () => this.close();
     const refresh = () => {
       info.textContent = `${board.name} · hôm nay còn ${this.left()}/${this.cfg.spinsPerDay} lượt` + (this.left() > 0 ? ` · phí lượt này ${this.costNow().toLocaleString('vi-VN')} Gold` : '');
-      hub.replaceChildren(document.createTextNode('QUAY'), hubCost);
+      hub.replaceChildren(document.createTextNode('MỞ HÒM'), hubCost);
       hubCost.textContent = this.left() > 0 ? `${this.costNow().toLocaleString('vi-VN')} Gold` : 'Hết lượt';
       hub.disabled = this.spinning || this.left() <= 0;
     };
@@ -95,10 +116,15 @@ const Wheel = {
       const idx = this.pick(slots);
       this.setUsed(this.used() + 1);   // trừ lượt NGAY (trước khi quay) để tải lại trang không lách được
       this.spinning = true; Ui.busy = true; close.disabled = true; say(''); refresh();
-      this.angle = this.angle - (this.angle % 360) + 360 * 6 + (360 - (idx * per + per / 2));   // ô trúng dừng ngay dưới mũi tên (đỉnh vòng)
-      wheel.style.transform = `rotate(${this.angle}deg)`;
-      await new Promise(resolve => setTimeout(resolve, 4400));
+      build(slots[idx], lastSlot);     // dải mới: ô đang đứng yên giữ nguyên ở vị trí cũ rồi chạy tới ô trúng
+      place(REST, 0);
+      const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, ms = reduce ? 900 : 5200;
+      track.style.transition = `transform ${ms}ms cubic-bezier(.1,.62,.08,1)`;
+      track.style.transform = `translateX(${shiftFor(WIN, (Math.random() - 0.5) * 0.7)}px)`;
+      await new Promise(resolve => setTimeout(resolve, ms + 150));
       try {
+        track.children[WIN].classList.add('is-win');
+        lastSlot = slots[idx];
         const res = await Player.wheelReward(slots[idx], cost);
         say(`🎉 Đã trả ${cost.toLocaleString('vi-VN')} Gold. Bạn nhận được: ${res.text}`);
       } catch (error) {
@@ -106,11 +132,21 @@ const Wheel = {
         say(error.message || 'Không nhận được phần thưởng. Vui lòng thử lại.', true);
       } finally { this.spinning = false; Ui.busy = false; close.disabled = false; refresh(); }
     };
+    // Danh sách phần quà của bảng hôm nay (chỉ liệt kê, KHÔNG hiện tỉ lệ; không ảnh hưởng random).
+    const prizes = el('div', 'wheel-prizes'), seen = new Set(), order = { gold: 0, crystal: 1, item: 2 };
+    slots.filter(sl => { const k = sl.type + (sl.id || sl.amount); if (seen.has(k)) return false; seen.add(k); return true; })
+      .sort((a, b) => order[a.type] - order[b.type] || (a.amount || 0) - (b.amount || 0))
+      .forEach(sl => prizes.append(this.tile(sl)));
+    prizes.hidden = true;
+    const listBtn = el('button', 'btn ghost wheel-list-btn', 'Xem phần thưởng'); listBtn.type = 'button';
+    listBtn.onclick = () => { prizes.hidden = !prizes.hidden; listBtn.textContent = prizes.hidden ? 'Xem phần thưởng' : 'Ẩn phần thưởng'; };
     const actions = el('div', 'sheet-actions wheel-actions'); actions.append(close);
-    card.append(el('b', 'sheet-name', '🎡 Vòng quay may mắn'), info, stage, msg, actions);
+    card.append(el('b', 'sheet-name', 'Hòm may mắn'), info, view, hub, msg, listBtn, prizes, actions);
     back.append(card); document.body.append(back);
     this.node = back; document.addEventListener('keydown', this.onKey);
-    refresh(); hub.focus();
+    build(null, null); place(REST, 0); refresh(); hub.focus();
+    this.onResize = () => { if (!this.spinning && this.node) place(REST, 0); };
+    window.addEventListener('resize', this.onResize);
   }
 };
 

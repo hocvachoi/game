@@ -6,7 +6,7 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email_verified == true
-        && request.auth.token.email in ['THAY_EMAIL_ADMIN@gmail.com'];
+        && request.auth.token.email in ['hauvo20072001@gmail.com'];
     }
 
     match /accounts/{className}/users/{username} {
@@ -284,9 +284,10 @@ service cloud.firestore {
         && request.resource.data.Enventory.size() == 0
         && request.resource.data.progress is map
         && request.resource.data.progress.size() == 0
+        && (!('Character' in request.resource.data) || (request.resource.data.Character is string && request.resource.data.Character in charKeys()))   // nhân vật chọn lúc tạo tài khoản
         && request.resource.data.keys().hasOnly([
           'UID', 'Username', 'Class', 'Nickname', 'Golds', 'Crystals',
-          'LV', 'EXP', 'Equipment', 'Enventory', 'progress', 'Room'
+          'LV', 'EXP', 'Equipment', 'Enventory', 'progress', 'Room', 'Character'
         ]);
 
       // Nhận phiếu thưởng xếp hạng: cộng đúng số Gold trên phiếu (rewards/<UID>/vouchers/<id>), phiếu phải được đánh dấu đã nhận
@@ -437,6 +438,18 @@ service cloud.firestore {
     // Boss 2 chỉ được tạo SAU Boss 1 kết thúc (DefeatedAt hoặc StartAt+15') cộng 5 phút, trước 22:30 VN, và có StartAt = giờ tạo. Boss đã mở thì chạy nốt kể cả quá 21:00.
     // Chống gian lận cơ bản: mỗi lần chỉ cộng ≤ 60000, cách nhau ≥ 105s, Damage của Boss chỉ tăng ĐÚNG bằng phần tăng của người gửi (getAfter, cùng batch),
     // Players chỉ tăng 1 mỗi lần và chỉ cùng lúc tạo tài liệu người chơi, tối đa 70. Không chặn được người sửa mã gửi đúng mức trần mỗi lần.
+    // ===== CẤU HÌNH DO ADMIN QUẢN LÝ =====
+    // config/raidSchedule: lịch Boss Raid (xem scheduledGrades() trong match /raids). Học sinh đã đăng nhập chỉ ĐỌC (get); chỉ admin được ghi.
+    match /config/{docId} {
+      allow get: if request.auth != null && docId == 'raidSchedule';
+      allow list: if false;
+      allow create, update: if isAdmin() && docId == 'raidSchedule'
+        && request.resource.data.keys().hasOnly(['Weekly', 'Dates', 'UpdatedAt'])
+        && request.resource.data.Weekly is map && request.resource.data.Dates is map
+        && request.resource.data.Dates.size() <= 200;
+      allow delete: if false;
+    }
+
     match /raids/{raidId} {
       function parts() { return raidId.split('_'); }
       function raidGrade() { return parts()[0]; }
@@ -455,17 +468,29 @@ service cloud.firestore {
       // đánh số của nó khác giả định cũ — đã làm khối 7 bị chặn vào thứ Năm và khối 8 bị chặn vào thứ Sáu). Ngày 1/1/1970 là Thứ Năm → 0 = Thứ Hai … 6 = Chủ Nhật.
       // UTC cùng ngày với giờ VN trong khung 19:00–22:30 VN. Mặc định: T2, T3, T5, T7 → khối 7 · T4, T6 → khối 6 và 8 · Chủ nhật → khối 9.
       function weekdayMon0() { return (math.floor(request.time.toMillis() / 86400000) + 3) % 7; }
-      function scheduledGrades() {
+      function defaultGrades() {
         return (weekdayMon0() == 0 || weekdayMon0() == 1 || weekdayMon0() == 3 || weekdayMon0() == 5) ? ['7']
           : ((weekdayMon0() == 2 || weekdayMon0() == 4) ? ['6', '8'] : ['9']);
       }
+      // LỊCH DO ADMIN ĐẶT: tài liệu config/raidSchedule { Weekly: {"2": ["7"], … "8": ["9"]}, Dates: {"yyyymmdd": ["6","7"]} } (2 = Thứ Hai … 8 = Chủ nhật).
+      // Dates ghi đè Weekly; mảng rỗng = đóng. Chưa có tài liệu → dùng defaultGrades() ở trên. CHỈ kiểm tra khi TẠO Boss (≈ 1–2 lượt đọc mỗi Boss mỗi ngày):
+      // đã có tài liệu Boss nghĩa là hôm nay hợp lệ, nên cập nhật/tạo người chơi KHÔNG đọc lịch nữa (không tốn đọc cho mỗi lần gửi sát thương).
+      function schedPath() { return /databases/$(database)/documents/config/raidSchedule; }
+      function scheduledGrades() {
+        return !exists(schedPath()) ? defaultGrades()
+          : ((('Dates' in get(schedPath()).data) && (string(dayInt()) in get(schedPath()).data.Dates)) ? get(schedPath()).data.Dates[string(dayInt())]
+          : ((('Weekly' in get(schedPath()).data) && (string(weekdayMon0() + 2) in get(schedPath()).data.Weekly)) ? get(schedPath()).data.Weekly[string(weekdayMon0() + 2)] : []));
+      }
       function isScheduled() { return raidGrade() in scheduledGrades(); }
+      // [RULES] số người cần để Boss 1 xuất hiện (CONFIG.RAID.START_PLAYERS). TẠM THỜI = 1: người đầu tiên tạo Boss là Boss bắt đầu ngay (StartAt = giờ tạo). Khôi phục = 5.
+      function startPlayers() { return 1; }
       // [RULES] cửa kích hoạt Boss 1: 19:00–21:00 VN = phút 720–840 UTC (CONFIG.RAID.OPEN_MIN / CLOSE_MIN).
       function openNow() { return minuteOfDay() >= 720 && minuteOfDay() < 840; }
       // [RULES] Boss 2 chỉ bắt đầu trước 22:30 VN = phút 930 UTC (CONFIG.RAID.LATEST_START_MIN).
       function boss2NotTooLate() { return minuteOfDay() < 930; }
-      // [RULES] HP tối đa Boss mỗi khối — khớp CONFIG.RAID.BOSS_HP.
-      function bossMax() { return { '6': 100000, '7': 100000, '8': 100000, '9': 100000 }[raidGrade()]; }
+      // HP tối đa Boss do game đọc từ assets/raid/raid_boss.json (rules không đọc được file này) → chỉ kiểm khoảng hợp lệ 1.000–5.000.000.
+      // (Đánh đổi: HP không còn bị khóa cứng; người sửa mã có thể tạo Boss với HP thấp hơn trong khoảng này.)
+      function bossMaxOk(v) { return v is int && v >= 1000 && v <= 5000000; }
       // [RULES] thời gian Boss: 15 phút (CONFIG.RAID.BOSS_MIN); lượt gửi cuối còn được nhận đến 18 phút (BOSS_MIN + GRACE_MIN); Boss 2 sau Boss 1 5 phút (BOSS2_DELAY_MIN).
       function bossPath() { return /databases/$(database)/documents/raids/$(raidId); }
       function boss1Path() { return /databases/$(database)/documents/raids/$(raidGrade() + '_' + parts()[1] + '_1'); }
@@ -484,17 +509,17 @@ service cloud.firestore {
       allow create: if isStudentOfRaid() && isToday() && isScheduled()
         && request.resource.data.keys().hasOnly(['MaxHP', 'Damage', 'Players', 'Slot', 'CreatedAt', 'StartAt'])
         && request.resource.data.keys().hasAll(['MaxHP', 'Damage', 'Players', 'Slot', 'CreatedAt'])
-        && request.resource.data.MaxHP == bossMax()
+        && bossMaxOk(request.resource.data.MaxHP)
         && request.resource.data.Damage == 0
         && request.resource.data.Players == 1
         && request.resource.data.Slot == int(slot())
         && request.resource.data.CreatedAt == request.time
         && existsAfter(playerPath())
         && (slot() == '1'
-          ? (openNow() && !('StartAt' in request.resource.data))
+          ? (openNow() && (startPlayers() <= 1 ? request.resource.data.StartAt == request.time : !('StartAt' in request.resource.data)))
           : (boss2NotTooLate() && request.resource.data.StartAt == request.time && boss1EndedLongEnough()));
 
-      allow update: if isStudentOfRaid() && isToday() && isScheduled() && (joinOk() || flushOk() || defeatOk());
+      allow update: if isStudentOfRaid() && isToday() && (joinOk() || flushOk() || defeatOk());
 
       // (1) Vào Boss: Players + 1 (≤ 70) cùng lúc tạo tài liệu người chơi. Phòng chờ (chưa có StartAt): trong cửa 19–21h; người thứ 5 ghi StartAt = request.time.
       //     Boss đang chạy (đã có StartAt): trong 15 phút, chưa hạ.
@@ -508,7 +533,7 @@ service cloud.firestore {
             ? (!('StartAt' in request.resource.data.diff(resource.data).affectedKeys())
               && request.time < o.StartAt + duration.value(15, 'm')
               && !('DefeatedAt' in o) && o.Damage < o.MaxHP)
-            : (openNow() && (n.Players >= 5 ? n.StartAt == request.time : !('StartAt' in n))));
+            : (openNow() && (n.Players >= startPlayers() ? n.StartAt == request.time : !('StartAt' in n))));
       }
       // (2) Gửi sát thương: Damage tăng ≤ 60000, bằng đúng phần tăng của người gửi; trong 15 phút + 3 phút gia hạn kể từ StartAt.
       function flushOk() {
@@ -538,7 +563,7 @@ service cloud.firestore {
         allow list: if isAdmin() || (isStudentOfRaid() && request.query.limit <= 10);
 
         // Tạo tài liệu người chơi: chỉ cùng batch với việc Boss tăng Players đúng 1 (hoặc Boss được tạo với Players = 1).
-        allow create: if isStudentOfRaid() && puid == request.auth.uid && isToday() && isScheduled()
+        allow create: if isStudentOfRaid() && puid == request.auth.uid && isToday()
           && request.resource.data.keys().hasOnly(['Nickname', 'Damage', 'LastFlush'])
           && request.resource.data.keys().hasAll(['Nickname', 'Damage', 'LastFlush'])
           && request.resource.data.Nickname is string
@@ -550,7 +575,7 @@ service cloud.firestore {
             : getAfter(bossPath()).data.Players == 1);
 
         // Gửi sát thương: ≤ 60000 mỗi lần, cách nhau ≥ 105s, trong thời gian của Boss (StartAt + 18 phút).
-        allow update: if isStudentOfRaid() && puid == request.auth.uid && isToday() && isScheduled()
+        allow update: if isStudentOfRaid() && puid == request.auth.uid && isToday()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['Damage', 'LastFlush'])
           && 'StartAt' in get(bossPath()).data
           && request.time < get(bossPath()).data.StartAt + duration.value(18, 'm')
