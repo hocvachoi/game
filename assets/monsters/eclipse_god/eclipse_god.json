@@ -1,34 +1,34 @@
 {
-  "name": "Nhân mã khờ khạo",
+  "name": "Nguyệt thực ma thần",
   "attackStyle": "ranged",
   "Type": "rare",
   "Class":"archer",
   "effects":{
     "type": "ambush",
-    "value":30
+    "value":45
   },
   "stats": {
     "HP": 1200,
     "ATK": 350,
-    "DEF": 250,
+    "DEF": 350,
     "CRIT": 30
   },
-  "ANSWER_TIMEOUT_SEC": 15,
+  "ANSWER_TIMEOUT_SEC": 20,
   "sprites": {
     "idle": {
-     "src": "assets/monsters/centaur/centaur_idle.png",
+     "src": "assets/monsters/eclipse/eclipse_idle.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [0, 1, 2, 3, 4, 5]
     },
     "attack": {
-      "src": "assets/monsters/centaur/centaur_animation.png",
+      "src": "assets/monsters/eclipse/eclipse_animation.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [3 ,4 , 5, 6, 7, 8, 9, 10, 11]
     },
     "skill": {
-      "src": "assets/monsters/centaur/centaur_skill.png"
+      "src": "assets/monsters/eclipse/eclipse_skill.png"
     }
   },
   "castSkill": {
