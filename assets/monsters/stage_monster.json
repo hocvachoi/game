@@ -4,17 +4,13 @@
   "worlds": {
     "World1": {
       "Stage_1": "goblin",
-      "Stage_2": "undead_knight",
-      "Stage_3": "undead_knight",
-      "Stage_4": "undead_knight",
+      "Stage_2": "mad_axe",
+      "Stage_3": "bog_witch",
+      "Stage_4": "devil_bird",
       "Stage_5": "undead_knight",
-      "Stage_6": "undead_knight",
-      "Stage_7": "undead_knight",
-      "Stage_8": "undead_knight",
-      "Stage_9": "undead_knight",
-      "Stage_10": "undead_knight",
-      "Stage_11": "undead_knight",
-      "Stage_12": "undead_knight"
+      "Stage_6": "mummy",
+      "Stage_7": "mad_jester",
+      "Stage_8": "demon_king"
     },
     "World2": {
       "Stage_1": "giant_slime",
@@ -31,18 +27,16 @@
       "Stage_12": "dragon_emperor"
     },
     "World3": {
-      "Stage_1": "giant_slime",
-      "Stage_2": "killer_bat",
-      "Stage_3": "devil_bird",
-      "Stage_4": "bog_witch",
-      "Stage_5": "bandits",
-      "Stage_6": "centaur",
-      "Stage_7": "undead_knight",
-      "Stage_8": "statue",
-      "Stage_9": "rebel_knight",
-      "Stage_10": "mad_jester",
-      "Stage_11": "undead_knight",
-      "Stage_12": "undead_knight"
+      "Stage_1": "sky_soldier",
+      "Stage_2": "dark_adam",
+      "Stage_3": "dark_warlord_mini",
+      "Stage_4": "eclipse_god",
+      "Stage_5": "thunder_god_mini",
+      "Stage_6": "bifrost_gaurd",
+      "Stage_7": "Valkyrie",
+      "Stage_8": "giant_head",
+      "Stage_9": "older_god",
+      "Stage_10": "kidding_god"
     },
     "World4": {
       "Stage_1": "giant_slime",

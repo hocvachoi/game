@@ -13,7 +13,7 @@
     "DEF": 600,
     "CRIT": 30
   },
-  "ANSWER_TIMEOUT_SEC": 15,
+  "ANSWER_TIMEOUT_SEC": 20,
   "sprites": {
     "idle": {
      "src": "assets/monsters/mad_jester/mad_jester_idle.png",

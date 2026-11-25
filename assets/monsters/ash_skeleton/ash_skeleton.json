@@ -13,7 +13,7 @@
     "DEF": 500,
     "CRIT": 10
   },
-  "ANSWER_TIMEOUT_SEC": 15,
+  "ANSWER_TIMEOUT_SEC": 20,
   "sprites": {
     "idle": {
      "src": "assets/monsters/ash_skeleton/ash_skeleton_idle.png",

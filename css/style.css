@@ -937,23 +937,25 @@ select.reveal,.slot.reveal{outline:3px solid #ffd23f;outline-offset:-1px}
 
 /* [v5.15] CỐT TRUYỆN (js/story.js): .story = lớp phủ toàn màn hình (làm tối + mờ cảnh phía sau 50%); .story-wrap = vùng hội thoại rộng 90% màn hình;
    .story-box = thẻ thoại; .story-portrait = ảnh nhân vật (không khung, phóng ~200%: kích thước = --w × --zoom) */
-.story{--zoom:2;position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,15,27,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.story{--zoom:1.5;position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,15,27,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .story-wrap{position:relative;width:90vw;margin-bottom:12px}
 .story-box{position:relative;display:flex;flex-direction:column;gap:6px;padding:16px 22px 12px;min-height:112px;color:#F7EDD3;background:linear-gradient(rgba(36,60,91,.96),rgba(16,27,45,.97));border:3px solid var(--c-gold);border-radius:10px;box-shadow:inset 0 0 0 3px var(--c-bronze),0 0 0 3px var(--c-void),6px 7px 0 rgba(8,15,27,.6)}
 .story-name{position:absolute;top:-30px;min-width:130px;max-width:46%;padding:3px 14px;font:700 20px/1.2 "VT323",var(--pixel),sans-serif;text-align:center;color:var(--c-void);background:linear-gradient(var(--c-gold-lt),var(--c-gold));border:3px solid var(--c-bronze);border-bottom:0;border-radius:8px 8px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.story-name.is-left,.story-name.is-right{left:50%;transform:translateX(-50%)}
+.story-name.is-left{left:22%;right:auto;transform:none}      /* người nói bên trái: tab cách mép TRÁI khung thoại 22% */
+.story-name.is-right{right:22%;left:auto;transform:none}     /* người nói bên phải: tab cách mép PHẢI khung thoại 22% */
 .story-text{flex:1;margin:4px 0 0;font:22px/1.35 "VT323",var(--pixel),sans-serif;white-space:pre-wrap;min-height:3.9em}
 .story-actions{display:flex;justify-content:flex-end;gap:10px}
 .story-actions .btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;width:132px;height:40px;min-width:0;padding:0 8px;margin:0;font-size:19px;line-height:1}
-.story-portrait{position:absolute;bottom:calc(100% - 30px);width:auto;height:auto;pointer-events:none;transition:filter .15s}
+.story-portrait{position:absolute;bottom:calc(100% - var(--fh,202) * var(--zoom) * .4px);width:auto;height:auto;pointer-events:none;transition:filter .15s}
 .story-portrait.is-left{left:2%}
 .story-portrait.is-right{right:2%}
 .story-portrait.is-dim{filter:brightness(.45) saturate(.6)}
 .story-portrait:empty{display:none}
 .story-face{display:block;image-rendering:pixelated;filter:drop-shadow(0 4px 0 rgba(8,15,27,.6))}
-.story-portrait .story-face{width:calc(var(--w,120) * var(--zoom) * 1px);height:auto}   /* giữ nguyên tỉ lệ, phóng --zoom lần ảnh gốc */
-@media (max-height:480px){.story{--zoom:1.1}.story-wrap{margin-bottom:6px}.story-box{min-height:78px;padding:10px 14px 8px}.story-text{font-size:17px;min-height:3.4em}.story-name{top:-24px;font-size:16px;min-width:100px}.story-actions .btn{width:104px;height:32px;font-size:16px}}
-@media (max-width:520px) and (orientation:portrait){.story{--zoom:1.2}}
+.story-portrait .story-face{width:calc(var(--fw,256) * var(--zoom) * 1px);height:auto}   /* 100% khung gốc × --zoom; khung thoại đè lên ~40% phía dưới */
+.story-name[hidden]{display:none}
+@media (max-height:480px){.story{--zoom:1}.story-wrap{margin-bottom:6px}.story-box{min-height:78px;padding:10px 14px 8px}.story-text{font-size:17px;min-height:3.4em}.story-name{top:-24px;font-size:16px;min-width:100px}.story-actions .btn{width:104px;height:32px;font-size:16px}}
+@media (max-width:520px) and (orientation:portrait){.story{--zoom:1}}
 
 /* [v5.15] Chọn nhân vật khi ĐĂNG KÝ: .char-grid lưới 3 cột, .char-opt = ô (ảnh idle đứng yên + tên), .is-on = đang chọn */
 .char-pick{margin:6px 0 0;padding:8px;border:2px solid var(--c-bronze);border-radius:8px;min-width:0}

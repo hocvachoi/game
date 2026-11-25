@@ -1,0 +1,35 @@
+{
+  "name": "Thuỷ tổ hắc ám",
+  "attackStyle": "melee",
+  "Type": "normal",
+  "Class":"Warrior",
+  "effects":{
+    "type": "pierce",
+    "value":30
+  },
+  "stats": {
+    "HP": 300,
+    "ATK": 130,
+    "DEF": 120,
+    "CRIT": 25
+  },
+  "ANSWER_TIMEOUT_SEC": 20, 
+  "sprites": {
+    "idle": {
+     "src": "assets/monsters/dark_adam/dark_adam_idle.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [0, 1, 2, 3, 4, 5]
+    },
+    "attack": {
+      "src": "assets/monsters/dark_adam/dark_adam_animation.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [4, 5, 6, 7, 8, 9, 10, 11]
+    },
+    "skill": {
+    }
+  },
+  "castSkill": {
+  }
+}

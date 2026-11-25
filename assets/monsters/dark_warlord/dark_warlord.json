@@ -1,0 +1,35 @@
+{
+  "name": "Ma thần chiến tranh",
+  "attackStyle": "melee",
+  "Type": "epic",
+  "Class":"Warrior",
+  "effects":{
+    "type": "Burn",
+    "value": 150
+  },
+  "stats": {
+    "HP": 1500,
+    "ATK": 500,
+    "DEF": 300,
+    "CRIT": 20
+  },
+  "ANSWER_TIMEOUT_SEC": 20,
+  "sprites": {
+    "idle": {
+     "src": "assets/monsters/dark_warlord/dark_warlord_idle.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [0, 1, 2, 3, 4, 5]
+    },
+    "attack": {
+      "src": "assets/monsters/dark_warlord/dark_warlord_animation.png",
+      "frameW": 256,
+      "frameH": 202,
+      "frames": [3 ,4 , 5, 6, 7, 8, 9, 10, 11]
+    },
+    "skill": {
+    }
+  },
+  "castSkill": {
+  }
+}

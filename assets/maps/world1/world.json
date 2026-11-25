@@ -1,8 +1,8 @@
 {
   "id": "world1",
   "name": "Vương Quốc Cổ Đại",
-  "stage_names": ["", "", "", "", "", "", "", ""],
-  "dungeon_names": ["", ""],
+  "stage_names": ["Thị trấn Toronto", "Cánh đồng hoang", "Rừng lạc lối", "Cao nguyên xanh", "Thác nước thử thần", "Thành phố sa mạc", "Quảng trường trung tâm", "Cung điện của quỷ"],
+  "dungeon_names": ["Trường huấn luyện", "Đền cổ"],
   "stage_nodes": [
     { "x": 10.3, "y": 64.6 }, { "x": 20.9, "y": 52.7 },
     { "x": 34.8, "y": 47.3 }, { "x": 45.9, "y": 29.2 },

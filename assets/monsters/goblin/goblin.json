@@ -9,7 +9,7 @@
     "DEF": 25,
     "CRIT": 20
   },
-  "ANSWER_TIMEOUT_SEC": 15,
+  "ANSWER_TIMEOUT_SEC": 25,
   "sprites": {
     "idle": {
      "src": "assets/monsters/goblin/goblin_idle.png",

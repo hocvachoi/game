@@ -13,7 +13,7 @@
     "DEF": 300,
     "CRIT": 20
   },
-  "ANSWER_TIMEOUT_SEC": 15,
+  "ANSWER_TIMEOUT_SEC": 20,
   "sprites": {
     "idle": {
      "src": "assets/monsters/rebel_knight/rebel_knight_idle.png",

@@ -3,6 +3,12 @@
   "characters": {
     "merie": { "name": "Merie", "src": "assets/npc/merie_idle.png" },
     "noname": { "name": "", "src": "" },
+    
+    "goblin": { "name": "goblin thân thiện", "src":"assets/monsters/goblin/goblin_idle.png"},
+    "mad_axe": { "name": "Tiều phu nhân hậu", "src":"assets/monsters/bandits/bandits_idle.png"},
+    "mummy": { "name": "U linh hoàng đế", "src":"assets/monsters/mummy/mummy_idle.png"},
+    "demon": { "name": "Thiên ma hoàng đế", "src":"assets/monsters/demon_king/demon_king_idle.png"},
+
     "slime": { "name": "Slime khổng lồ", "src":"assets/npc/giant_slime_story.png" },
     "killer_bat": { "name": "Dơi sát thủ", "src":"assets/monsters/killer_bat/killer_bat_idle.png" },
     "devil_bird": { "name": "Chim quỷ", "src":"assets/monsters/devil_bird/devil_bird_idle.png" },
@@ -16,6 +22,96 @@
     "ash_skeleton": { "name": "Cận vệ điện ngục", "src":"assets/monsters/ash_skeleton/ash_skeleton_idle.png"},
     "dragon_emperor": { "name": "Vua rông địa ngục", "src":"assets/monsters/dragon_emperor/dragon_emperor_idle.png"}
   },
+ "World1": {
+    "Stage_1": {
+      "start_stage": [
+        { "who": "merie", "text": "Xin chào dũng sĩ! Chào mừng ngài đã đến với VƯƠNG QUỐC CỔ ĐẠI." },
+        { "who": "merie", "text": "Tôi là Merie-dân làng của thị trấn Toronto, thật may mắn khi lại có thêm một dũng sĩ xuyên không đến đây." },
+        { "who": "merie", "text": "Từ khi Ma thần hồi sinh, bọn quái vật lần lượt xuất hiện, tàn phá và tấn công các ngôi làng." },
+        { "who": "merie", "text": "Nơi đây cũng không ngoại lệ, ngôi làng này thường xuyên bị bầy Goblin tấn công, chúng phá hoại mùa màng và bắt cóc người dân." },
+        { "who": "merie", "text": "Xin ngài hãy giúp chúng tôi, tiêu diệt bọn chúng, đem lại yên bình cho làng." },
+        { "who": "player", "text": "Sứ mệnh của em là đem lại hoà bình cho thế giới, em sẽ tiêu diệt hết lũ quái vật này" },
+        { "who": "merie", "text": "Cảm ơn ngài!." },
+        { "who": "goblin", "text": "Zhihahaha, Ngươi nói sẽ tiêu diệt ai hả?" },
+        { "who": "merie", "text": "Bón chúng lại đến rồi, Ngài dũng sĩ cẩn thận."},
+        { "who": "player", "text": "Chị hãy lùi lại, để em hạ chúng." }
+      ],
+      "end_stage": [
+        { "who": "merie", "text": "Hay quá! Goblin đã bị đánh bại. Dân làng giờ yên tâm rồi, cảm ơn ngài." },
+        { "who": "player", "text": "Không có gì đâu chị, đây là sứ mệnh của em mà." },
+        { "who": "merie", "text": "Con đường phía trước nhiều nguy hiểm, xin ngài cho tôi đi cùng để hỗ trợ hậu cần cho ngài." },
+        { "who": "player", "text": "Vậy chúng ta lên đường thôi" },
+        { "who": "merie", "text": "Nhân tiện làng của tôi có cửa hàng và TRƯỜNG HUẤN LUYỆN, Ngày có thể đến đó để mua vật phẩm và luyện tập...." },
+        { "who": "noname", "text": "Đã mở khoá HẦM NGỤC 1 - TRƯỜNG HUẤN LUYỆN..." }
+      ]
+    },
+    "Stage_2":{
+      "start_stage":[
+         { "who": "merie", "text": "Phía trước là cánh đồng lúa, từ ngày bị Goblin tấn công nơi đây đã không được ai chăm sóc dẫn đến hoang tàn nhưu thế này." },
+         { "who": "player", "text": "Bọn Goblin giờ không còn nữa, em nghĩ ít lâu sau nó sẽ xanh tươi trở lại thôi " },
+         { "who": "mad_axe", "text": "Hai người kía, đi đâu vậy?"},
+         { "who": "merie", "text": "Chào bác tiều phu! bọn cháu đang trên đường tiêu diệt MA Thần."},
+         { "who": "mad_axe", "text": "Hahaha! đùa à! hai người nhỏ như các cháu làm sao đánh bại coi quỷ huyện thoại được"},
+         { "who": "mad_axe", "text": "Mà thôi đi đường cẩn thận và coi chừng những người lạ tới bắt chuyện nhé! Ha ha"},
+         { "who": "merie", "text": "hihi vậy chắc bọn cháu phải cẩn thận với bác nhỉ?"},
+         { "who": "mad_axe", "text": "Đúng vậy đó các cháu...Ha HA HA... CÓ bao nhiêu tiền đưa hết cho ta"},
+         { "who": "player", "text": "biết ngay mà, cánh đồng này nguy hiểm thế này làm gì có người nào chứ...Đến đây ông già"}
+      ],
+      "end_stage": [
+        { "who": "mad_axe", "text": "Ahhhhhh!..... Sao...sao...sao lại như thế được, ngươi dùng hack?." },
+        { "who": "player", "text": "Ta liêm, ông quá gà để có thể đánh bại ta." },
+        { "who": "merie", "text": "Hay lắm dũng sĩ, Ngài đã hạ được nó rồi, từ giờ chúng ta có thể án toàn rời cánh đồng này và tiến đến kinh đô." },
+        { "who": "merie", "text": "Ra khỏi hang động này sẽ có thị trấn nhỏ, sẽ có vài món đồ giá trị, chúng ta đến đó nhé thưa Ngài?" },
+        { "who": "player", "text": "Vâng, em cần mua thêm vài trang bị để chống chọi với lũ quái vật này" }
+      ]
+    },
+    "Stage_3":{
+      "start_stage":[
+         { "who": "noname", "text": "Hai người bọn họ vừa rời thị trấn và đến một ngọn đồi..." },
+         { "who": "noname", "text": "~ XOẸT ~... Trong lúc 2 người đang quan sát xung quanh, bỗng có một vật lao đến cả hai" },
+         { "who": "devil_bird", "text": "~ ÉCCCC ~ Bọn trẻ ranh dám đến địa bàn của taaaa!" },
+         { "who": "merie", "text": "Ngài dũng sĩ cẩn thận phía trên!"},
+         { "who": "player", "text": "Con chim khốn kiếp, tiếp chiêu..."}
+      ],
+      "end_stage": [
+        { "who": "player", "text": "Hừ...Con chim này khó nhằn thật, mệt quá!" },
+        { "who": "merie", "text": "Ngài ổn chứ, để tôi cõng ngài về về thị trấn." },
+        { "who": "player", "text": "Không sao! em vẫn ổn, chúng ta đi đâu tiếp?" },
+        { "who": "merie", "text": "Theo bản đồ, phía trước là một đầm lầy rất nguy hiểm. gần đó có làng nhỏ, chúng ta đến đó điều trị vết thương của Ngài." },
+        { "who": "player", "text": "Em... vẫn... ổ...n..." },
+        { "who": "noname", "text": "~ RẦM ~ bạn đã ngất xỉu vì kiệt sức...." },
+        { "who": "noname", "text": "Ít lâu sau, bạn tỉnh dậy trên lưng của Merie...." },
+        { "who": "player", "text": "Cảm ơn chị..." },
+        { "who": "merie", "text": "Ngài cố gắng lên, phái trước có một ngôi nhà, tôi sẽ xin ở tạm."}
+      ]
+    },
+    "Stage_4":{
+      "start_stage":[
+         { "who": "noname", "text": "Hai đến gần một ngôi nhà..." },
+         { "who": "bog_witch", "text": "Này cô bé...hai người bị sao vậy" },
+         { "who": "merie", "text": "Thưa bà, xin hãy giúp cháu, Ngài ấy đang bị thương" },
+         { "who": "bog_witch", "text": "Hãy đặt Ngài ấy lên giường và cho ngài ấy uống viên thuốc này, rồi theo ta đi hái thuốc"},
+         { "who": "merie", "text": "Vâng. cháu cảm ơn bà"},
+         { "who": "noname", "text": "Một lát sau..............~ Áaaaaaaa ~ bạn nghe tiếng hét cảu chị Merie...Bạn vội chạy theo hướng tiếng hét và thấy chị Merie đang bị nhấn chìm trong đầm lầy"},
+         { "who": "bog_witch", "text": "Hí hí hí. Ngoan ngoãn làm thức ăn cho đứa con của ta đi"},
+         { "who": "player", "text": "Mụ phù thuỷ kia! thả chị Merie ra..."}
+      ],
+      "end_stage": [
+        { "who": "bog_witch", "text": "Sao có thể, ta đã cho ngươi uống độc rồi mà" },
+        { "who": "bog_witch", "text": "Ah...ah...ah ta đưa nhầm thuốc..... dũng sĩ à, nước đi này cho ta đi lại nhé... hí hí" },
+        { "who": "player", "text": "Đừng có mơ! Bà dám hại chị Merie, giờ ta sẽ bỏ người xuống đứa con của ngươi." },
+        { "who": "bog_witch", "text": "Khôngggg.... ta cho lão đi mà!!!!!!" },
+        { "who": "noname", "text": "bạn đi đến sát đầm lầy, dùng hết sức để cứu chị Merie" },
+        { "who": "player", "text": "Chị Merie, chị ổn chứ?" },
+        { "who": "merie", "text": "Ạc...ạc...Cảm ơn ngài!" },
+        { "who": "player", "text": "Cứ gọi em là {name}..."}
+      ]
+    }
+  },
+
+
+
+
   "World2": {
     "Stage_1": {
       "start_stage": [
@@ -55,8 +151,8 @@
     },
     "Stage_3":{
       "start_stage":[
-         { "who": "noame", "text": "Hai người bọn họ vừa rời thị trấn và đến một ngọn đồi..." },
-         { "who": "noame", "text": "~ XOẸT ~... Trong lúc 2 người đang quan sát xung quanh, bỗng có một vật lao đến cả hai" },
+         { "who": "noname", "text": "Hai người bọn họ vừa rời thị trấn và đến một ngọn đồi..." },
+         { "who": "noname", "text": "~ XOẸT ~... Trong lúc 2 người đang quan sát xung quanh, bỗng có một vật lao đến cả hai" },
          { "who": "devil_bird", "text": "~ ÉCCCC ~ Bọn trẻ ranh dám đến địa bàn của taaaa!" },
          { "who": "merie", "text": "Ngài dũng sĩ cẩn thận phía trên!"},
          { "who": "player", "text": "Con chim khốn kiếp, tiếp chiêu..."}
@@ -67,33 +163,32 @@
         { "who": "player", "text": "Không sao! em vẫn ổn, chúng ta đi đâu tiếp?" },
         { "who": "merie", "text": "Theo bản đồ, phía trước là một đầm lầy rất nguy hiểm. gần đó có làng nhỏ, chúng ta đến đó điều trị vết thương của Ngài." },
         { "who": "player", "text": "Em... vẫn... ổ...n..." },
-        { "who": "noame", "text": "~ RẦM ~ bạn đã ngất xỉu vì kiệt sức...." },
-        { "who": "noame", "text": "Ít lâu sau, bạn tỉnh dậy trên lưng của Merie...." },
+        { "who": "noname", "text": "~ RẦM ~ bạn đã ngất xỉu vì kiệt sức...." },
+        { "who": "noname", "text": "Ít lâu sau, bạn tỉnh dậy trên lưng của Merie...." },
         { "who": "player", "text": "Cảm ơn chị..." },
         { "who": "merie", "text": "Ngài cố gắng lên, phái trước có một ngôi nhà, tôi sẽ xin ở tạm."}
       ]
     },
     "Stage_4":{
       "start_stage":[
-         { "who": "noame", "text": "Hai đến gần một ngôi nhà..." },
+         { "who": "noname", "text": "Hai đến gần một ngôi nhà..." },
          { "who": "bog_witch", "text": "Này cô bé...hai người bị sao vậy" },
          { "who": "merie", "text": "Thưa bà, xin hãy giúp cháu, Ngài ấy đang bị thương" },
          { "who": "bog_witch", "text": "Hãy đặt Ngài ấy lên giường và cho ngài ấy uống viên thuốc này, rồi theo ta đi hái thuốc"},
          { "who": "merie", "text": "Vâng. cháu cảm ơn bà"},
-         { "who": "noame", "text": "Một lát sau..............~ Áaaaaaaa ~ bạn nghe tiếng hét cảu chị Merie...Bạn vội chạy theo hướng tiếng hét và thấy chị Merie đang bị nhấn chìm trong đầm lầy"},
+         { "who": "noname", "text": "Một lát sau..............~ Áaaaaaaa ~ bạn nghe tiếng hét cảu chị Merie...Bạn vội chạy theo hướng tiếng hét và thấy chị Merie đang bị nhấn chìm trong đầm lầy"},
          { "who": "bog_witch", "text": "Hí hí hí. Ngoan ngoãn làm thức ăn cho đứa con của ta đi"},
          { "who": "player", "text": "Mụ phù thuỷ kia! thả chị Merie ra..."}
       ],
       "end_stage": [
         { "who": "bog_witch", "text": "Sao có thể, ta đã cho ngươi uống độc rồi mà" },
-        { "who": "merie", "text": "Ngài ổn chứ, để tôi cõng ngài về về thị trấn." },
-        { "who": "player", "text": "Không sao! em vẫn ổn, chúng ta đi đâu tiếp?" },
-        { "who": "merie", "text": "Theo bản đồ, phía trước là một đầm lầy rất nguy hiểm. gần đó có làng nhỏ, chúng ta đến đó điều trị vết thương của Ngài." },
-        { "who": "plaer", "text": "Em... vẫn... ổ...n..." },
-        { "who": "noame", "text": "~ RẦM ~ bạn đã ngất xĩu vì kiệt sức...." },
-        { "who": "noame", "text": "Ít lâu sau, bạn tỉnh dậy trên lưng của Merie...." },
-        { "who": "player", "text": "Cảm ơn chị..." },
-        { "who": "merie", "text": "Ngài cố gắng lên, phái trước có một ngôi nhà, tôi sẽ xin ở tạm."}
+        { "who": "bog_witch", "text": "Ah...ah...ah ta đưa nhầm thuốc..... dũng sĩ à, nước đi này cho ta đi lại nhé... hí hí" },
+        { "who": "player", "text": "Đừng có mơ! Bà dám hại chị Merie, giờ ta sẽ bỏ người xuống đứa con của ngươi." },
+        { "who": "bog_witch", "text": "Khôngggg.... ta cho lão đi mà!!!!!!" },
+        { "who": "noname", "text": "bạn đi đến sát đầm lầy, dùng hết sức để cứu chị Merie" },
+        { "who": "player", "text": "Chị Merie, chị ổn chứ?" },
+        { "who": "merie", "text": "Ạc...ạc...Cảm ơn ngài!" },
+        { "who": "player", "text": "Cứ gọi em là {name}..."}
       ]
     }
   }

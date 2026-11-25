@@ -9,8 +9,8 @@
   },
   "stats": {
     "HP": 1200,
-    "ATK": 400,
-    "DEF": 200,
+    "ATK": 350,
+    "DEF": 250,
     "CRIT": 30
   },
   "ANSWER_TIMEOUT_SEC": 15,
@@ -32,7 +32,7 @@
     }
   },
   "castSkill": {
-    "frame": 9,
+    "frame": 7,
     "origin": { "x": 0.4, "y": 0.42 },
     "target": { "x": 0.72, "y": 0.42 }
   }

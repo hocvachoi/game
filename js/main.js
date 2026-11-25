@@ -37,7 +37,7 @@ function buildSignupCharacters() {
   Object.values(CONFIG.CHARACTERS).forEach(c => {
     const dir = c.key.toLowerCase(), b = el('button', 'char-opt' + (c.key === signupCharacter ? ' is-on' : ''));
     b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(c.key === signupCharacter));
-    b.append(Story.portrait({ src: `assets/characters/${dir}/${dir}_idle.png`, frameW: 256, frameH: 202, frames: [0], still: true }), el('span', '', c.name));
+    b.append(Story.bust({ src: `assets/characters/${dir}/${dir}_idle.png`, frameW: 256, frameH: 202, frames: [0], still: true }), el('span', '', c.name));
     b.onclick = () => {
       signupCharacter = c.key;
       grid.querySelectorAll('.char-opt').forEach(o => { const on = o === b; o.classList.toggle('is-on', on); o.setAttribute('aria-checked', String(on)); });

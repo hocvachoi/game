@@ -17,7 +17,7 @@
     "DEF": 800,
     "CRIT": 30
   },
-  "ANSWER_TIMEOUT_SEC": 15,
+  "ANSWER_TIMEOUT_SEC": 20,
   "sprites": {
     "idle": {
      "src": "assets/monsters/dragon_emperor/dragon_emperor_idle.png",

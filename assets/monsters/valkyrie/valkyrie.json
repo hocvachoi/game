@@ -1,15 +1,19 @@
 {
-  "name": "Mummi",
+  "name": "Vong hồn hiệp sĩ",
   "attackStyle": "melee",
-  "Type": "Rare",
+  "Type": "epic",
   "Class":"Warrior",
+  "effects":{
+    "type": "Blessing",
+    "value":5
+  },
   "stats": {
-    "HP": 500,
-    "ATK": 70,
-    "DEF": 40,
+    "HP": 2000,
+    "ATK": 400,
+    "DEF": 350,
     "CRIT": 0
   },
-  "ANSWER_TIMEOUT_SEC": 15,
+  "ANSWER_TIMEOUT_SEC": 20,
   "sprites": {
     "idle": {
      "src": "assets/monsters/undead_knight/undead_knight_idle.png",
