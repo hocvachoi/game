@@ -141,8 +141,11 @@ CONFIG.GAME = {
   // Công cụ trong lượt (Phiêu lưu: tối đa PER_STAGE lần MỖI loại mỗi lượt; Hầm ngục: không giới hạn): Gợi ý 1 đáp án / Hồi HEAL_PCT% HP, mỗi lần COST Crystal, mỗi câu hỏi 1 lần mỗi loại.
   // Crystal đã dùng lưu localStorage ngay (Player.addSpend) và trừ trên Firestore khi kết thúc lượt (runSave) hoặc khi đăng nhập lại (Player.flushSpend).
   TOOLS: { PER_STAGE: 3, COST: 1, HEAL_PCT: 10 },
+  // THƯỞNG ĐỌC CỐT TRUYỆN (mỗi hộp thoại nhận 1 LẦN suốt đời; phải đọc tới câu cuối, bấm "Bỏ qua" thì không nhận). Số Gold của ải N = gốc × (1 + (N-1) × STAGE_STEP):
+  // STAGE_STEP 1 = mỗi ải cộng thêm 100% gốc (ải 1: ×1, ải 2: ×2, ải 3: ×3…, cộng dồn tuyến tính, KHÔNG nhân lũy tiến). Gộp vào lượt lưu có sẵn nên không tốn thêm đọc/ghi.
+  STORY: { GOLD: { start: 100, end: 50 }, STAGE_STEP: 0.7 },
   WRONG_WAIT_MS: 5000,   // trả lời SAI: chờ bấy lâu (đáp án đúng được tô nổi bật) mới được sang câu mới; mọi chế độ
-  KILL_GAP_MS: 1000,   // quái bị hạ mất bấy lâu mới hồi sinh/quái mới xuất hiện (Phiêu lưu/Hầm ngục); câu hỏi kế tiếp hiện NGAY, không chờ
+  KILL_GAP_MS: 1500,   // quái bị hạ mất bấy lâu mới hồi sinh/quái mới xuất hiện (Phiêu lưu/Hầm ngục); câu hỏi kế tiếp hiện NGAY, không chờ
   MAX_LEVEL_BONUS_CRYSTALS: 50,   // thưởng một lần khi lên cấp tối đa (MAX_LEVEL); [RULES] trần Crystal mỗi lượt khi lên cấp 100 là 80
   KILL_BONUS: { stage: 0.10 },   // stage: cộng dồn thẳng 10% mỗi quái bị hạ
   MIN_LOSE_FACTOR: 0.10,    // thua: thưởng = % sát thương gây cho quái, tối thiểu 10%
@@ -265,7 +268,7 @@ CONFIG.BURN_MAX_STACKS = 10;   // Thiêu đốt: tối đa 10 tầng
 CONFIG.EFFECTS = {
   burn: { name: 'Thiêu đốt', text: x => `Mỗi đòn tấn công tích 1 tầng (tối đa 10), mỗi tầng gây thêm ${x} sát thương; mất hết tầng khi bị tấn công` },
   pierce: { name: 'Xuyên giáp', text: x => `Bỏ qua ${x}% DEF của kẻ địch` },
-  blessing: { name: 'Ban phước', text: x => `Hồi ${x} HP mỗi lượt` },
+  blessing: { name: 'Ban phước', text: x => `Hồi ${x}% HP tối đa mỗi lượt` },
   steallife: { name: 'Đoạt huyết', text: x => `Hồi HP bằng ${x}% sát thương đã gây ra` },
   thorns: { name: 'Gai góc', text: x => `Gây ${x} sát thương khi bị tấn công` },
   ambush: { name: 'Đột kích', text: x => `Tăng ${x}% sát thương khi chí mạng` },

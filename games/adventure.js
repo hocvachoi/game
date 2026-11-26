@@ -86,7 +86,7 @@ const Adventure = {
     Stage.init({ background: this.level.background || this.world.stages[0].background, monster: this.monster, character: CONFIG.selectedCharacter, madness: this.madness });
     Stage.reset();
     this.beginCombat();
-    Story.pendingEnd = null;
+    Story.pendingEnd = null; Player.storyStart = null;   // hộp thoại start_stage của lượt trước (nếu chưa lưu) không còn hiệu lực
     const startQuiz = () => {
       if (!this.active) return;
       this.quizCtl = Quiz.run(qs, box, {
@@ -99,7 +99,7 @@ const Adventure = {
     };
     // Cốt truyện: ải (không phải Hầm ngục) phát hội thoại start_stage trước câu hỏi đầu tiên; đồng hồ chỉ chạy sau khi xong/bỏ qua.
     if (this.isDungeon()) startQuiz();
-    else { box.replaceChildren(); Story.play(this.world, this.level, 'start_stage', startQuiz); }
+    else { box.replaceChildren(); Story.play(this.world, this.level, 'start_stage', info => { if (info && info.completed) Player.storyRead(this.level, 's'); startQuiz(); }); }
   },
   // Dừng đồng hồ/hẹn giờ của lượt trước (khi chơi lại hoặc rời ải).
   teardown() {
@@ -369,6 +369,7 @@ const Adventure = {
     const ico = src => { const i = new Image(); i.alt = ''; i.src = src; i.className = 'reward-ico'; return i; };
     const chip = (icon, text, cls) => { const c = el('span', 'reward-chip' + (cls ? ' ' + cls : '')); if (icon) c.append(icon); c.append(el('b', '', text)); return c; };
     row.append(chip(ico('assets/ui/gold.png'), `+${Number(r.gold || 0).toLocaleString('vi-VN')} Gold`));
+    if (r.storyGold) row.append(chip(ico('assets/ui/gold.png'), `+${Number(r.storyGold).toLocaleString('vi-VN')} Gold cốt truyện`, 'is-story'));
     row.append(chip(null, `+${Number(r.exp || 0).toLocaleString('vi-VN')} EXP`, 'is-exp'));
     if (r.crystals) row.append(chip(ico('assets/ui/crystal.png'), `+${r.crystals} Crystal`));
     for (const id of r.drops || []) {

@@ -70,7 +70,10 @@ function renderLevels() {
   setMsg('');
   show('screen-levels');
   const ending = Story.pendingEnd; Story.pendingEnd = null;   // vừa vượt ải: phát hội thoại end_stage trên bản đồ
-  if (ending) Story.play(ending.world, ending.stage, 'end_stage', () => {});
+  if (ending) Story.play(ending.world, ending.stage, 'end_stage', info => {
+    const gold = info && info.completed ? Player.storyRead(ending.stage, 'e') : 0;   // đọc xong lần đầu: nhận Gold ở lượt lưu kế tiếp
+    if (gold) setMsg(`📖 Đọc xong cốt truyện: +${gold.toLocaleString('vi-VN')} Gold (sẽ cộng ở lượt lưu kế tiếp).`);
+  });
 }
 
 function renderMapPlayerInfo() {

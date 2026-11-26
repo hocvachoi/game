@@ -152,7 +152,7 @@ const Story = {
     };
     // Cả hai bên hiện sẵn ngay từ lời thoại đầu: lấy người đầu tiên nói ở mỗi bên.
     ['left', 'right'].forEach(s => { const f = lines.find(l => l.side === s && !actors[l.who].hidden); if (f) setFace(s, f.who); });
-    const finish = () => { this.close(); done(); };
+    const finish = completed => { this.close(); done({ completed: completed === true }); };   // completed = đọc tới câu cuối (không bấm Bỏ qua)
     const show = () => {
       const l = lines[i], a = actors[l.who];
       const who = l.name || a.name;   // tab tên: dòng có "name" riêng > tên nhân vật (học sinh = nickname)
@@ -173,10 +173,10 @@ const Story = {
     };
     next.onclick = () => {
       if (typing) { clearInterval(this.timer); text.textContent = text._full; typing = false; return; }
-      if (++i >= lines.length) { finish(); return; }
+      if (++i >= lines.length) { finish(true); return; }
       show();
     };
-    skip.onclick = finish;
+    skip.onclick = () => finish(false);
     document.addEventListener('keydown', this.onKey);
     show(); next.focus();
   }

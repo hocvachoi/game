@@ -86,12 +86,44 @@ const Player = {
     this.data = {
       ...p, nick: p.Nickname, cls: this.u.cls,
       level: this.levelOf(exp), xp: exp, gold: p.Golds || 0, rawCrystals: p.Crystals || 0, crystals: Math.max(0, (p.Crystals || 0) - this.pendingSpend()),
-      equip: p.Equipment || {}, stock: this.parseInv(p.Enventory), inventory: Object.keys(this.parseInv(p.Enventory)), progress: p.progress || {},
+      equip: p.Equipment || {}, stock: this.parseInv(p.Enventory), inventory: Object.keys(this.parseInv(p.Enventory)), progress: p.progress || {}, story: p.Story || {},
       character: p.Character || null,
       // Mốc đổi NGHỀ gần nhất (ms). Vừa ghi bằng serverTimestamp (chưa có giá trị thật) thì lấy giờ máy làm xấp xỉ.
       classChangedAt: p.ClassChangedAt ? (p.ClassChangedAt.toMillis ? p.ClassChangedAt.toMillis() : Date.now()) : 0,
       room: p.Room || null   // lớp dạng "6/5"; hồ sơ cũ chưa có thì null → main.js yêu cầu nhập một lần
     };
+  },
+
+  // ----- THƯỞNG ĐỌC CỐT TRUYỆN -----
+  // Hồ sơ có trường Story = { "<idẢi>_s": true (đã nhận start_stage), "<idẢi>_e": true (đã nhận end_stage) }.
+  // start_stage: nhớ trong bộ nhớ (storyStart) và trả KÈM lượt lưu cuối ải đó. end_stage: nhớ ở trình duyệt (localStorage) và trả kèm lượt lưu ải kế tiếp.
+  // Không có lượt đọc/ghi riêng. Mất ghi nhớ (đổi máy…) thì chỉ cần đọc lại hộp thoại ở lần qua ải sau.
+  storyStart: null,
+  storyAmount(phase, index) {
+    const S = this.G().STORY, base = phase === 's' ? S.GOLD.start : S.GOLD.end;
+    return Math.max(0, Math.floor(base * (1 + (Math.max(1, Number(index) || 1) - 1) * S.STAGE_STEP)));
+  },
+  storyPendingKey() { return 'rpg_story_pending_' + this.uid; },
+  loadStoryPending() {
+    try { const a = JSON.parse(localStorage.getItem(this.storyPendingKey()) || '[]'); return Array.isArray(a) ? a.filter(x => x && typeof x.id === 'string' && Number.isInteger(x.index)) : []; } catch (e) { return []; }
+  },
+  saveStoryPending(list) { try { localStorage.setItem(this.storyPendingKey(), JSON.stringify(list.slice(-30))); } catch (e) { /* bỏ qua */ } },
+  // Gọi khi học sinh ĐỌC XONG hộp thoại (không bỏ qua). Trả về số Gold sẽ nhận (0 nếu đã nhận trước đó).
+  storyRead(level, phase) {
+    if (!level || level.kind !== 'stage' || (this.data.story || {})[`${level.id}_${phase}`]) return 0;
+    const amount = this.storyAmount(phase, level.index);
+    if (!amount) return 0;
+    if (phase === 's') this.storyStart = { id: level.id, index: level.index };
+    else this.saveStoryPending([...this.loadStoryPending().filter(x => x.id !== level.id), { id: level.id, index: level.index }]);
+    return amount;
+  },
+  // Các khoản đang chờ trả trong lượt lưu này (đã loại khoản đã nhận): [{ key, id, index, phase }]
+  storyClaims(cur, level) {
+    const got = (cur && cur.Story) || {}, out = [];
+    const add = (id, index, phase) => { const key = `${id}_${phase}`; if (!got[key] && !out.some(c => c.key === key)) out.push({ key, id, index, phase }); };
+    if (this.storyStart && this.storyStart.id === level.id) add(this.storyStart.id, this.storyStart.index, 's');
+    this.loadStoryPending().forEach(x => add(x.id, x.index, 'e'));
+    return out.slice(0, 6);
   },
 
   // ----- Phiếu thưởng xếp hạng (do trang admin tạo ở rewards/<UID>/vouchers/<id>) -----
@@ -237,19 +269,21 @@ const Player = {
   // (ví dụ đồng hồ máy lệch tuần) thì lưu lại thưởng không kèm xếp hạng và đặt out.rankSkipped = true.
   async saveRun(level, o) {
     try {
-      return await this.runSave(level, o, true);
+      return await this.runSave(level, o, true, true);
     } catch (e) {
       if (!e.denied) throw e;
+      // Rules chưa cho phép trường Story (chưa Publish) → lưu lại lượt chơi KHÔNG kèm thưởng cốt truyện (khoản chờ vẫn còn, trả ở lượt sau).
+      try { return await this.runSave(level, o, true, false); } catch (e1) { if (!e1.denied) throw e1; }
       // Bản sao điểm xếp hạng ở máy có thể lệch (chơi trên máy khác...): đọc lại bản ghi của mình 1 lần rồi thử lại trước khi bỏ qua xếp hạng.
-      try { await Rank.ownEntry(true); return await this.runSave(level, o, true); } catch (e2) { if (!e2.denied) throw e2; }
-      const out = await this.runSave(level, o, false);
+      try { await Rank.ownEntry(true); return await this.runSave(level, o, true, false); } catch (e2) { if (!e2.denied) throw e2; }
+      const out = await this.runSave(level, o, false, false);
       out.rankSkipped = true;
       return out;
     }
   },
-  async runSave(level, o, withRank) {
+  async runSave(level, o, withRank, withStory = true) {
     const G = this.G(), R = G.REWARD, dungeon = level.kind === 'dungeon';
-    const out = { gold: 0, exp: 0, crystals: 0, levelUp: false, factor: 0, drop: null, drops: [], rankSkipped: false };
+    const out = { gold: 0, storyGold: 0, storyClaims: [], exp: 0, crystals: 0, levelUp: false, factor: 0, drop: null, drops: [], rankSkipped: false };
     if (!Number.isInteger(o.kills) || o.kills < 0) throw new Error('Số quái vật bị hạ không hợp lệ.');
     if (dungeon && (!Number.isInteger(o.floor) || o.floor < 0)) throw new Error('Tầng hầm ngục không hợp lệ.');
     const base = level.reward || { EXP: 0, GOLD: 0, drops: [] };
@@ -298,7 +332,12 @@ const Player = {
       const entry = dungeon
         ? { best: Math.max(old.best, o.floor), passed: false, tries: old.tries + 1 }       // dungeon: best = TẦNG cao nhất đã vượt (không giảm)
         : { best: Math.max(old.best, pct), passed: old.passed || o.passed, tries: old.tries + 1 };
-      const fields = { Golds: (cur.Golds || 0) + gold, EXP: exp, LV: this.levelOf(exp), LastReward: firebase.firestore.FieldValue.serverTimestamp() };
+      // Thưởng cốt truyện (chỉ ở lượt ải, không ở hầm ngục): gộp vào CÙNG lần ghi này.
+      const claims = withStory && !dungeon ? this.storyClaims(cur, level) : [];
+      const storyGold = claims.reduce((sum, c) => sum + this.storyAmount(c.phase, c.index), 0);
+      out.storyGold = storyGold; out.storyClaims = claims;
+      const fields = { Golds: (cur.Golds || 0) + gold + storyGold, EXP: exp, LV: this.levelOf(exp), LastReward: firebase.firestore.FieldValue.serverTimestamp() };
+      if (claims.length) fields.Story = { ...(cur.Story || {}), ...Object.fromEntries(claims.map(c => [c.key, true])) };
       const spent = Math.max(0, Math.floor(Number(o.spent) || 0));   // Crystal đã dùng cho Gợi ý/Hồi HP trong lượt này
       if (crystals - spent !== 0) fields.Crystals = Math.max(0, (cur.Crystals || 0) + crystals - spent);
       if (dungeon) {
@@ -315,6 +354,8 @@ const Player = {
       }
       return result;
     }, needRank ? this.rankRef() : null, { skipRankRead: true });
+    if (!dungeon) this.storyStart = null;
+    if (out.storyClaims.length) this.saveStoryPending(this.loadStoryPending().filter(x => !out.storyClaims.some(c => c.key === `${x.id}_e`)));
     Rank.afterRun(out.rank);
     this.clearSpend(Math.max(0, Math.floor(Number(o.spent) || 0)));
     return out;

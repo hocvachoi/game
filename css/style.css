@@ -999,3 +999,4 @@ select.reveal,.slot.reveal{outline:3px solid #ffd23f;outline-offset:-1px}
 #screen-game.is-raid #quiz.quiz{margin-top:48px}
 #screen-game.is-raid .enemy .enemy-info{top:170px}   /* Tên + HP Boss ghim dưới cụm HUD + nút điều hướng */
 @media (max-width:800px),(max-height:520px){#screen-game.is-raid .enemy .enemy-info{top:116px}}
+.reward-chip.is-story{border-color:var(--c-gold)}
