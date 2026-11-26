@@ -13,23 +13,19 @@
     { "x": 16.4, "y": 84.2, "after": 1 },
     { "x": 50.8, "y": 46.5, "after": 4 }
   ],
-  "dungeon_monsters": [ ["giant_slime", "killer_bat", "bandits", "bog_witch"], ["undead_knight"] ],
+"dungeon_monsters": [ ["giant_slime","goblin","sky_soldier","dark_adam","dark_warlord","eclipse_god","mummy","valkyrie","killer_bat","devil_bird","bog_Witch","centaur","bandits","undead_knight","statue","rebel_knight","ash_skeleton","mad_jester","dragon_emperor"], ["dark_warlord","eclipse_god","mummy","valkyrie","killer_bat","devil_bird","bog_Witch","centaur","bandits","undead_knight","statue","rebel_knight","ash_skeleton","mad_jester","dragon_emperor"] ],
   "stage_rewards": [
-    { "EXP": 150, "GOLD": 50, "drops": [{ "itemId": "iron_sword", "chance": 0.05 }] },
-    { "EXP": 300, "GOLD": 100, "drops": [{ "itemId": "short_bow", "chance": 0.05 }] },
-    { "EXP": 500, "GOLD": 150, "drops": [{ "itemId": "magic_staff", "chance": 0.04 }] },
-    { "EXP": 800, "GOLD": 200, "drops": [{ "itemId": "leather_armor", "chance": 0.04 }] },
-    { "EXP": 1000, "GOLD": 250, "drops": [{ "itemId": "iron_helmet", "chance": 0.04 }] },
-    { "EXP": 1400, "GOLD": 300, "drops": [{ "itemId": "old_necklace", "chance": 0.04 }] },
-    { "EXP": 1800, "GOLD": 400, "drops": [{ "itemId": "iron_sword", "chance": 0.06 }] },
-    { "EXP": 2300, "GOLD": 500, "drops": [{ "itemId": "short_bow", "chance": 0.06 }] },
-    { "EXP": 2800, "GOLD": 600, "drops": [{ "itemId": "magic_staff", "chance": 0.06 }] },
-    { "EXP": 3500, "GOLD": 700, "drops": [{ "itemId": "leather_armor", "chance": 0.06 }] },
-    { "EXP": 4000, "GOLD": 800, "drops": [{ "itemId": "iron_helmet", "chance": 0.08 }] },
-    { "EXP": 5000, "GOLD": 1000, "drops": [{ "itemId": "old_necklace", "chance": 0.08 }] }
+    { "EXP": 150, "GOLD": 50, "drops": [{ "itemId": "iron_sword", "chance": 0.3 },{ "itemId": "magic_staff", "chance": 0.3 },{ "itemId": "wooden_bow", "chance": 0.3 }] },
+    { "EXP": 300, "GOLD": 100, "drops": [{ "itemId": "iron_armor", "chance": 0.05 }] },
+    { "EXP": 700, "GOLD": 250, "drops": [{ "itemId": "brave_sword", "chance": 0.04 },{ "itemId": "hunter_armor", "chance": 0.04 },{ "itemId": "priest_hood", "chance": 0.04 }] },
+    { "EXP": 1400, "GOLD": 300, "drops": [{ "itemId": "brave_armor", "chance":0.03 },{ "itemId": "hunter_arrow", "chance":0.03 },{ "itemId": "priest_book", "chance":0.03 }] },
+    { "EXP": 2300, "GOLD": 500, "drops": [{ "itemId": "royal_emblem", "chance": 0.02 },{ "itemId": "royal_helmet", "chance": 0.02 },{ "itemId": "royal_cloak", "chance": 0.02 }] },
+    { "EXP": 3000, "GOLD": 600, "drops": [{ "itemId": "royal_emblem", "chance": 0.05 },{ "itemId": "royal_helmet", "chance": 0.05 },{ "itemId": "royal_cloak", "chance": 0.05 }] },
+    { "EXP": 3800, "GOLD": 700, "drops": [{ "itemId": "warlord_armor", "chance": 0.01 },{ "itemId": "chaos_cloak", "chance": 0.01 },{ "itemId": "hell_armor", "chance": 0.01 }] },
+    { "EXP": 5000, "GOLD": 1000, "drops": [{ "itemId": "warlord_ring", "chance": 0.0 },{ "itemId": "chaos_staff", "chance": 0.01 },{ "itemId": "hell_banner", "chance": 0.01 }] }
   ],
   "dungeon_rewards": [
-    { "EXP": 100, "GOLD": 40, "drops": [{ "itemId": "warlord_helmet", "chance": 0.03 }, { "itemId": "warlord_sword", "chance": 0.02 }] },
-    { "EXP": 800, "GOLD": 150, "drops": [{ "itemId": "warlord_armor", "chance": 0.03 }, { "itemId": "warlord_ring", "chance": 0.02 }] }
+    { "EXP": 50, "GOLD": 40, "drops": [{ "itemId": "love_sword", "chance": 0.01 }, { "itemId": "sun_bow", "chance": 0.01 }, { "itemId": "dark_staff", "chance": 0.01 }] },
+    { "EXP": 800, "GOLD": 150, "drops": [{ "itemId": "warlord_spear", "chance": 0.005 }, { "itemId": "chaos_gloves", "chance": 0.005}, { "itemId": "hell_kunai", "chance": 0.005 }] }
   ]
 }
