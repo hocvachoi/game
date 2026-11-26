@@ -104,6 +104,16 @@
       </label>
       <button id="sc-add" type="button" class="alt" style="align-self:end">Thêm / sửa ngày</button>
     </div>
+    <div class="row">
+      <label>Ghim Boss 1 (key, bỏ trống = random)
+        <input id="sc-pin1" maxlength="32" placeholder="vd: raid_boss" autocomplete="off">
+      </label>
+      <label>Ghim Boss 2 (key, bỏ trống = random)
+        <input id="sc-pin2" maxlength="32" placeholder="vd: thunder_god" autocomplete="off">
+      </label>
+      <button id="sc-pin" type="button" class="alt" style="align-self:end">Ghim Boss cho ngày đã chọn</button>
+    </div>
+    <div class="small">Boss mỗi lượt mặc định được game chọn ngẫu nhiên theo khối + ngày + lượt trong danh sách <b>assets/raid/raid_bosses.json</b> của game. Ghim chỉ áp dụng cho ngày đã chọn ở trên (mọi khối của ngày đó); <b>key</b> là trường "key" trong raid_bosses.json. Có thể ghim một ngày không có trong lịch riêng (khi đó vẫn theo lịch tuần).</div>
     <div id="sc-dates"></div>
     <div class="row">
       <button id="sc-load" type="button" class="alt">Tải lịch hiện tại</button>
@@ -420,7 +430,7 @@ $('#rw-commit').onclick = async () => {
 // Khóa Weekly: 2 = Thứ Hai … 7 = Thứ Bảy, 8 = Chủ nhật. Quyền ghi do firestore.rules (isAdmin) quyết định.
 const SC_DAYS = [[2, 'Thứ Hai'], [3, 'Thứ Ba'], [4, 'Thứ Tư'], [5, 'Thứ Năm'], [6, 'Thứ Sáu'], [7, 'Thứ Bảy'], [8, 'Chủ nhật']], SC_GRADES = ['6', '7', '8', '9'];
 const SC_DEFAULT = { 2: ['7'], 3: ['7'], 4: ['6', '8'], 5: ['7'], 6: ['6', '8'], 7: ['7'], 8: ['9'] };   // lịch mặc định cũ của game
-let sched = { Weekly: JSON.parse(JSON.stringify(SC_DEFAULT)), Dates: {} };
+let sched = { Weekly: JSON.parse(JSON.stringify(SC_DEFAULT)), Dates: {}, Pins: {} };
 const vnToday = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
 const gradeBoxes = (checked, onChange) => {
   const wrap = el('span'); wrap.style.cssText = 'display:flex;gap:10px';
@@ -440,15 +450,17 @@ function renderSched() {
     tr.append(td1, td2); table.append(tr);
   });
   $('#sc-weekly').replaceChildren(table);
-  const keys = Object.keys(sched.Dates).sort(), box = el('table');
+  const keys = [...new Set([...Object.keys(sched.Dates), ...Object.keys(sched.Pins)])].sort(), box = el('table');
   keys.forEach(k => {
     const tr = el('tr'), del = el('button', 'Xóa'); del.type = 'button'; del.className = 'alt';
-    del.onclick = () => { delete sched.Dates[k]; renderSched(); };
-    const d = el('td'); d.append(del);
-    tr.append(el('td', `${k.slice(6)}/${k.slice(4, 6)}/${k.slice(0, 4)}`), el('td', sched.Dates[k].length ? 'Khối ' + sched.Dates[k].join(', ') : 'NGHỈ (không mở Raid)'), d);
+    del.onclick = () => { delete sched.Dates[k]; delete sched.Pins[k]; renderSched(); };
+    const d = el('td'); d.append(del); const pin = sched.Pins[k] || {};
+    const pinText = (pin[1] || pin[2]) ? `Boss 1: ${pin[1] || 'random'} · Boss 2: ${pin[2] || 'random'}` : 'Boss: random';
+    tr.append(el('td', `${k.slice(6)}/${k.slice(4, 6)}/${k.slice(0, 4)}`),
+      el('td', sched.Dates[k] ? (sched.Dates[k].length ? 'Khối ' + sched.Dates[k].join(', ') : 'NGHỈ (không mở Raid)') : 'Theo lịch tuần'), el('td', pinText), d);
     box.append(tr);
   });
-  $('#sc-dates').replaceChildren(keys.length ? box : el('div', 'Chưa có ngày riêng nào.', 'small'));
+  $('#sc-dates').replaceChildren(keys.length ? box : el('div', 'Chưa có ngày riêng / ghim Boss nào.', 'small'));
 }
 (function initSched() {
   $('#sc-date').value = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
@@ -463,25 +475,36 @@ $('#sc-add').onclick = () => {
   sched.Dates[day] = [...$('#sc-date-grades').querySelectorAll('input:checked')].map(x => x.value);
   renderSched(); log('Đã thêm vào danh sách (chưa lưu). Bấm "Lưu lịch" để áp dụng.', 'ok');
 };
+$('#sc-pin').onclick = () => {
+  const day = $('#sc-date').value.replace(/-/g, ''), keyOk = v => /^[A-Za-z0-9_-]{1,32}$/.test(v);
+  if (!/^\d{8}$/.test(day)) { log('Hãy chọn ngày.', 'err'); return; }
+  if (day < vnToday()) { log('Ngày đã qua, không cần ghim.', 'err'); return; }
+  const p1 = $('#sc-pin1').value.trim(), p2 = $('#sc-pin2').value.trim();
+  if ((p1 && !keyOk(p1)) || (p2 && !keyOk(p2))) { log('Key Boss chỉ gồm chữ không dấu, số, _ và - (tối đa 32 ký tự).', 'err'); return; }
+  if (!p1 && !p2) { delete sched.Pins[day]; renderSched(); log('Đã bỏ ghim Boss của ngày này (chưa lưu).', 'ok'); return; }
+  sched.Pins[day] = {}; if (p1) sched.Pins[day][1] = p1; if (p2) sched.Pins[day][2] = p2;
+  renderSched(); log('Đã ghim Boss (chưa lưu). Bấm "Lưu lịch" để áp dụng.', 'ok');
+};
 $('#sc-load').onclick = async () => {
   $('#sc-load').disabled = true; log('Đang đọc lịch…');
   try {
     const snap = await db.collection('config').doc('raidSchedule').get();
     if (!snap.exists) { log('Chưa có lịch trên máy chủ — đang hiện lịch mặc định. Bấm "Lưu lịch" để áp dụng.', 'ok'); return; }
-    const d = snap.data(); sched = { Weekly: d.Weekly || {}, Dates: d.Dates || {} };
+    const d = snap.data(); sched = { Weekly: d.Weekly || {}, Dates: d.Dates || {}, Pins: d.Pins || {} };
     renderSched(); log('Đã tải lịch hiện tại.', 'ok');
   } catch (e) { log('Không đọc được lịch: ' + e.message + '\nGợi ý: email đăng nhập phải nằm trong isAdmin() của firestore.rules và rules đã Publish.', 'err'); }
   finally { $('#sc-load').disabled = false; }
 };
 $('#sc-save').onclick = async () => {
   if (!confirm('Lưu lịch Boss Raid? Game sẽ dùng lịch này ngay (học sinh có thể mất tối đa 5 phút để thấy thay đổi).')) return;
-  const today = vnToday(), Weekly = {}, Dates = {}, dropped = [];
+  const today = vnToday(), Weekly = {}, Dates = {}, Pins = {}, dropped = [];
   SC_DAYS.forEach(([k]) => { Weekly[String(k)] = (sched.Weekly[k] || []).filter(g => SC_GRADES.includes(g)); });
   Object.keys(sched.Dates).forEach(k => { if (k < today) dropped.push(k); else Dates[k] = sched.Dates[k].filter(g => SC_GRADES.includes(g)); });
+  Object.keys(sched.Pins).forEach(k => { if (k >= today) { const o = {}; [1, 2].forEach(n => { if (sched.Pins[k][n]) o[n] = String(sched.Pins[k][n]); }); if (Object.keys(o).length) Pins[k] = o; } });
   $('#sc-save').disabled = true; log('Đang lưu lịch…');
   try {
-    await db.collection('config').doc('raidSchedule').set({ Weekly, Dates, UpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    sched = { Weekly, Dates }; renderSched();
+    await db.collection('config').doc('raidSchedule').set({ Weekly, Dates, Pins, UpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    sched = { Weekly, Dates, Pins }; renderSched();
     log('Đã lưu lịch Boss Raid (1 lượt ghi).' + (dropped.length ? ` Đã xóa ${dropped.length} ngày riêng đã qua.` : ''), 'ok');
   } catch (e) { log('Không lưu được lịch: ' + e.message + '\nGợi ý: email đăng nhập phải nằm trong isAdmin() của firestore.rules và rules đã Publish (có phần match /config).', 'err'); }
   finally { $('#sc-save').disabled = false; }

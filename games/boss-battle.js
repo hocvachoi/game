@@ -79,10 +79,11 @@ const Raid = {
     if (!world) { setMsg('Chưa tải được bản đồ của khối. Hãy thử lại.', true); return; }
     this.opening = true; setMsg('Đang vào Boss Raid…');
     try {
-      const [bossDef, questions] = await Promise.all([this.loadBoss(), this.loadRaidQuestions(world)]);
+      const [bossList, questions] = await Promise.all([this.loadBossList(), this.loadRaidQuestions(world)]);
       if (!questions.length) throw new Error('Chưa có câu hỏi nào trong Dungeon_1.xlsx / Dungeon_2.xlsx của khối này.');
       const slot = await this.route(grade);
       if (!slot) return;   // đã hiện thông báo lý do
+      const bossDef = await this.loadBoss(this.pickBossEntry(bossList, grade, slot));   // Boss của lượt này: random theo (khối, ngày, lượt) hoặc do admin ghim
       this.world = world; this.bossDef = bossDef; this.questions = questions;
       const phase = await this.join(grade, slot);
       setMsg('');
@@ -121,15 +122,50 @@ const Raid = {
     const d = this.bossDef || {}, by = d.HP_BY_GRADE || {}, pick = [by[grade], d.stats && d.stats.HP].map(Number).find(n => Number.isFinite(n) && n > 0);
     return pick ? Math.min(5000000, Math.max(1000, Math.round(pick))) : this.R().BOSS_HP[grade];
   },
-  async loadBoss() {
-    if (this.cache.boss) return this.cache.boss;
-    const r = await fetch(this.R().BOSS_FILE);
-    if (!r.ok) throw new Error(`Không tải được ${this.R().BOSS_FILE} (${r.status}).`);
-    const data = await r.json();
-    if (!StageMonster.validate(data)) throw new Error('raid_boss.json không hợp lệ (cần name, stats, sprites.idle/attack).');
-    const boss = { ...data, key: 'raid_boss', stats: { CRIT: 0, ...data.stats } };
-    return (this.cache.boss = Monster.create(boss));
+  // ----- NHIỀU BOSS -----
+  // assets/raid/raid_bosses.json = { bosses: [ { key, file, grades? }, … ] }. Thiếu/lỗi file → dùng một Boss duy nhất CONFIG.RAID.BOSS_FILE.
+  async loadBossList() {
+    if (this.cache.bossList) return this.cache.bossList;
+    let list = [];
+    try {
+      const r = await fetch(this.R().BOSS_LIST_FILE);
+      if (r.ok) {
+        const j = await r.json();
+        list = (Array.isArray(j.bosses) ? j.bosses : []).filter(b => b && /^[A-Za-z0-9_-]{1,32}$/.test(String(b.key)) && typeof b.file === 'string' && b.file)
+          .map(b => ({ key: String(b.key), file: b.file, grades: Array.isArray(b.grades) ? b.grades.map(String) : [] }));
+      }
+    } catch (e) { console.warn('Không đọc được danh sách Boss, dùng Boss mặc định:', e); }
+    if (!list.length) list = [{ key: 'raid_boss', file: this.R().BOSS_FILE, grades: [] }];
+    return (this.cache.bossList = list);
   },
+  hash32(text) { let h = 2166136261; for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; },
+  // Chọn Boss cho (khối, ngày, lượt): admin ghim (config/raidSchedule.Pins[yyyymmdd][lượt] = key) > random theo "hạt giống" khối+ngày+lượt.
+  // Mọi máy tính ra CÙNG kết quả nên không cần ghi gì lên Firestore. Boss 2 luôn khác Boss 1 (nếu có từ 2 Boss trở lên).
+  pickBossEntry(list, grade, slot) {
+    const eligible = list.filter(b => !b.grades.length || b.grades.includes(grade)), pool = eligible.length ? eligible : list, day = String(this.dayKey());
+    const pins = (this.schedule && this.schedule.Pins && this.schedule.Pins[day]) || {};
+    const byKey = key => key ? (pool.find(b => b.key === key) || list.find(b => b.key === key)) : null;
+    const pinned = byKey(pins[slot]);
+    if (pins[slot] && !pinned) console.warn(`Boss ghim "${pins[slot]}" không có trong raid_bosses.json — dùng random.`);
+    if (pinned) return pinned;
+    if (pool.length === 1) return pool[0];
+    const first = byKey(pins[1]) || pool[this.hash32(`${grade}_${day}_boss1`) % pool.length];
+    if (slot === 1) return first;
+    const others = pool.filter(b => b.key !== first.key);
+    return others[this.hash32(`${grade}_${day}_boss2`) % others.length];
+  },
+  async loadBoss(entry) {
+    this.cache.boss = this.cache.boss || {};
+    if (this.cache.boss[entry.key]) return this.cache.boss[entry.key];
+    const r = await fetch(entry.file);
+    if (!r.ok) throw new Error(`Không tải được ${entry.file} (${r.status}).`);
+    const data = await r.json();
+    if (!StageMonster.validate(data)) throw new Error(`${entry.file} không hợp lệ (cần name, stats, sprites.idle/attack).`);
+    const boss = { ...data, key: 'raid_' + entry.key, stats: { CRIT: 0, ...data.stats } };
+    return (this.cache.boss[entry.key] = Monster.create(boss));
+  },
+  bossTitle() { return String((this.bossDef && this.bossDef.name) || `Boss ${this.slot}`).toUpperCase(); },
+  bossBackground() { return (this.bossDef && this.bossDef.background) || this.world.stages[0].background; },   // mỗi Boss có thể khai báo "background" riêng
   // Câu hỏi BOSS RAID = Dungeon_1.xlsx + Dungeon_2.xlsx của thế giới (khối) đó (1 lần tải mỗi phiên). Dùng đường dẫn `world.dungeons[].file`.
   async loadRaidQuestions(world) {
     const key = 'raid:' + world.id;
@@ -201,7 +237,7 @@ const Raid = {
     this.waiting = true; this.lobbyFrom = Date.now();
     $('#hud-nick').textContent = Player.data.nick; Player.renderHud();
     show('screen-game');
-    Stage.init({ background: this.world.stages[0].background, monster: this.bossDef, character: CONFIG.selectedCharacter, raid: true });
+    Stage.init({ background: this.bossBackground(), monster: this.bossDef, character: CONFIG.selectedCharacter, raid: true });
     Stage.reset(); Stage.hp(1, '???', '???');
     $('#raid-bar').hidden = true; $('#raid-top').hidden = true;
     this.drawLobby(false);
@@ -248,7 +284,7 @@ const Raid = {
     if (!this.running) return;   // người chơi đã rời trong lúc chờ đọc
     A.teardown();
     A.raid = this; A.world = world; A.monster = bossDef; A.monsterPool = [bossDef];
-    A.level = { kind: 'raid', index: 0, key: '', background: world.stages[0].background };
+    A.level = { kind: 'raid', index: 0, key: '', background: this.bossBackground() };
     $('#hud-nick').textContent = Player.data.nick; Player.renderHud();
     A.active = true; A.guard.bind(); A.guard.reset();
     show('screen-game');
@@ -526,7 +562,7 @@ const Raid = {
     const div = el('div', 'result'), status = el('p', 'save-status', 'Đang gửi sát thương…'), list = el('div', 'raid-top-list'), next = el('p', '');
     const back = el('button', 'btn ghost', 'Về bản đồ');
     back.onclick = () => { clearInterval(this.nextTimer); Adventure.raid = null; renderLevels(); };
-    div.append(el('h1', '', dead ? `BOSS ${this.slot} ĐÃ BỊ HẠ!` : `BOSS ${this.slot} THẤT BẠI`),
+    div.append(el('h1', '', dead ? `${this.bossTitle()} ĐÃ BỊ HẠ!` : `${this.bossTitle()} THẤT BẠI`),
       el('div', 'score', `${this.fmt(this.myTotal + this.pending)} sát thương`),
       el('p', '', (dead ? 'Cả khối đã hạ Boss: ' : 'Boss chưa bị hạ khi hết giờ: ') + 'top 10 sát thương nhận thưởng' +
         (dead ? ' đầy đủ' : ' 50% và không có trang bị') + '; giáo viên sẽ chốt, bạn sẽ thấy thông báo khi đăng nhập.'),

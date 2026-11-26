@@ -466,3 +466,13 @@ Cũ: `Reduce DMG` (giảm sát thương nhận), `Increase DMG` (tăng sát thư
 - **Người dẫn truyện**: khai báo trong `characters` với `"src": ""` (vd `"noname": {"name": "", "src": ""}`) → không hiện ảnh và không hiện tab tên (cả hai bên mờ đi), chỉ hiện chữ. `who` sai chính tả (không tìm thấy ảnh) cũng được xử lý như vậy và báo ở Console (`Story: không tải được ảnh của "..."`).
 - **Tên**: tab tên của học sinh (`who:"player"`) = **nickname**. Trong `text` dùng `{name}` = `name` trong `character.json` của nhân vật học sinh đang chọn (vd "Pháp Sư Nam"), `{nick}` = nickname. Dòng có `name` riêng thì tab hiện tên đó.
 - **Tab tên hộp thoại**: `.story-name.is-left` cách mép trái `.story-box` 22%, `.story-name.is-right` cách mép phải 22% (CSS `left:22%` / `right:22%`).
+
+**v5.22 — Boss Raid nhiều Boss, random theo ngày:**
+- `assets/raid/raid_bosses.json` = `{ bosses: [ { key, file, grades? } ] }` (`CONFIG.RAID.BOSS_LIST_FILE`). Thiếu/lỗi file → dùng Boss duy nhất `CONFIG.RAID.BOSS_FILE`. Mỗi Boss một file JSON như `raid_boss.json`: `stats.HP` (mặc định dự phòng 50000, `CONFIG.RAID.BOSS_HP`), `HP_BY_GRADE` tùy chọn, `background` tùy chọn (nền riêng; không có thì dùng nền ải đầu của khối).
+- `Raid.pickBossEntry(list, grade, slot)`: admin GHIM (`config/raidSchedule.Pins[yyyymmdd][1|2] = key`) > random theo hạt giống FNV-1a của `khối_ngày_boss1/boss2`. Mọi máy ra CÙNG kết quả nên KHÔNG ghi thêm gì lên Firestore (0 lượt đọc/ghi thêm). Boss 2 luôn khác Boss 1 khi có ≥ 2 Boss hợp lệ cho khối. `open()` giờ: đọc danh sách + câu hỏi → `route()` (xác định lượt) → chọn + tải file Boss của lượt đó.
+- Tiêu đề kết quả dùng tên Boss (`bossTitle()`), không còn "BOSS 1".
+- `firestore.rules` (`match /config`): thêm khóa `Pins` (map, ≤ 200) → CẦN Publish lại rules. Trang admin (thẻ "Lịch Boss Raid"): thêm ô "Ghim Boss 1/2" theo ngày.
+
+**v5.20 (ghép vào bản 5.22) — Bố cục màn chiến đấu:** nút "← Về bản đồ" / "Thoát hầm ngục" (và nhãn "Tầng N") nằm trong `.hud-under`, neo ngay DƯỚI `.player-hud` (sát góc trái, đi theo HUD khi thu nhỏ trên điện thoại). Khung câu hỏi `#quiz` chiếm toàn bộ chiều cao vùng phải (`flex:1`, lề 10px; `.quiz-shield` khớp: `top:10px; height:calc(100% - 20px)`). Boss Raid: khung câu hỏi chừa `margin-top:48px` cho `raid-bar`; tên + HP Boss (`.enemy-info`) ghim ở `top:170px` (điện thoại 116px). Id `#game-back`, `#dungeon-exit`, `#floor-badge` không đổi nên JS không phải sửa.
+
+**v5.23 — Thứ tự câu hỏi:** Ải (Stage) của Phiêu lưu giữ NGUYÊN thứ tự câu trong file Excel (`Adventure.run`: `this.all.slice()`); Hầm ngục, Ranked, Boss Raid vẫn đảo câu (`Quiz.pick`). Ở mọi chế độ, thứ tự đáp án của câu trắc nghiệm, các ý trong ô Danh sách, vế/đáp án của câu Ghép nối vẫn được đảo trong `Quiz.run` (không đổi).

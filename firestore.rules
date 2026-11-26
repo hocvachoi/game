@@ -444,9 +444,10 @@ service cloud.firestore {
       allow get: if request.auth != null && docId == 'raidSchedule';
       allow list: if false;
       allow create, update: if isAdmin() && docId == 'raidSchedule'
-        && request.resource.data.keys().hasOnly(['Weekly', 'Dates', 'UpdatedAt'])
+        && request.resource.data.keys().hasOnly(['Weekly', 'Dates', 'Pins', 'UpdatedAt'])
         && request.resource.data.Weekly is map && request.resource.data.Dates is map
-        && request.resource.data.Dates.size() <= 200;
+        && request.resource.data.Dates.size() <= 200
+        && (!('Pins' in request.resource.data) || (request.resource.data.Pins is map && request.resource.data.Pins.size() <= 200));   // Pins: ghim Boss theo ngày {yyyymmdd: {1: key, 2: key}}
       allow delete: if false;
     }
 

@@ -71,7 +71,8 @@ const Adventure = {
 
   run() {
     this.teardown();
-    const qs = Quiz.pick(this.all, this.all.length), box = document.getElementById('quiz');   // làm hết mọi câu trong file
+    // Ải (Stage): GIỮ NGUYÊN thứ tự câu như trong file Excel (đáp án / ý chọn của từng câu vẫn được đảo trong Quiz.run). Hầm ngục (vô tận) và các chế độ khác vẫn đảo câu.
+    const qs = this.isDungeon() ? Quiz.pick(this.all, this.all.length) : this.all.slice(), box = document.getElementById('quiz');   // làm hết mọi câu trong file
     document.getElementById('hud-nick').textContent = Player.data.nick; Player.renderHud();
     this.active = true;
     this.guard.bind(); this.guard.reset();

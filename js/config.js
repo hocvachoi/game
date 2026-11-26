@@ -203,7 +203,8 @@ CONFIG.RAID = {
   ULT_DAMAGE: 500,
   REVIVE_SEC: 10,                          // hồi sinh sau khi bị hạ gục (Plan 5.2)
   TOP: 10,                                 // chỉ top 10 sát thương được xếp hạng/thưởng
-  BOSS_HP: { '6': 100000, '7': 100000, '8': 100000, '9': 100000 },   // DỰ PHÒNG: chỉ dùng khi assets/raid/raid_boss.json không có stats.HP hợp lệ (HP thật lấy từ raid_boss.json; rules chấp nhận 1.000–5.000.000)
+  BOSS_HP: { '6': 50000, '7': 50000, '8': 50000, '9': 50000 },   // DỰ PHÒNG: chỉ dùng khi assets/raid/raid_boss.json không có stats.HP hợp lệ (HP thật lấy từ raid_boss.json; rules chấp nhận 1.000–5.000.000)
+  BOSS_LIST_FILE: 'assets/raid/raid_bosses.json',   // DANH SÁCH Boss (random theo ngày/khối/lượt); mỗi Boss một file JSON riêng (HP, ATK, DEF, sprite…)
   BOSS_FILE: 'assets/raid/raid_boss.json'  // ATK/DEF/CRIT + sprite của Boss (thay ảnh trong assets/raid/)
 };
 
@@ -264,7 +265,7 @@ CONFIG.BURN_MAX_STACKS = 10;   // Thiêu đốt: tối đa 10 tầng
 CONFIG.EFFECTS = {
   burn: { name: 'Thiêu đốt', text: x => `Mỗi đòn tấn công tích 1 tầng (tối đa 10), mỗi tầng gây thêm ${x} sát thương; mất hết tầng khi bị tấn công` },
   pierce: { name: 'Xuyên giáp', text: x => `Bỏ qua ${x}% DEF của kẻ địch` },
-  blessing: { name: 'Ban phước', text: x => `Hồi ${x}% HP tối đa mỗi lượt` },
+  blessing: { name: 'Ban phước', text: x => `Hồi ${x} HP mỗi lượt` },
   steallife: { name: 'Đoạt huyết', text: x => `Hồi HP bằng ${x}% sát thương đã gây ra` },
   thorns: { name: 'Gai góc', text: x => `Gây ${x} sát thương khi bị tấn công` },
   ambush: { name: 'Đột kích', text: x => `Tăng ${x}% sát thương khi chí mạng` },

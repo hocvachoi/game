@@ -1,0 +1,9 @@
+{
+  "_help": "DANH SÁCH BOSS RAID. Mỗi Boss = 1 file JSON riêng giống raid_boss.json (name, Class, attackStyle, stats{HP,ATK,DEF,CRIT}, ANSWER_TIMEOUT_SEC, sprites{idle,attack,skill}, castSkill; tùy chọn: HP_BY_GRADE {\"6\":…,\"9\":…}, background \"đường dẫn ảnh nền\"). HP mặc định 50000 nếu không khai báo. 'key' = tên ngắn không dấu (a-z, 0-9, _ -) dùng khi admin GHIM Boss cho một ngày; 'grades' (tùy chọn) = chỉ cho các khối này, ví dụ [\"8\",\"9\"]. Boss mỗi lượt được chọn ngẫu nhiên theo khối + ngày + lượt (Boss 2 luôn khác Boss 1 khi có ≥ 2 Boss); admin có thể ghim ở trang admin. Ví dụ thêm Boss: {\"key\": \"thunder_god\", \"file\": \"assets/raid/thunder_god.json\", \"grades\": [\"8\",\"9\"]}.",
+  "bosses": [
+    {
+      "key": "raid_boss",
+      "file": "assets/raid/raid_boss.json"
+    }
+  ]
+}

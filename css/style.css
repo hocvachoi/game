@@ -987,3 +987,15 @@ select.reveal,.slot.reveal{outline:3px solid #ffd23f;outline-offset:-1px}
 .wheel-card>*{flex-shrink:0}
 /* [v5.15] Tấm che câu hỏi (quiz-shield) trùng khít thẻ câu hỏi hiện tại: margin 5px, rộng 100% - 10px, cao 90% (xem #screen-game #quiz.quiz) */
 .quiz-shield{top:5%;right:5px;width:calc(100% - 10px);height:90%}
+
+/* [v5.20] Nút "Về bản đồ" / "Thoát hầm ngục" (+ nhãn "Tầng N") nằm NGAY DƯỚI thanh trạng thái người chơi, sát góc trái (.hud-under neo vào .player-hud nên đi theo HUD khi thu nhỏ trên điện thoại).
+   Khung câu hỏi chiếm toàn bộ chiều cao vùng phải (chỉ chừa lề 10px), không còn dải nút phía trên. Boss Raid: chừa 48px cho thanh raid-bar phía trên khung câu hỏi. */
+.hud-under{position:absolute;left:0;top:calc(100% + 8px);display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:6}
+#screen-game .hud-under .game-actions{margin:0;align-self:auto;justify-content:flex-start;flex-wrap:nowrap}
+#screen-game .hud-under .game-back{margin:0;min-height:0;padding:6px 14px;white-space:nowrap;font-size:clamp(14px,1.3vw,19px)}
+#screen-game .hud-under .floor-badge{position:static}
+#screen-game #quiz.quiz{height:auto;min-height:0;max-height:none;flex:1 1 0;margin:10px 5px}
+.quiz-shield{top:10px;height:calc(100% - 20px)}
+#screen-game.is-raid #quiz.quiz{margin-top:48px}
+#screen-game.is-raid .enemy .enemy-info{top:170px}   /* Tên + HP Boss ghim dưới cụm HUD + nút điều hướng */
+@media (max-width:800px),(max-height:520px){#screen-game.is-raid .enemy .enemy-info{top:116px}}

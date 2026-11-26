@@ -257,13 +257,20 @@
   <div class="game">
     <aside class="stage" id="stage" aria-hidden="true">
       <canvas id="scene" class="scene"></canvas>
-      <div id="floor-badge" class="floor-badge" hidden>Tầng 1</div>
       <div class="player-hud">
         <div class="level-badge"><span>LV</span><b id="hud-level">1</b></div>
         <div class="player-stats">
           <div class="hud-name" id="hud-nick"></div>
           <div class="player-hp"><i></i><b id="hud-hp">100 / 100</b></div>
           <div class="player-xp"><i id="hud-xp-bar"></i><b id="hud-xp">0 / 100 XP</b></div>
+        </div>
+        <!-- Nút điều hướng ngay dưới thanh trạng thái người chơi (sát góc trái); nhãn "Tầng N" của hầm ngục nằm dưới nút -->
+        <div class="hud-under">
+          <div class="game-actions">
+            <button id="dungeon-exit" class="btn game-back dungeon-exit" type="button" hidden>Thoát hầm ngục</button>
+            <button id="game-back" class="btn ghost game-back" type="button">← Về bản đồ</button>
+          </div>
+          <div id="floor-badge" class="floor-badge" hidden>Tầng 1</div>
         </div>
       </div>
       <canvas id="hero"></canvas>
@@ -277,10 +284,6 @@
       <img id="skill-projectile" alt="" aria-hidden="true">
     </aside>
     <main class="qwrap">
-      <div class="game-actions">
-        <button id="dungeon-exit" class="btn game-back dungeon-exit" type="button" hidden>Thoát hầm ngục</button>
-        <button id="game-back" class="btn ghost game-back" type="button">← Về bản đồ</button>
-      </div>
       <div id="raid-bar" class="raid-bar" title="Số sát thương kèm nickname đồng đội là hiệu ứng minh họa; tổng sát thương theo dữ liệu thật." hidden>
         <span id="raid-time"></span>
         <span id="raid-counter"></span>
