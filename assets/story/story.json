@@ -3,7 +3,8 @@
   "characters": {
     "merie": { "name": "Merie", "src": "assets/npc/merie_idle.png" },
     "noname": { "name": "", "src": "" },
-    
+    "centaur_tame":{"name":"Centaur", "src":"assets/npc/centaur_tame_idle.png"},
+
     "goblin": { "name": "goblin thân thiện", "src":"assets/monsters/goblin/goblin_idle.png"},
     "mad_axe": { "name": "Tiều phu nhân hậu", "src":"assets/monsters/bandits/bandits_idle.png"},
     "mummy": { "name": "U linh hoàng đế", "src":"assets/monsters/mummy/mummy_idle.png"},
@@ -18,7 +19,7 @@
     "undead_knight": { "name": "Vong hồn hiệp sĩ", "src":"assets/monsters/undead_knight/undead_knight_idle.png"},
     "rebel_knight": { "name": "Kỵ sĩ lưu vong", "src":"assets/monsters/rebel_knight/rebel_knight_idle.png"},
     "statue": { "name": "Khổng lồ đá", "src":"assets/monsters/statue/statue_idle.png"},
-    "mad_jester": { "name": "Vua hệ tham lam", "src":"assets/monsters/mad_jester/mad_jester_idle.png"},
+    "mad_jester": { "name": "Vua hề tham lam", "src":"assets/monsters/mad_jester/mad_jester_idle.png"},
     "ash_skeleton": { "name": "Cận vệ điện ngục", "src":"assets/monsters/ash_skeleton/ash_skeleton_idle.png"},
     "dragon_emperor": { "name": "Vua rông địa ngục", "src":"assets/monsters/dragon_emperor/dragon_emperor_idle.png"}
   },
@@ -104,7 +105,8 @@
         { "who": "noname", "text": "bạn đi đến sát đầm lầy, dùng hết sức để cứu chị Merie" },
         { "who": "player", "text": "Chị Merie, chị ổn chứ?" },
         { "who": "merie", "text": "Ạc...ạc...Cảm ơn ngài!" },
-        { "who": "player", "text": "Cứ gọi em là {name}..."}
+        { "who": "player", "text": "Cứ gọi em là {name}..."},
+        { "who": "merie", "text": "~ cười ~ Cảm ơn em, {name}"}
       ]
     }
   },
@@ -113,7 +115,7 @@
 
 
   "World2": {
-    "Stage_1": {
+    "Stage_1":{
       "start_stage": [
         { "who": "merie", "text": "Xin chào dũng sĩ! Chào mừng ngài đã đến với LỤC ĐỊA BÌNH MINH." },
         { "who": "merie", "text": "Tôi là Merie-dân làng của thị trấn Rừng Xanh, Từ ngày Hoàng đế Long tộc thức giấc, lục địa này đã không còn bình yên nữa." },
@@ -174,9 +176,9 @@
          { "who": "noname", "text": "Hai đến gần một ngôi nhà..." },
          { "who": "bog_witch", "text": "Này cô bé...hai người bị sao vậy" },
          { "who": "merie", "text": "Thưa bà, xin hãy giúp cháu, Ngài ấy đang bị thương" },
-         { "who": "bog_witch", "text": "Hãy đặt Ngài ấy lên giường và cho ngài ấy uống viên thuốc này, rồi theo ta đi hái thuốc"},
+         { "who": "bog_witch", "text": "Hãy đặt Ngài ấy lên giường và cho ngài ấy uống viên thuốc này, rồi theo ta đi hái thêm thảo dược"},
          { "who": "merie", "text": "Vâng. cháu cảm ơn bà"},
-         { "who": "noname", "text": "Một lát sau..............~ Áaaaaaaa ~ bạn nghe tiếng hét cảu chị Merie...Bạn vội chạy theo hướng tiếng hét và thấy chị Merie đang bị nhấn chìm trong đầm lầy"},
+         { "who": "noname", "text": "Một lát sau..............~ Áaaaaaaa ~ bạn nghe tiếng hét của chị Merie...Bạn vội chạy theo hướng tiếng hét và thấy chị Merie đang bị nhấn chìm trong đầm lầy"},
          { "who": "bog_witch", "text": "Hí hí hí. Ngoan ngoãn làm thức ăn cho đứa con của ta đi"},
          { "who": "player", "text": "Mụ phù thuỷ kia! thả chị Merie ra..."}
       ],
@@ -184,11 +186,156 @@
         { "who": "bog_witch", "text": "Sao có thể, ta đã cho ngươi uống độc rồi mà" },
         { "who": "bog_witch", "text": "Ah...ah...ah ta đưa nhầm thuốc..... dũng sĩ à, nước đi này cho ta đi lại nhé... hí hí" },
         { "who": "player", "text": "Đừng có mơ! Bà dám hại chị Merie, giờ ta sẽ bỏ người xuống đứa con của ngươi." },
-        { "who": "bog_witch", "text": "Khôngggg.... ta cho lão đi mà!!!!!!" },
+        { "who": "bog_witch", "text": "Khôngggg.... tha cho lão đi mà!!!!!!" },
         { "who": "noname", "text": "bạn đi đến sát đầm lầy, dùng hết sức để cứu chị Merie" },
         { "who": "player", "text": "Chị Merie, chị ổn chứ?" },
         { "who": "merie", "text": "Ạc...ạc...Cảm ơn ngài!" },
-        { "who": "player", "text": "Cứ gọi em là {name}..."}
+        { "who": "player", "text": "Cứ gọi em là {name}..."},
+        { "who": "merie", "text": "~ cười ~ Cảm ơn em, {name}"}
+      ]
+    },
+    "Stage_5":{
+      "start_stage":[
+         { "who": "noname", "text": "Sau khi thoát chết tại đầm lầy và mụ phù thuỷ, cả hai đã đi đen được một thành trì bỏ hoang..." },
+         { "who": "player", "text": "Nơi này thật hoang tàn...Chắc bọn quái vật cũng đã tàn phá nơi này" },
+         { "who": "merie", "text": "Không. Nơi này vốn bỏ hoang hơn 20 năm, bị bòn cướp thường xuyên tấn công, không ai ở lại đây cả. Bọn quái vật cũng không dám đến đây" },
+         { "who": "player", "text": "Đám cướp này đánh bật cả bậy quái vật hung hăng luôn sao? Bọn chúng mạnh đến thế à?"},
+         { "who": "bandits", "text": "Hohoho quá khen"},
+         { "who": "merie", "text": "là bọn cướp, chúng ta bị vây rồi"},
+         { "who": "bandits", "text": "Ho ho ho. Bình tĩnh đi cô bé ta chỉ hỏi thăm tí thôi. Các ngươi có tiền không? cho ta xin"},
+         { "who": "player", "text": "~ -.-! ~ Cướp mà cũng văn minh thế à?"},
+         { "who": "bandits", "text": "Ho Ho Ho Ta xin chứ có cướp đâu?"},
+         { "who": "player", "text": "Vậy ta không đưa"},
+         { "who": "bandits", "text": "Ho Ho Ho Vậy ta cướp..."}
+      ],
+      "end_stage": [
+        { "who": "bandits", "text": "Ho Ho Ho Không cho thì thôi sao đánh dữ zậy? Không chơi nữa, ta đi dìa" },
+        { "who": "player", "text": "Ehem. Bác có tiền không? Cho cháu xin." },
+        { "who": "merie", "text": "Ể giờ ai mới là cướp nhỉ?." },
+        { "who": "player", "text": "Em xin chứ có cướp đâu? :)" },
+        { "who": "bandits", "text": "Đây đây của các người hết. Cho ta dìa đi" },
+        { "who": "noname", "text": "Tên sơn tặc hớt hãy chạy về cùng với 1 chiếc rách. Mọi thứ còn lại bạn đã lấy hết.." },
+        { "who": "merie", "text": "Ông ta có kha khá đồ ngon đấy, em xem có gì sử dụng được không?" },
+        { "who": "player", "text": "Bán chúng chắc cũng có kha khá tiền đề mua thêm vật phẩm"},
+        { "who": "merie", "text": "~ cười ~ Thôi ta lên đường nào, phái trước sẽ rất đẹp đấy!"}
+      ]
+    },
+    "Stage_6":{
+      "start_stage":[
+         { "who": "noname", "text": "Hai ngày sau....Cả hai cuối cùng đã đi đến nơi có phong cảnh đẹp nhất lục địa..." },
+         { "who": "player", "text": "Thật trong lành, nơi đây chắc yên bình nhỉ?" },
+         { "who": "merie", "text": "Theo những già làng kể làng, ở đây hay xuất hiện những con ngựa cầm cung." },
+         { "who": "player", "text": "Lại là quái vật à?"},
+         { "who": "merie", "text": "Không phải, chúng là sinh vật thần bí của lục địa này, bọn chúng là giống cả người và ngựa nhưng chúng không thông minh lắm"},
+         { "who": "noname", "text": "Bỗng có một mũi tên từ đâu bay đến...Bay sượt qua cả hai"},
+         { "who": "player", "text": "Là bọn chúng à?"},
+         { "who": "centaur", "text": "~ -.-! ~ Hiiiiií Vậy mà cũng né được"},
+         { "who": "merie", "text": "Ngươi tự bắn hụt mà con ngựa khờ khạo kia"},
+         { "who": "centaur", "text": "Híiiii, TA KHÔNG CÓ KHỜ, TA CHỈ KHÔNG THÔNG MINH THÔI"},
+         { "who": "player", "text": "Khác gì nhau đâu?"},
+         { "who": "player", "text": "Ngươi xúc phạm ta? TA SẼ ĂN THỊT NGƯƠI!....Híiiiii"}
+      ],
+      "end_stage": [
+        { "who": "centaur", "text": "Híiiiii, Tha em, em lỡ dại" },
+        { "who": "player", "text": "Làm thú cưỡi cho ta nhé?." },
+        { "who": "merie", "text": "Nghe được đó." },
+        { "who": "centaur", "text": "Dạ dạ, em làm gì cũng được, miễn ngày ăn 8 bữa, làm việc 8 tiếng ngày, lương thưởng đầy đủ là được ạ. Híiiii" },
+        { "who": "merie", "text": "Đòi hỏi lắm thế, một ngày 3 bữa, hoặc làm 3 bữa ăn cho ta. chọn đi" },
+        { "who": "centaur", "text": "Vậy cũng được ạ. Híiiii." },
+        { "who": "merie", "text": "Tên này dễ dụ thật. Từ nay chúng ta không cần phải đi bộ nữa" },
+        { "who": "player", "text": "Giờ chúng ta đi đâu tiếp?"},
+        { "who": "merie", "text": "Phía trước có một thị trấn nhỏ, ta đến đua mua ít vật phẩm. Ngựa ơi, đi nào!"},
+        { "who": "centaur", "text": "Vâng híiiiii"}
+      ]
+    },
+    "Stage_7":{
+      "start_stage":[
+         { "who": "noname", "text": "Một ngày sau..." },
+         { "who": "player", "text": "~ (-.-!) ~ Chị Merie, chị có chắc là chúng ta sắp đến một thị trấn không?" },
+         { "who": "noname", "text": "Đúng là có một thị trấn. Nhưng nới đó không có người, không có động vật, không tiếng ốn và...không ánh sáng." },
+         { "who": "merie", "text": "Bản đồ lục địa chỉ như thế mà. Chị thấy có mùi nguy hiểm"},
+         { "who": "player", "text": "Chắc lại là bọn quái vật, em cảm thấy nó rất mạnh"},
+         { "who": "noname", "text": "Hai người tiến vào trong thị trấn, bên trong tối om, thi thoảng có vài ngọn lửa lam bay lên chiếu sáng một khoảng không"},
+         { "who": "merie","text": "Nơi này ghê quá? Chị cảm thấy có gì đó đang theo dõi mình"},
+         { "who": "centaur_tame","text": "Tui sợ quá hò híiiii"},
+         { "who": "player", "text": "Cẩn thận phía sau"},
+         { "who": "noname", "text": "RẦM...Một đường ánh sáng xanh loé lên rồi vụt tắt và một ngôi nhà đổ sập..."},
+         { "who": "noname", "text": "Một giọng nói vang lên khắp thị trấn..."},
+         { "who": "undead_knight", "text": "KẺ...XÂM...PHẠM. TIÊU DIỆT...TIÊU DIỆT."},
+         { "who": "player", "text": "Một bộ giáp biết nói? Chị tìm chỗ trốn đi, tên này rất mạnh."},
+         { "who": "centaur_tame","text": "Còn tôi thì sao? híiii"},
+         { "who": "undead_knight", "text": "TIÊU DIỆT...TIÊU DIỆT...NGAY...LẬP...TỨC!"}
+      ],
+      "end_stage": [
+        { "who": "player", "text": "Phù...Cuối cùng..." },
+        { "who": "merie", "text": "{name}, Em ổn chứ?" },
+        { "who": "noname_tame", "text": "{name} gục xuống bên cạnh Merie, Trước mặt vẫn là bộ giáp bi đi đấy..." },
+        { "who": "undead_knight", "text": "NHIỆM......VỤ......THẤT......BẠI!" },
+        { "who": "noname", "text": "Một nguồn năng lượng từ bộ giáp bay lên, bộ giáp vỡ tan từng mãnh, ánh sáng đã về với thị trấn..." },
+        { "who": "merie", "text": "Thắng rồi, em giỏi lắm. Centaur, cõng {name} đi ." },
+        { "who": "centaur_tame", "text": "híiii để tôi" },
+        { "who": "player", "text": "Cảm ơn mi! Centaur"},
+        { "who": "centaur_tame", "text": "úi chùi ui, cảm động quá! híiiii"},
+        { "who": "merie", "text": "Mau đi đi, chúng ta sắp đến kinh đồ rồi, tới đó ta sẽ thưởng cho ngươi."},
+        { "who": "centaur_tame", "text": "Tốc độ tối ta, thắng tiếnnnnnnn."}
+      ]
+    },
+    "Stage_8":{
+      "start_stage":[
+         { "who": "noname", "text": "Hai ngày sau...Kinh đô dần hiện ra trước mắt, tráng lệ uy nghi nhưng cũng đầy tổn hại vì quái vật. Nới đây là cứ địa cuối cùng của loại người." },
+         { "who": "player", "text": "Wow đây là kinh đô sao, lớn quá!" },
+         { "who": "centaur_tame", "text": "Hí. Ngựa tôi chưa bao giờ thấy nhiều người như vậy cả, sợ quá sợ quá híiiii." },
+         { "who": "merie", "text": "Chúng ta mua ít thức ăn đi. CHị đói quá!"},
+         { "who": "player", "text": "Em cũng mua một ít trang bị."},
+         { "who": "centaur_tame", "text": "Ủa? vậy còn tôi thì sao?...Ê."},
+         { "who": "noname", "text": "Từ phía xa, một bóng đen lao đến...Vụt...Hắn cướp lấy túi tiền của Merie và chạy mất."},
+         { "who": "merie", "text": "{name}! Tên kia vừa lấy túi tiền của chúng ta."},
+         { "who": "player", "text": "Ê! Centaur, Cùng ta chặng hắn lại."},
+         { "who": "centaur_tame", "text": "Dám lấy thức ăn của ta, trả lại đây híiiii."},
+         { "who": "centaur_tame", "text": "Hí hộc hí hộc, Hết đường chạy rồi, trả lại đây híiii"},
+         { "who": "rebel_knight", "text": "Giỏi thì lấy lại đi."}
+        ],
+      "end_stage": [
+        { "who": "player", "text": "Ngươi là hiệp sĩ hoàng gia?" },
+        { "who": "rebel_knight", "text": "Sao ngươi biết?"},
+        { "who": "player", "text": "Quốc huy trên áo của ngươi." },
+        { "who": "merie", "text": "Một hiệp sĩ hoàng gia lại đi trộm vặt á? không thể."},
+        { "who": "rebel_knight", "text": "Muốn làm gì thì làm đi." },
+        { "who": "player", "text": "Ta không làm hại ngươi đâu, nói. Vì sao một hiệp sĩ nhu ngươi lại phải làm việc thấp hèn này" },
+        { "who": "rebel_knight", "text": "Ta không còn là hiệp sĩ nữa. Vị vua mà ta thề phục vụ đã không còn, giờ ta không có chốn nương thân."},
+        { "who": "player", "text": "Ý ngươi là sao?."},
+        { "who": "rebel_knight", "text": "Ta khoogn rõ nhưng Có kẻ cướp ngôi, ai không phục tùng hắn, đều bị truy cùng diệt tận, ta là người duy nhất thoát được với vết thương chí tử."},
+        { "who": "player", "text": "Chị Merie, cho hắn một ít thức ăn...Ngươi đi đi, Ta sẽ đích thân tìm hiểu ngọn nguồn."},
+        { "who": "centaur_tame", "text": "Lên lưng tôi và đến cung điện hoàng gia híiii."}
+      ]
+    },
+    "Stage_9":{
+      "start_stage":[
+         { "who": "noname", "text": " Hai người một ngựa băng băng tiến đến cung điện... Ê tui là nhân mã mà (Centaur)." },
+         { "who": "player", "text": "Sắp đến rồi, chuẩn bị tinh thần chiến đấu!" },
+         { "who": "centaur_tame", "text": "Hí. tui hong chiến đấu đâu híiiii." },
+         { "who": "merie", "text": "Vậy thì nhịn đói nhé!"},
+         { "who": "player", "text": "Mọi người, phía trước cánh cổng."},
+         { "who": "centaur_tame", "text": "Cục đá biết đi kìa, ngộ ha híiiii."},
+         { "who": "noname", "text": "Từ trên tường thành, những tượng đá bỗng đứng dậy, nhảy xuống chặn đường đội của {name}."},
+         { "who": "merie", "text": "{name}! Cẩn thận."},
+         { "who": "player", "text": "Ê! Centaur, Yểm trợ ta."},
+         { "who": "statue", "text": "GÂU GÂU GÂU! CÓ..KẺ..ĐỘT..NHẬP! "},
+         { "who": "centaur_tame", "text": "Hí hộc hí hộc, Hết đường chạy rồi, trả lại đây híiii"},
+         { "who": "rebel_knight", "text": "Giỏi thì lấy lại đi."}
+        ],
+      "end_stage": [
+        { "who": "player", "text": "Ngươi là hiệp sĩ hoàng gia?" },
+        { "who": "rebel_knight", "text": "Sao ngươi biết?"},
+        { "who": "player", "text": "Quốc huy trên áo của ngươi." },
+        { "who": "merie", "text": "Một hiệp sĩ hoàng gia lại đi trộm vặt á? không thể."},
+        { "who": "rebel_knight", "text": "Muốn làm gì thì làm đi." },
+        { "who": "player", "text": "Ta không làm hại ngươi đâu, nói. Vì sao một hiệp sĩ nhu ngươi lại phải làm việc thấp hèn này" },
+        { "who": "rebel_knight", "text": "Ta không còn là hiệp sĩ nữa. Vị vua mà ta thề phục vụ đã không còn, giờ ta không có chốn nương thân."},
+        { "who": "player", "text": "Ý ngươi là sao?."},
+        { "who": "rebel_knight", "text": "Ta khoogn rõ nhưng Có kẻ cướp ngôi, ai không phục tùng hắn, đều bị truy cùng diệt tận, ta là người duy nhất thoát được với vết thương chí tử."},
+        { "who": "player", "text": "Chị Merie, cho hắn một ít thức ăn...Ngươi đi đi, Ta sẽ đích thân tìm hiểu ngọn nguồn."},
+        { "who": "centaur_tame", "text": "Lên lưng tôi và đến cung điện hoàng gia híiii."}
       ]
     }
   }
