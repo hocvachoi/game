@@ -109,7 +109,7 @@ CONFIG.GAME = {
   // Lên cấp (Plan 13.4): lv1 cần 100 EXP, mỗi cấp sau cần thêm 50 (lv1:100, lv2:150, lv3:200...).
   // EXP cần để ĐẠT cấp L = 25*(L-1)*(L+2).      [RULES] XP_BASE=100, XP_STEP=50
   XP_BASE: 100, XP_STEP: 50,
-  MAX_LEVEL: 100,           // [RULES] Plan chưa nêu cấp tối đa; ải 12 cần cấp 56 nên đặt 100 (chỉnh được, nhớ sửa rules)
+  MAX_LEVEL: 1000,           // [RULES] Plan chưa nêu cấp tối đa; ải 12 cần cấp 56 nên đặt 100 (chỉnh được, nhớ sửa rules)
   STAGE_LEVEL_STEP: 5,      // ải i yêu cầu cấp 1 + 5*(i-1) (ải 1: cấp 1, ải 2: cấp 6...). Đặt 0 để tắt.
   // Giá trị MẶC ĐỊNH (Plan 13.4: 20s). Mỗi quái vật quy định riêng bằng "ANSWER_TIMEOUT_SEC" trong <monster_key>.json
   // (xem như tốc độ tấn công: sau ngần ấy giây chưa trả lời thì quái đánh, lặp lại mỗi chu kỳ). Quái không khai báo thì dùng số này.
