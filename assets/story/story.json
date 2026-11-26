@@ -60,7 +60,7 @@
       "end_stage": [
         { "who": "mad_axe", "text": "Ahhhhhh!..... Sao...sao...sao lại như thế được, ngươi dùng hack?." },
         { "who": "player", "text": "Ta liêm, ông quá gà để có thể đánh bại ta." },
-        { "who": "merie", "text": "Hay lắm dũng sĩ, Ngài đã hạ được nó rồi, từ giờ chúng ta có thể án toàn rời cánh đồng này và tiến đến kinh đô." },
+        { "who": "merie", "text": "Hay lắm dũng sĩ, Ngài đã hạ được nó rồi, từ giờ chúng ta có thể an toàn rời cánh đồng này và tiến đến kinh đô." },
         { "who": "merie", "text": "Ra khỏi hang động này sẽ có thị trấn nhỏ, sẽ có vài món đồ giá trị, chúng ta đến đó nhé thưa Ngài?" },
         { "who": "player", "text": "Vâng, em cần mua thêm vài trang bị để chống chọi với lũ quái vật này" }
       ]
@@ -92,7 +92,7 @@
          { "who": "merie", "text": "Thưa bà, xin hãy giúp cháu, Ngài ấy đang bị thương" },
          { "who": "bog_witch", "text": "Hãy đặt Ngài ấy lên giường và cho ngài ấy uống viên thuốc này, rồi theo ta đi hái thuốc"},
          { "who": "merie", "text": "Vâng. cháu cảm ơn bà"},
-         { "who": "noname", "text": "Một lát sau..............~ Áaaaaaaa ~ bạn nghe tiếng hét cảu chị Merie...Bạn vội chạy theo hướng tiếng hét và thấy chị Merie đang bị nhấn chìm trong đầm lầy"},
+         { "who": "noname", "text": "Một lát sau..............~ Áaaaaaaa ~ bạn nghe tiếng hét của chị Merie...Bạn vội chạy theo hướng tiếng hét và thấy chị Merie đang bị nhấn chìm trong đầm lầy"},
          { "who": "bog_witch", "text": "Hí hí hí. Ngoan ngoãn làm thức ăn cho đứa con của ta đi"},
          { "who": "player", "text": "Mụ phù thuỷ kia! thả chị Merie ra..."}
       ],
@@ -118,7 +118,7 @@
         { "who": "merie", "text": "Xin chào dũng sĩ! Chào mừng ngài đã đến với LỤC ĐỊA BÌNH MINH." },
         { "who": "merie", "text": "Tôi là Merie-dân làng của thị trấn Rừng Xanh, Từ ngày Hoàng đế Long tộc thức giấc, lục địa này đã không còn bình yên nữa." },
         { "who": "merie", "text": "Bọn quái vật lần lượt xuất hiện, tàn phá và tấn công các ngôi làng." },
-        { "who": "merie", "text": "Nơi đây cũng không ngoại lệ, trong khu rừng cạnh làng có bầy Slime khổng lồ, Chúng hút dinh dưỡng của cây và tân công người đi qua rừng." },
+        { "who": "merie", "text": "Nơi đây cũng không ngoại lệ, trong khu rừng cạnh làng có bầy Slime khổng lồ, Chúng hút dinh dưỡng của cây và tấn công người đi qua rừng." },
         { "who": "merie", "text": "Xin ngài hãy giúp chúng tôi, tiêu diệt bọn chúng, đem lại yên bình cho làng." },
         { "who": "player", "text": "Sứ mệnh của em là đem lại hoà bình cho thế giới, em sẽ tiêu diệt hết lũ quái vật này" },
         { "who": "merie", "text": "Cảm ơn ngài!." },

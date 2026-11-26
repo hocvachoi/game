@@ -143,9 +143,9 @@ CONFIG.GAME = {
   TOOLS: { PER_STAGE: 3, COST: 1, HEAL_PCT: 10 },
   // THƯỞNG ĐỌC CỐT TRUYỆN (mỗi hộp thoại nhận 1 LẦN suốt đời; phải đọc tới câu cuối, bấm "Bỏ qua" thì không nhận). Số Gold của ải N = gốc × (1 + (N-1) × STAGE_STEP):
   // STAGE_STEP 1 = mỗi ải cộng thêm 100% gốc (ải 1: ×1, ải 2: ×2, ải 3: ×3…, cộng dồn tuyến tính, KHÔNG nhân lũy tiến). Gộp vào lượt lưu có sẵn nên không tốn thêm đọc/ghi.
-  STORY: { GOLD: { start: 100, end: 50 }, STAGE_STEP: 0.7 },
+  STORY: { GOLD: { start: 100, end: 50 }, STAGE_STEP: 1 },
   WRONG_WAIT_MS: 5000,   // trả lời SAI: chờ bấy lâu (đáp án đúng được tô nổi bật) mới được sang câu mới; mọi chế độ
-  KILL_GAP_MS: 1500,   // quái bị hạ mất bấy lâu mới hồi sinh/quái mới xuất hiện (Phiêu lưu/Hầm ngục); câu hỏi kế tiếp hiện NGAY, không chờ
+  KILL_GAP_MS: 1000,   // quái bị hạ mất bấy lâu mới hồi sinh/quái mới xuất hiện (Phiêu lưu/Hầm ngục); câu hỏi kế tiếp hiện NGAY, không chờ
   MAX_LEVEL_BONUS_CRYSTALS: 50,   // thưởng một lần khi lên cấp tối đa (MAX_LEVEL); [RULES] trần Crystal mỗi lượt khi lên cấp 100 là 80
   KILL_BONUS: { stage: 0.10 },   // stage: cộng dồn thẳng 10% mỗi quái bị hạ
   MIN_LOSE_FACTOR: 0.10,    // thua: thưởng = % sát thương gây cho quái, tối thiểu 10%

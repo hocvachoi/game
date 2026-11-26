@@ -98,6 +98,7 @@ const Auth = {
 
   async register(className, username, password, nickname, room, character) {
     if (!FirebaseService.configured) throw new Error(FirebaseService.errorMessage);
+    if (this.registering) throw new Error("Yêu cầu đăng ký đang được xử lý. Vui lòng đợi hoàn tất.");
     const normalizedClass = this.normalizeClass(className);
     const normalizedUsername = this.normalizeUsername(username);
     if (!/^[6-9]$/.test(normalizedClass)) throw new Error("Vui lòng chọn khối lớp hợp lệ.");
@@ -142,6 +143,9 @@ const Auth = {
         }
         if (error.code === "auth/weak-password") {
           throw new Error("Mật khẩu cần có ít nhất 6 ký tự.");
+        }
+        if (error.code === "auth/too-many-requests") {
+          throw new Error("Firebase Authentication đang tạm chặn yêu cầu từ thiết bị này do thử quá nhiều lần. Hãy chờ một lúc rồi thử lại một lần; lỗi này không liên quan đến Firestore Rules.");
         }
         if (error.code === "permission-denied" || error.code === "already-exists") {
           throw new Error("Tên đăng nhập này đã được sử dụng trong khối đã chọn hoặc hồ sơ cần được giáo viên liên kết.");

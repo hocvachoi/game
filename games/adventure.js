@@ -99,7 +99,14 @@ const Adventure = {
     };
     // Cốt truyện: ải (không phải Hầm ngục) phát hội thoại start_stage trước câu hỏi đầu tiên; đồng hồ chỉ chạy sau khi xong/bỏ qua.
     if (this.isDungeon()) startQuiz();
-    else { box.replaceChildren(); Story.play(this.world, this.level, 'start_stage', info => { if (info && info.completed) Player.storyRead(this.level, 's'); startQuiz(); }); }
+    else {
+      box.replaceChildren();
+      Story.play(this.world, this.level, 'start_stage', info => {
+        const storyGold = info && info.completed ? Player.storyRead(this.level, 's') : 0;
+        startQuiz();
+        if (storyGold) this.note(`Đọc xong cốt truyện lần đầu: +${storyGold.toLocaleString('vi-VN')} Gold (sẽ cộng khi lưu kết quả ải).`);
+      });
+    }
   },
   // Dừng đồng hồ/hẹn giờ của lượt trước (khi chơi lại hoặc rời ải).
   teardown() {
