@@ -16,19 +16,19 @@
   "ANSWER_TIMEOUT_SEC": 20,
   "sprites": {
     "idle": {
-     "src": "assets/monsters/eclipse/eclipse_idle.png",
+     "src": "assets/monsters/eclipse_god/eclipse_god_idle.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [0, 1, 2, 3, 4, 5]
     },
     "attack": {
-      "src": "assets/monsters/eclipse/eclipse_animation.png",
+      "src": "assets/monsters/eclipse_god/eclipse_god_animation.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [3 ,4 , 5, 6, 7, 8, 9, 10, 11]
     },
     "skill": {
-      "src": "assets/monsters/eclipse/eclipse_skill.png"
+      "src": "assets/monsters/eclipse_god/eclipse_god_skill.png"
     }
   },
   "castSkill": {
