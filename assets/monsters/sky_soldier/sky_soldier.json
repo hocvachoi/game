@@ -1,24 +1,24 @@
 {
-  "name": "Dơi Sát thủ",
+  "name": "Vệ binh bầu trời",
   "attackStyle": "melee",
   "Type": "normal",
   "Class":"Warrior",
   "stats": {
-    "HP": 200,
+    "HP": 100,
     "ATK": 70,
     "DEF": 50,
-    "CRIT": 25
+    "CRIT": 10
   },
-  "ANSWER_TIMEOUT_SEC": 15, 
+  "ANSWER_TIMEOUT_SEC": 25, 
   "sprites": {
     "idle": {
-     "src": "assets/monsters/killer_bat/killer_bat_idle.png",
+     "src": "assets/monsters/sky_soldier/sky_soldier_idle.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [0, 1, 2, 3, 4, 5]
     },
     "attack": {
-      "src": "assets/monsters/killer_bat/killer_bat_animation.png",
+      "src": "assets/monsters/sky_soldier/sky_soldier_animation.png",
       "frameW": 256,
       "frameH": 202,
       "frames": [4, 5, 6, 7, 8, 9, 10, 11]

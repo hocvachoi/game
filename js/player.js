@@ -292,6 +292,8 @@ const Player = {
       ? 1 + (dungeon ? CONFIG.dungeonRewardBonus(o.floor) : o.kills * G.KILL_BONUS.stage)
       : Math.max(G.MIN_LOSE_FACTOR, Math.min(1, o.damagePct || 0));
     const ratio = o.total ? o.correct / o.total : 0, C = G.CRYSTAL;
+    // Vàng / Crystal RỚT TỪ QUÁI (Drops.roll, gom ở Adventure): cộng phẳng, chặn trần mỗi lượt như Rules (Gold R.maxGold, Crystal MAX_CRYSTALS_PER_RUN).
+    const dropGold = Math.max(0, Math.min(R.maxGold, Math.floor(Number(o.dropGold) || 0))), dropCrystals = Math.max(0, Math.min(G.DUNGEON.MAX_CRYSTALS_PER_RUN, Math.floor(Number(o.dropCrystals) || 0)));
     let crystals = 0;
     if (!dungeon) {
       if (o.passed && ratio > C.stage.minCorrectRatio) crystals = C.stage.amount;
@@ -299,6 +301,7 @@ const Player = {
       const mk = Number.isInteger(o.madnessKills) && o.madnessKills > 0 ? o.madnessKills : 0;   // Crystal hầm ngục CHỈ từ quái Điên loạn
       crystals = Math.min(G.DUNGEON.MAX_CRYSTALS_PER_RUN, mk * G.DUNGEON.MADNESS.CRYSTALS);
     }
+    crystals = Math.min(G.DUNGEON.MAX_CRYSTALS_PER_RUN, crystals + dropCrystals);
     // Chỉ GHI bản ghi xếp hạng khi lượt này có thể đổi điểm tuần (thắng ải, hoặc hầm ngục hạ ≥ 1 quái). KHÔNG đọc lại bản ghi của mình:
     // lấy từ bản sao ở máy (Rank.ownEntry: 0 lượt đọc nếu đã có, 1 lượt đọc lần đầu). Kiểm tra top 10 làm ở Rank.afterRun, không tốn đọc/ghi.
     const needRank = withRank && Boolean(this.data.room) && (dungeon ? o.kills > 0 : Boolean(o.passed));
@@ -306,10 +309,10 @@ const Player = {
     await this.tx(cur => {
       const old = (cur.progress || {})[level.id] || { best: 0, passed: false, tries: 0 };
       const f = factor * (old.passed ? R.repeatFactor : 1);
-      const gold = Math.min(R.maxGold, Math.floor(base.GOLD * f));
+      const gold = Math.min(R.maxGold, Math.floor(base.GOLD * f) + dropGold);
       const rawExp = Math.min(R.maxExp, Math.floor(base.EXP * f));
       const exp = Math.min(this.maxExp(), (cur.EXP || 0) + rawExp);
-      out.factor = f; out.gold = gold; out.exp = exp - (cur.EXP || 0); out.drop = null; out.crystals = crystals;
+      out.factor = f; out.gold = gold; out.exp = exp - (cur.EXP || 0); out.drop = null; out.crystals = crystals; out.dropGold = dropGold; out.dropCrystals = dropCrystals;
       out.levelUp = this.levelOf(exp) > this.levelOf(cur.EXP || 0);
       // Lần đầu đạt cấp tối đa: tặng thêm Crystal và bật hiệu ứng chúc mừng (chỉ xảy ra một lần vì chỉ vượt mốc này một lần)
       if (this.levelOf(exp) >= G.MAX_LEVEL && this.levelOf(cur.EXP || 0) < G.MAX_LEVEL) {
@@ -317,15 +320,13 @@ const Player = {
       }
       const owned = cur.Enventory || [], stock = this.parseInv(owned);
       out.drop = null; out.drops = [];
-      if (win && dungeon) {   // hầm ngục: vật phẩm đã roll theo từng quái (Adventure.rollDrop), gom ở o.drops và ghi MỘT lần; mỗi loại tối đa CONFIG.STACK_MAX
-        const st = { ...stock };
-        for (const id of Array.isArray(o.drops) ? o.drops : []) {
-          if (!this.item(id) || (st[id] || 0) >= CONFIG.STACK_MAX) continue;
-          st[id] = (st[id] || 0) + 1; out.drops.push(id);
-        }
-      } else if (win) { // tối đa 1 vật phẩm rơi mỗi lượt; món đã có vẫn rơi để cộng dồn, đến tối đa CONFIG.STACK_MAX
-        for (const drop of base.drops || []) {
-          if ((stock[drop.itemId] || 0) < CONFIG.STACK_MAX && this.item(drop.itemId) && Math.random() < drop.chance) { out.drop = drop.itemId; break; }
+      // Vật phẩm rớt theo từng quái (Adventure.rollDrop → o.drops), Ải và Hầm ngục dùng chung; giữ cả khi thua (đã hạ quái). Ghi MỘT lần.
+      // Mỗi loại tối đa CONFIG.STACK_MAX; tối đa 10 loại khác nhau mỗi lượt (giới hạn addBatch của Rules).
+      if (o.kills > 0) {
+        const st = { ...stock }, kinds = new Set();
+        for (const id of Array.isArray(o.drops) ? o.drops.slice(0, 200) : []) {
+          if (!this.item(id) || (st[id] || 0) >= CONFIG.STACK_MAX || (!kinds.has(id) && kinds.size >= 10)) continue;
+          kinds.add(id); st[id] = (st[id] || 0) + 1; out.drops.push(id);
         }
       }
       const pct = o.total ? Math.round(o.correct / o.total * 100) : 0;
@@ -340,13 +341,11 @@ const Player = {
       if (claims.length) fields.Story = { ...(cur.Story || {}), ...Object.fromEntries(claims.map(c => [c.key, true])) };
       const spent = Math.max(0, Math.floor(Number(o.spent) || 0));   // Crystal đã dùng cho Gợi ý/Hồi HP trong lượt này
       if (crystals - spent !== 0) fields.Crystals = Math.max(0, (cur.Crystals || 0) + crystals - spent);
-      if (dungeon) {
-        if (out.drops.length) {
-          let list = owned; const st = { ...stock };
-          out.drops.forEach(id => { st[id] = (st[id] || 0) + 1; list = this.invSet(list, id, st[id]); });
-          fields.Enventory = list;
-        }
-      } else if (out.drop) { out.drops = [out.drop]; fields.Enventory = this.invSet(owned, out.drop, (stock[out.drop] || 0) + 1); }
+      if (out.drops.length) {
+        let list = owned; const st = { ...stock };
+        out.drops.forEach(id => { st[id] = (st[id] || 0) + 1; list = this.invSet(list, id, st[id]); });
+        fields.Enventory = list;
+      }
       const result = { fields, progress: { id: level.id, entry } };
       if (needRank) {
         const rank = Rank.entry(rankPrev, { nick: cur.Nickname, room: cur.Room, lv: fields.LV, kind: dungeon ? 'dungeon' : 'stage', index: level.index, kills: o.kills, floor: o.floor || 0, passedNow: !dungeon && o.passed });

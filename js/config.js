@@ -82,12 +82,14 @@ CONFIG.loadWorlds = function () {
       const customName = (list, index) => (Array.isArray(list) && typeof list[index] === 'string' ? list[index].trim().slice(0, 40) : '');
       world.stages.forEach((stage, index) => {
         Object.assign(stage, data.stage_nodes[index], { reward: data.stage_rewards[index] });
+        if (typeof Drops !== 'undefined') Drops.validate(stage.reward, `${world.id} Ải ${index + 1}`);   // cảnh báo dữ liệu rớt vật phẩm ở Console
         stage.title = customName(data.stage_names, index);
         if (stage.title) stage.name = stage.title;
       });
       world.dungeons.forEach((dungeon, index) => {
         // monsters: mảng key quái vật có thể xuất hiện trong dungeon (assets/monsters/<key>/<key>.json)
         dungeon.title = customName(data.dungeon_names, index);
+        if (typeof Drops !== 'undefined') Drops.validate(data.dungeon_rewards[index], `${world.id} Hầm ngục ${index + 1}`);
         if (dungeon.title) dungeon.name = dungeon.title;
         Object.assign(dungeon, data.dungeon_nodes[index], {
           reward: data.dungeon_rewards[index],
@@ -109,7 +111,7 @@ CONFIG.GAME = {
   // Lên cấp (Plan 13.4): lv1 cần 100 EXP, mỗi cấp sau cần thêm 50 (lv1:100, lv2:150, lv3:200...).
   // EXP cần để ĐẠT cấp L = 25*(L-1)*(L+2).      [RULES] XP_BASE=100, XP_STEP=50
   XP_BASE: 100, XP_STEP: 50,
-  MAX_LEVEL: 1000,           // [RULES] Plan chưa nêu cấp tối đa; ải 12 cần cấp 56 nên đặt 100 (chỉnh được, nhớ sửa rules)
+  MAX_LEVEL: 100,           // [RULES] Plan chưa nêu cấp tối đa; ải 12 cần cấp 56 nên đặt 100 (chỉnh được, nhớ sửa rules)
   STAGE_LEVEL_STEP: 5,      // ải i yêu cầu cấp 1 + 5*(i-1) (ải 1: cấp 1, ải 2: cấp 6...). Đặt 0 để tắt.
   // Giá trị MẶC ĐỊNH (Plan 13.4: 20s). Mỗi quái vật quy định riêng bằng "ANSWER_TIMEOUT_SEC" trong <monster_key>.json
   // (xem như tốc độ tấn công: sau ngần ấy giây chưa trả lời thì quái đánh, lặp lại mỗi chu kỳ). Quái không khai báo thì dùng số này.
@@ -126,7 +128,7 @@ CONFIG.GAME = {
     },
     REENTRY_BACK: 5,
     // v5.7 — CÂN BẰNG THEO TẦNG: mỗi STEP tầng quái tăng SCALE_PER_STEP của giá trị GỐC (cộng thẳng, không nhân dồn) cho HP/ATK/DEF (không CRIT);
-    // tỉ lệ rơi vật phẩm tăng cùng hệ số (5% → 5,5% ở tầng 11–20, 6% ở 21–30…). Tầng 1–10 ×1,0; 11–20 ×1,1; 21–30 ×1,2 …
+    // tỉ lệ rơi vật phẩm tăng cùng hệ số (2% → 2,2% ở tầng 11–20, 2,4% ở 21–30…; tổng mỗi quái = chance lớn nhất trong danh sách, KHÔNG cộng các món). Tầng 1–10 ×1,0; 11–20 ×1,1; 21–30 ×1,2 …
     STEP: 10,
     SCALE_PER_STEP: 0.10,
     // Thưởng Gold/EXP cuối lượt tăng thêm (cộng vào hệ số thưởng): đạt tầng XY → +X0% (tầng 37 → +30%, tầng 9 → +0%). Crystal không nhân.
@@ -260,7 +262,7 @@ CONFIG.STACK_MAX = 10;
 // Phí quay: lượt đầu trong ngày COST_BASE Gold, mỗi lượt sau +COST_STEP (đổi trong wheel.json → "cost"); MAX_COST là trần phí [RULES: Gold giảm tối đa 2000 mỗi lượt quay].
 CONFIG.WHEEL = { SPINS_PER_DAY: 5, MAX_GOLD: 5000, MAX_CRYSTAL: 10, MIN_GAP_SEC: 3, COST_BASE: 500, COST_STEP: 100, MAX_COST: 2000 };
 // Giá BÁN cho NPC của vật phẩm CHỈ RƠI (không ghi giá, không mua được trong Cửa hàng): theo phẩm chất, tính bằng Crystal (không có Gold).
-CONFIG.DROP_ONLY_SELL_CRYSTALS = { epic: 1, legendary: 2, divine: 5 };
+CONFIG.DROP_ONLY_SELL_CRYSTALS = { epic: 5, legendary: 10, divine: 5 };
 // Giới hạn thời gian chơi mỗi ngày (giờ Việt Nam), đếm ở trình duyệt (js/playtime.js).
 CONFIG.PLAYTIME = { LIMIT_SEC: 3 * 3600, WARN_SEC: 600, IDLE_SEC: 120 };
 CONFIG.SELL_RATIO = 0.5;

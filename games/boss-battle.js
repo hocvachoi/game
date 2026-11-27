@@ -393,6 +393,7 @@ const Raid = {
     const n = el('div', 'raid-ult', text);
     n.setAttribute('role', 'alert');
     n.addEventListener('animationend', () => n.remove());
+    setTimeout(() => n.remove(), 3000);   // dự phòng khi không có hoạt ảnh
     stage.append(n);
     stage.classList.add('is-ult'); setTimeout(() => stage.classList.remove('is-ult'), 700);
   },

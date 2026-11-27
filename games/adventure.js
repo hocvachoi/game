@@ -99,14 +99,7 @@ const Adventure = {
     };
     // Cốt truyện: ải (không phải Hầm ngục) phát hội thoại start_stage trước câu hỏi đầu tiên; đồng hồ chỉ chạy sau khi xong/bỏ qua.
     if (this.isDungeon()) startQuiz();
-    else {
-      box.replaceChildren();
-      Story.play(this.world, this.level, 'start_stage', info => {
-        const storyGold = info && info.completed ? Player.storyRead(this.level, 's') : 0;
-        startQuiz();
-        if (storyGold) this.note(`Đọc xong cốt truyện lần đầu: +${storyGold.toLocaleString('vi-VN')} Gold (sẽ cộng khi lưu kết quả ải).`);
-      });
-    }
+    else { box.replaceChildren(); Story.play(this.world, this.level, 'start_stage', info => { if (info && info.completed) Player.storyRead(this.level, 's'); startQuiz(); }); }
   },
   // Dừng đồng hồ/hẹn giờ của lượt trước (khi chơi lại hoặc rời ải).
   teardown() {
@@ -174,18 +167,19 @@ const Adventure = {
       CRIT: (base.CRIT || 0) + (this.madness ? M.CRIT_BONUS : 0)
     };
   },
-  // Hầm ngục: mỗi quái bị hạ roll vật phẩm (tỉ lệ gốc trong world.json × hệ số tầng); vật phẩm gom trong fight.drops, ghi MỘT lần khi kết thúc lượt.
+  // Ải VÀ Hầm ngục dùng chung (js/drops.js): mỗi quái bị hạ → duyệt TẤT CẢ vật phẩm trong danh sách, MỖI MÓN ROLL RIÊNG (không tỉ lệ chung), có thể rớt nhiều món;
+  // Gold/Crystal rớt thêm nếu world.json khai báo. Kết quả gom trong fight và ghi MỘT lần khi kết thúc lượt (Player.runSave). Hầm ngục nhân hệ số tầng cho tỉ lệ món đồ.
   rollDrop(fight) {
-    const scale = CONFIG.dungeonScale(this.floor);
-    for (const drop of (this.level.reward && this.level.reward.drops) || []) {
-      const have = Player.count(drop.itemId) + (fight.dropCounts[drop.itemId] || 0), item = Player.item(drop.itemId);
-      if (!item || have >= CONFIG.STACK_MAX) continue;
-      if (Math.random() < drop.chance * scale) {
-        fight.drops.push(drop.itemId); fight.dropCounts[drop.itemId] = (fight.dropCounts[drop.itemId] || 0) + 1;
-        this.note(`Nhặt được: ${item.name}!`);
-        break;   // tối đa 1 món mỗi quái
-      }
-    }
+    const got = Drops.roll(this.level.reward, {
+      scale: this.isDungeon() ? CONFIG.dungeonScale(this.floor) : 1,
+      owned: id => Player.count(id) + (fight.dropCounts[id] || 0),
+      hasItem: id => Boolean(Player.item(id))
+    });
+    const parts = [];
+    got.items.forEach(id => { fight.drops.push(id); fight.dropCounts[id] = (fight.dropCounts[id] || 0) + 1; parts.push(Player.item(id).name); });
+    if (got.gold) { fight.dropGold += got.gold; parts.push(`${got.gold} Gold`); }
+    if (got.crystals) { fight.dropCrystals += got.crystals; parts.push(`${got.crystals} Crystal`); }
+    if (parts.length) this.note(`Nhặt được: ${parts.join(', ')}!`);   // một dòng chữ tĩnh, không cần hoạt ảnh
   },
   beginCombat() {
     const stats = Player.stats(), maxMonsterHp = Math.max(1, this.monsterStat('HP'));
@@ -193,7 +187,7 @@ const Adventure = {
     this.combat = {
       playerStats: stats, maxPlayerHp, playerHp: maxPlayerHp,
       monster: this.monster, maxMonsterHp, monsterHp: maxMonsterHp,
-      monsterKills: 0, damageDealt: 0, finished: false, drops: [], dropCounts: {}, madnessKills: 0, hints: 0, heals: 0, spent: 0
+      monsterKills: 0, damageDealt: 0, finished: false, drops: [], dropCounts: {}, dropGold: 0, dropCrystals: 0, madnessKills: 0, hints: 0, heals: 0, spent: 0
     };
     Stage.playerHp(1, maxPlayerHp, maxPlayerHp);
     Stage.hp(1, maxMonsterHp, maxMonsterHp);
@@ -237,10 +231,8 @@ const Adventure = {
   killMonster(fight) {
     fight.monsterKills++;
     Effects.resetBurn(fight);
-    if (this.isDungeon()) {
-      if (this.madness) { fight.madnessKills++; this.note(`Hạ quái Điên loạn: +${CONFIG.GAME.DUNGEON.MADNESS.CRYSTALS} Crystal!`); }
-      this.rollDrop(fight);
-    }
+    if (this.isDungeon() && this.madness) { fight.madnessKills++; this.note(`Hạ quái Điên loạn: +${CONFIG.GAME.DUNGEON.MADNESS.CRYSTALS} Crystal!`); }
+    this.rollDrop(fight);   // Ải và Hầm ngục: mỗi quái bị hạ duyệt rớt
     Stage.hp(0, 0, fight.maxMonsterHp);
     Stage.defeat();
     // Giãn cách KILL_GAP_MS (2s) giữa hai quái ở Phiêu lưu/Hầm ngục: quái mới xuất hiện sau khoảng này, câu hỏi kế tiếp cũng chờ hết khoảng này (xem killGap).
@@ -386,6 +378,7 @@ const Adventure = {
     }
     view.append(row);
     view.append(el('span', 'reward-note', `(${Math.round((r.factor || 0) * 100)}% thưởng)`));
+    if (r.dropGold || r.dropCrystals) view.append(el('span', 'reward-note', `Rớt từ quái: ${[r.dropGold ? `+${r.dropGold} Gold` : '', r.dropCrystals ? `+${r.dropCrystals} Crystal` : ''].filter(Boolean).join(' · ')} (đã tính trong tổng)`));
     if (r.levelUp) view.append(el('span', 'reward-levelup', `LÊN CẤP ${Player.data.level}!`));
     if (r.rankSkipped) view.append(el('span', 'reward-note', 'Chưa cập nhật bảng xếp hạng — hãy kiểm tra đồng hồ thiết bị.'));
     return view;
@@ -464,7 +457,7 @@ const Adventure = {
       try {
         const wait = Player.cooldownLeftMs();
         if (wait > 0) { status.textContent = `Đang chờ ${Math.ceil(wait / 1000)}s để lưu kết quả…`; await new Promise(r => setTimeout(r, wait)); status.textContent = 'Đang lưu kết quả…'; }
-        const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct, drops: fight ? fight.drops : [], madnessKills: fight ? fight.madnessKills : 0, spent: fight ? fight.spent : 0 });
+        const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct, drops: fight ? fight.drops : [], dropGold: fight ? fight.dropGold : 0, dropCrystals: fight ? fight.dropCrystals : 0, madnessKills: fight ? fight.madnessKills : 0, spent: fight ? fight.spent : 0 });
         if (r.celebrate && typeof Celebrate !== 'undefined') setTimeout(() => Celebrate.level100(r), 500);   // cấp 100 (một lần)
         status.replaceChildren(this.rewardView(r));
         Player.renderHud();

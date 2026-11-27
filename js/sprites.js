@@ -246,6 +246,7 @@ const Stage = {
     if (this.reduced()) return;
     void e.offsetWidth; e.classList.add(cls);
     e.addEventListener('animationend', () => e.classList.remove(cls), { once: true });
+    setTimeout(() => e.classList.remove(cls), 1500);   // dự phòng: máy không chạy hoạt ảnh sẽ không bắn animationend
   },
   play(who, mode, onImpact, onAnimationEnd) {  // chuyển sang hoạt ảnh tấn công từ khung đầu
     const o = this[who];
@@ -368,6 +369,7 @@ const Stage = {
       e.classList.remove('lunge-go'); void e.offsetWidth;
       e.classList.add('lunge-back');
       e.addEventListener('animationend', () => e.classList.remove('lunge-back'), { once: true });
+      setTimeout(() => e.classList.remove('lunge-back'), 1500);   // dự phòng khi không có hoạt ảnh
     });
   },
   castSkill(who = 'hero') {
@@ -398,6 +400,7 @@ const Stage = {
     projectile.classList.remove('is-flying');
     void projectile.offsetWidth;
     projectile.classList.add('is-flying');
+    setTimeout(() => projectile.classList.remove('is-flying'), 2500);   // dự phòng khi không có hoạt ảnh
     return true;
   },
   defeat() {
