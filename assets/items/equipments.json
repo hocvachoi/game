@@ -606,8 +606,8 @@
     ],
     "quality": "epic",
     "stats": {
-      "HP": 300,
-      "ATK": 170,
+      "HP": 150,
+      "ATK": 120,
       "DEF": 50,
       "CRIT": 15
     },
@@ -652,10 +652,10 @@
     ],
     "quality": "epic",
     "stats": {
-      "HP": 100,
-      "ATK": 150,
+      "HP": 80,
+      "ATK": 120,
       "DEF": 0,
-      "CRIT": 25
+      "CRIT": 20
     },
     "effect": {
       "type": "Ambush",
@@ -676,7 +676,7 @@
     "quality": "epic",
     "stats": {
       "HP": 0,
-      "ATK": 200,
+      "ATK": 150,
       "DEF": 50,
       "CRIT": 0
     },
