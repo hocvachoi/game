@@ -1,12 +1,12 @@
-// HIỆU ỨNG CHÚC MỪNG đạt cấp tối đa (cấp 100, một lần duy nhất vì chỉ vượt mốc này một lần): pháo hoa giấy toàn màn hình + biểu ngữ. Gọi từ Adventure.finish khi Player.runSave trả celebrate.
+// HIỆU ỨNG CHÚC MỪNG khi đạt mốc cấp 100: pháo hoa giấy toàn màn hình + biểu ngữ.
 const Celebrate = {
-  level100() {
+  levelMilestone(reward) {
     if (document.getElementById('celebrate')) return;
-    const box = el('div', 'celebrate'), bonus = CONFIG.GAME.MAX_LEVEL_BONUS_CRYSTALS;
+    const box = el('div', 'celebrate');
     box.id = 'celebrate'; box.setAttribute('role', 'alert');
     const card = el('div', 'celebrate-card');
-    card.append(el('p', 'celebrate-kicker', '🎉 CHÚC MỪNG! 🎉'), el('h2', '', `Bạn đã đạt CẤP ${CONFIG.GAME.MAX_LEVEL}!`),
-      el('p', '', 'Cấp cao nhất của game. Bạn thật xuất sắc!'), el('p', 'celebrate-gift', `Quà tặng: +${bonus} Crystal`), el('p', 'celebrate-hint', 'Chạm để đóng'));
+    card.append(el('p', 'celebrate-kicker', '🎉 CHÚC MỪNG! 🎉'), el('h2', '', `Bạn đã đạt CẤP ${reward.levelMilestone}!`),
+      el('p', '', 'Bạn đã chinh phục thêm một mốc cấp độ!'), el('p', 'celebrate-gift', `Quà tặng: +${reward.levelBonusCrystals.toLocaleString('vi-VN')} Crystal`), el('p', 'celebrate-hint', 'Chạm để đóng'));
     const close = () => { cancelAnimationFrame(this.raf); clearTimeout(this.timer); box.remove(); };
     box.onclick = close;
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) box.append(this.confetti());

@@ -79,7 +79,7 @@ Rồi mở http://localhost:8000. Đăng nhập Firebase cần chạy website qu
 ## V2: XP, Gold, trang bị, cửa hàng
 
 - Kết thúc mỗi lượt ải, trình duyệt ghi **một lần** (transaction) tiến trình + Gold + EXP lên Firestore. Không ghi theo từng câu (Plan mục 9.3).
-- Thưởng tạm: mỗi câu đúng 5 Gold + 10 EXP; vượt ải thêm 20 Gold + 30 EXP; ải đã vượt rồi chỉ nhận 25%. Cấp = 1 + EXP/100 (tối đa 50). Mỗi cấp cộng HP +10, ATK +2, DEF +1. **Tất cả là số tạm, chỉnh trong `CONFIG.GAME` (`js/config.js`).**
+- Cấp độ không giới hạn: cấp L đạt tại `25 × (L-1) × (L+2)` EXP; mốc `100 × N` nhận `50 × N` Crystal (cấp 100: 50; cấp 200: 100). Chỉ số theo cấp lấy từ `assets/characters/<key>/character.json`.
 - Cửa hàng/Trang bị: catalog lấy từ `assets/items/equipments.json`. Firestore chỉ lưu ID vật phẩm trong `Enventory` và ID theo ô trong `Equipment`; giá Gold/Crystal và ô trang bị được kiểm tra lại trong Rules. Mua hàng yêu cầu đủ cả hai loại tiền và chưa sở hữu.
 - Chỉ số (HP/ATK/DEF/CRIT) tính từ cấp và trang bị khi hiển thị, không lưu lên Firestore.
 - Tiến trình không còn lưu `localStorage` (không tin dữ liệu phía máy học sinh).

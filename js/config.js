@@ -111,7 +111,9 @@ CONFIG.GAME = {
   // Lên cấp (Plan 13.4): lv1 cần 100 EXP, mỗi cấp sau cần thêm 50 (lv1:100, lv2:150, lv3:200...).
   // EXP cần để ĐẠT cấp L = 25*(L-1)*(L+2).      [RULES] XP_BASE=100, XP_STEP=50
   XP_BASE: 100, XP_STEP: 50,
-  MAX_LEVEL: 100,           // [RULES] Plan chưa nêu cấp tối đa; ải 12 cần cấp 56 nên đặt 100 (chỉnh được, nhớ sửa rules)
+  LEVEL_CRYSTAL_STEP: 100,
+  LEVEL_CRYSTALS_PER_STEP: 50,
+  // Mốc thứ N (cấp N × 100) thưởng N × 50 Crystal.
   STAGE_LEVEL_STEP: 5,      // ải i yêu cầu cấp 1 + 5*(i-1) (ải 1: cấp 1, ải 2: cấp 6...). Đặt 0 để tắt.
   // Giá trị MẶC ĐỊNH (Plan 13.4: 20s). Mỗi quái vật quy định riêng bằng "ANSWER_TIMEOUT_SEC" trong <monster_key>.json
   // (xem như tốc độ tấn công: sau ngần ấy giây chưa trả lời thì quái đánh, lặp lại mỗi chu kỳ). Quái không khai báo thì dùng số này.
@@ -148,7 +150,6 @@ CONFIG.GAME = {
   STORY: { GOLD: { start: 100, end: 50 }, STAGE_STEP: 1 },
   WRONG_WAIT_MS: 5000,   // trả lời SAI: chờ bấy lâu (đáp án đúng được tô nổi bật) mới được sang câu mới; mọi chế độ
   KILL_GAP_MS: 1000,   // quái bị hạ mất bấy lâu mới hồi sinh/quái mới xuất hiện (Phiêu lưu/Hầm ngục); câu hỏi kế tiếp hiện NGAY, không chờ
-  MAX_LEVEL_BONUS_CRYSTALS: 50,   // thưởng một lần khi lên cấp tối đa (MAX_LEVEL); [RULES] trần Crystal mỗi lượt khi lên cấp 100 là 80
   KILL_BONUS: { stage: 0.10 },   // stage: cộng dồn thẳng 10% mỗi quái bị hạ
   MIN_LOSE_FACTOR: 0.10,    // thua: thưởng = % sát thương gây cho quái, tối thiểu 10%
   REWARD: {
@@ -172,7 +173,7 @@ CONFIG.RANKED = {
   WIN_BASE: 10,            // [RULES] thắng được WIN_BASE + max(0, điểm B − điểm A)
   MAX_DIFF: 100,           // [RULES] trần phần chênh lệch được cộng (chặn báo thắng gian lận với đối thủ cực mạnh)
   RANK_RANGE: 10,          // chọn B ngẫu nhiên trong ±RANK_RANGE hạng quanh A (cả trên lẫn dưới)
-  MIN_BATTLE_SEC: 30,      // [RULES] báo thắng phải cách lúc bắt đầu ≥ ngần này giây
+  MIN_BATTLE_SEC: 10,      // [RULES] báo thắng phải cách lúc bắt đầu ≥ ngần này giây
   CACHE_SEC: 300,          // dùng lại tài liệu lớp đã đọc trong 5 phút khi mở bảng (chỉ ở trình duyệt)
   TOP: 10                  // chỉ top 10 được hiển thị/xếp hạng/thưởng
 };

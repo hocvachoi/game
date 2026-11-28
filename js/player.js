@@ -177,12 +177,13 @@ const Player = {
   // ----- cấp độ & chỉ số (tính từ EXP, nhân vật đang chọn và trang bị; Firestore chỉ lưu LV và EXP) -----
   // EXP cần để ĐẠT cấp L: (L-1)*(2*XP_BASE + XP_STEP*(L-2))/2  (= 25*(L-1)*(L+2) với 100/50).
   expFor(level) { const G = this.G(); return level <= 1 ? 0 : (level - 1) * (2 * G.XP_BASE + G.XP_STEP * (level - 2)) / 2; },
-  levelOf(exp) {
-    const G = this.G(); let L = 1;
-    while (L < G.MAX_LEVEL && this.expFor(L + 1) <= exp) L++;
-    return L;
+  getLevelInfo(exp) {
+    const level = Math.floor((-1 + Math.sqrt(9 + 4 * exp / 25)) / 2);
+    const currentExp = exp - 25 * (level - 1) * (level + 2);
+    const nextLevelExp = 50 * (level + 1);
+    return { level, currentExp, nextLevelExp };
   },
-  maxExp() { return this.expFor(this.G().MAX_LEVEL); },
+  levelOf(exp) { return this.getLevelInfo(exp).level; },
   item(id) { return CONFIG.ITEMS.find(i => i.id === id); },
   stats() { const d = this.data; return this.statsOf(this.levelOf(d.xp), CONFIG.character().key, d.equip); },
   // Chỉ số của MỘT nhân vật bất kỳ (người chơi hiện tại hoặc bản chụp đối thủ Ranked): cấp + nhân vật + trang bị.
@@ -203,20 +204,18 @@ const Player = {
     return { N: d.nick, Lv: this.levelOf(d.xp), Ch: CONFIG.character().key, Eq: { ...d.equip } };
   },
   renderHud() {
-    const d = this.data, G = this.G(), maxed = d.level >= G.MAX_LEVEL;
-    const need = G.XP_BASE + G.XP_STEP * (d.level - 1), inLv = maxed ? need : d.xp - this.expFor(d.level), hp = this.stats().HP;
+    const d = this.data, info = this.getLevelInfo(d.xp), hp = this.stats().HP;
     $('#hud-level').textContent = d.level;
     $('#hud-hp').textContent = `${hp} / ${hp}`;
-    $('#hud-xp-bar').style.width = (inLv / need * 100) + '%';
-    $('#hud-xp').textContent = maxed ? 'MAX' : `${inLv} / ${need} XP`;
+    $('#hud-xp-bar').style.width = (info.currentExp / info.nextLevelExp * 100) + '%';
+    $('#hud-xp').textContent = `${info.currentExp} / ${info.nextLevelExp} XP`;
   },
   // Điền thanh trên cùng (cấp, EXP, nghề, Gold, Crystal) của màn Cửa hàng/Trang bị; prefix = 'shop' | 'equip' | 'rank'.
   fillTopBar(prefix) {
-    const d = this.data, G = this.G(), maxed = d.level >= G.MAX_LEVEL;
-    const need = G.XP_BASE + G.XP_STEP * (d.level - 1), inLv = maxed ? need : d.xp - this.expFor(d.level);
+    const d = this.data, info = this.getLevelInfo(d.xp);
     $(`#${prefix}-level`).textContent = d.level;
-    $(`#${prefix}-xp-bar`).style.width = (inLv / need * 100) + '%';
-    $(`#${prefix}-xp`).textContent = maxed ? 'MAX' : `${inLv} / ${need}`;
+    $(`#${prefix}-xp-bar`).style.width = (info.currentExp / info.nextLevelExp * 100) + '%';
+    $(`#${prefix}-xp`).textContent = `${info.currentExp} / ${info.nextLevelExp}`;
     $(`#${prefix}-class`).textContent = `${d.nick} · ${CONFIG.character().name}`;
     $(`#${prefix}-gold`).textContent = d.gold.toLocaleString('vi-VN');
     $(`#${prefix}-gem`).textContent = d.crystals.toLocaleString('vi-VN');
@@ -311,12 +310,17 @@ const Player = {
       const f = factor * (old.passed ? R.repeatFactor : 1);
       const gold = Math.min(R.maxGold, Math.floor(base.GOLD * f) + dropGold);
       const rawExp = Math.min(R.maxExp, Math.floor(base.EXP * f));
-      const exp = Math.min(this.maxExp(), (cur.EXP || 0) + rawExp);
+      const exp = (cur.EXP || 0) + rawExp;
+      const previousLevel = this.levelOf(cur.EXP || 0), currentLevel = this.levelOf(exp);
       out.factor = f; out.gold = gold; out.exp = exp - (cur.EXP || 0); out.drop = null; out.crystals = crystals; out.dropGold = dropGold; out.dropCrystals = dropCrystals;
-      out.levelUp = this.levelOf(exp) > this.levelOf(cur.EXP || 0);
-      // Lần đầu đạt cấp tối đa: tặng thêm Crystal và bật hiệu ứng chúc mừng (chỉ xảy ra một lần vì chỉ vượt mốc này một lần)
-      if (this.levelOf(exp) >= G.MAX_LEVEL && this.levelOf(cur.EXP || 0) < G.MAX_LEVEL) {
-        crystals += G.MAX_LEVEL_BONUS_CRYSTALS; out.crystals = crystals; out.celebrate = true;
+      out.levelUp = currentLevel > previousLevel;
+      const previousStep = Math.floor(previousLevel / G.LEVEL_CRYSTAL_STEP);
+      const currentStep = Math.floor(currentLevel / G.LEVEL_CRYSTAL_STEP);
+      if (currentStep > previousStep) {
+        out.levelBonusCrystals = G.LEVEL_CRYSTALS_PER_STEP
+          * (currentStep * (currentStep + 1) - previousStep * (previousStep + 1)) / 2;
+        out.levelMilestone = currentStep * G.LEVEL_CRYSTAL_STEP;
+        crystals += out.levelBonusCrystals; out.crystals = crystals; out.celebrate = true;
       }
       const owned = cur.Enventory || [], stock = this.parseInv(owned);
       out.drop = null; out.drops = [];

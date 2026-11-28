@@ -121,11 +121,16 @@ service cloud.firestore {
       }
 
       // [RULES] Level curve: EXP needed to REACH level L = 25*(L-1)*(L+2)  (XP_BASE 100, XP_STEP 50),
-      // MAX_LEVEL 100 -> max EXP 252450, per-run caps Gold 20000 / EXP 60000.
+      // Unlimited levels use EXP = 25*(LV-1)*(LV+2); milestone N (level N*100) grants N*50 Crystal.
       // Only LV and EXP are stored; HP/ATK/DEF come from the character JSON and are not saved.
-      // Crystal: tối đa 30 mỗi lượt (Stage +1; Hầm ngục: +1 cho mỗi quái Điên loạn hạ được). Progress advances one stage entry and rewards are at least 20 seconds apart.
+      // Crystal: tối đa 30 cơ bản mỗi lượt; vượt mốc 100 cấp thứ N được thêm N*50. Progress advances one stage entry and rewards are at least 20 seconds apart.
       // Thưởng đọc cốt truyện: Story = { "<idẢi>_s" | "<idẢi>_e": true }. Chỉ được THÊM khóa (tối đa 6 mỗi lần ghi), không sửa/xóa, giá trị luôn true.
       // Gold cộng kèm nằm trong trần Gold/lượt của validRun (chống gian lận cơ bản như phần thưởng ải).
+      function levelBonusCrystals(oldLevel, newLevel) {
+        let oldStep = (oldLevel - (oldLevel % 100)) / 100;
+        let newStep = (newLevel - (newLevel % 100)) / 100;
+        return 50 * (newStep * (newStep + 1) - oldStep * (oldStep + 1)) / 2;
+      }
       function storyOk() {
         let n = request.resource.data;
         return n.Story is map && n.Story.size() <= 120
@@ -141,11 +146,11 @@ service cloud.firestore {
           && changed().hasOnly(['Golds', 'Crystals', 'EXP', 'LV', 'progress', 'LastReward', 'Enventory', 'Story'])
           && (!('Story' in changed()) || storyOk())
           && n.Golds is int && n.Golds >= o.Golds && n.Golds - o.Golds <= 20000
-          && (!('Crystals' in changed()) || (n.Crystals is int && n.Crystals >= 0 && n.Crystals - o.Crystals <= ((n.LV == 100 && o.LV < 100) ? 80 : 30)))   // [RULES] 30 = GAME.DUNGEON.MAX_CRYSTALS_PER_RUN; lượt đạt cấp 100: +50 (GAME.MAX_LEVEL_BONUS_CRYSTALS)
-          && n.EXP is int && n.EXP >= o.EXP && n.EXP - o.EXP <= 60000 && n.EXP <= 252450
-          && n.LV is int && n.LV >= 1 && n.LV <= 100
+          && (!('Crystals' in changed()) || (n.Crystals is int && n.Crystals >= 0 && n.Crystals - o.Crystals <= 30 + levelBonusCrystals(o.LV, n.LV)))   // [RULES] 30 base Crystal + 50 × milestone step
+          && n.EXP is int && n.EXP >= o.EXP && n.EXP - o.EXP <= 60000
+          && n.LV is int && n.LV >= 1
           && n.EXP >= 25 * (n.LV - 1) * (n.LV + 2)
-          && (n.LV == 100 || n.EXP < 25 * n.LV * (n.LV + 3))
+          && n.EXP < 25 * n.LV * (n.LV + 3)
           && n.progress is map && n.progress.size() <= 60
           && n.progress.diff(o.progress).affectedKeys().size() == 1
           && n.LastReward == request.time
@@ -631,7 +636,7 @@ service cloud.firestore {
       // Bản chụp công khai (tên, cấp, nhân vật, trang bị) — chỉ để hiển thị/tính chỉ số đối thủ nên kiểm tra lỏng.
       function snapOk(e) {
         return e.N is string && e.N.size() >= 2 && e.N.size() <= 16
-          && e.Lv is int && e.Lv >= 1 && e.Lv <= 200
+          && e.Lv is int && e.Lv >= 1
           && e.Ch in ['Archer_F', 'Archer_M', 'Mage_F', 'Mage_M', 'Warrior_F', 'Warrior_M']
           && e.Eq is map && e.Eq.size() <= 6;
       }
@@ -665,7 +670,7 @@ service cloud.firestore {
           && n.LS == request.time
           && n.B is string && n.B != me() && (n.B in resource.data);
       }
-      // [RULES] điểm thắng = 10 (WIN_BASE) + min(100 (MAX_DIFF), max(0, Pt của B − Pt của mình)); báo thắng cách lúc bắt đầu ≥ 30 giây (MIN_BATTLE_SEC).
+      // [RULES] điểm thắng = 10 (WIN_BASE) + min(100 (MAX_DIFF), max(0, Pt của B − Pt của mình)); báo thắng cách lúc bắt đầu ≥ 10 giây (MIN_BATTLE_SEC).
       function winOk() {
         let o = resource.data[me()];
         let n = request.resource.data[me()];
@@ -676,7 +681,7 @@ service cloud.firestore {
           && o.D == vnDay()
           && n.Pt == o.Pt + gain
           && n.Win == o.Win + 1 && n.Win <= o.Cnt
-          && request.time >= o.LS + duration.value(30, 's');
+          && request.time >= o.LS + duration.value(10, 's');
       }
 
       allow get: if isAdmin() || isStudentOfGrade();

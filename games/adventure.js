@@ -458,7 +458,7 @@ const Adventure = {
         const wait = Player.cooldownLeftMs();
         if (wait > 0) { status.textContent = `Đang chờ ${Math.ceil(wait / 1000)}s để lưu kết quả…`; await new Promise(r => setTimeout(r, wait)); status.textContent = 'Đang lưu kết quả…'; }
         const r = await Player.saveRun(this.level, { correct: res.correct, total: res.total, passed, kills, floor: topFloor, damagePct, drops: fight ? fight.drops : [], dropGold: fight ? fight.dropGold : 0, dropCrystals: fight ? fight.dropCrystals : 0, madnessKills: fight ? fight.madnessKills : 0, spent: fight ? fight.spent : 0 });
-        if (r.celebrate && typeof Celebrate !== 'undefined') setTimeout(() => Celebrate.level100(r), 500);   // cấp 100 (một lần)
+        if (r.celebrate && typeof Celebrate !== 'undefined') setTimeout(() => Celebrate.levelMilestone(r), 500);
         status.replaceChildren(this.rewardView(r));
         Player.renderHud();
         again.disabled = back.disabled = false;
